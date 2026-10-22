@@ -1,0 +1,29 @@
+# data stays local
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+analysis/*.csv
+analysis/*.json
+*.tif
+*.zip
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+
+# models
+*.pt
+*.pth
+checkpoints/
+
+# os and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.env
