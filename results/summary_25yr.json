@@ -1,0 +1,62 @@
+{
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "population": 208321.77996826172,
+  "exposed": 71868.39333097778,
+  "weekly_capsules": 143736.78666195556,
+  "health_facilities": 36,
+  "facilities_closed_by_flood": 0,
+  "candidate_sites_usable": 80,
+  "exposed_on_road_network": 71680.2801680018,
+  "exposed_within_reach_dry": 62625.38718745674,
+  "exposed_within_reach_flood": 60140.376516974495,
+  "exposed_access_gap": 2485.0106704822397,
+  "exposed_unreached_in_flood": 11539.903651027305,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n9035409102",
+        "r12322576",
+        "w802759432"
+      ],
+      "exposed_newly_covered": 6030.0185397217465,
+      "exposed_within_reach_after": 66170.39505669624,
+      "share_of_exposed_within_reach_after": 0.9231324836009056
+    },
+    "5": {
+      "sites": [
+        "n9035409102",
+        "r12322576",
+        "r17882000",
+        "w797749288",
+        "w802759432"
+      ],
+      "exposed_newly_covered": 7819.245241178393,
+      "exposed_within_reach_after": 67959.62175815289,
+      "share_of_exposed_within_reach_after": 0.9480936960468268
+    },
+    "8": {
+      "sites": [
+        "r12322576",
+        "r12322593",
+        "r17882000",
+        "w68854163",
+        "w237832258",
+        "w797749288",
+        "w808135262",
+        "w1215767998"
+      ],
+      "exposed_newly_covered": 9409.172598915948,
+      "exposed_within_reach_after": 69549.54911589045,
+      "share_of_exposed_within_reach_after": 0.9702745155694507
+    }
+  },
+  "validation": {
+    "barangays_reported": 26,
+    "events": 13,
+    "spearman_events_vs_flooded_share": -0.10496801612099324,
+    "spearman_events_vs_exposed": 0.2608794138427817,
+    "note": "News coverage is biased toward downtown and river barangays; treat as a rough check."
+  },
+  "runtime_s": 4.2
+}

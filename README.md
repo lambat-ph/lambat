@@ -1,63 +1,74 @@
 # LAMBAT
 
-**Leptospirosis Alert, Mapping and Barangay Allocation Tool.** A decision tool for a city health office after a flood. Pilot city: Dagupan, Pangasinan.
+[![CI](https://github.com/bih-science/lambat/actions/workflows/ci.yml/badge.svg)](https://github.com/bih-science/lambat/actions/workflows/ci.yml)
 
-After a flood, a health officer has to decide which barangays get temporary doxycycline dose points and how many capsules each needs for every week the water stays. LAMBAT puts exposure and reachability on one map:
+**Leptospirosis Alert, Mapping and Barangay Allocation Tool.** *Lambat* is Filipino for *net*, and a net is only as good as where you cast it.
 
-1. **Where is the water?** Flood extent from the UP NOAH hazard map, then from Sentinel-1 radar when a pass arrives (simple threshold vs a U-Net trained on Sen1Floods11).
-2. **Who was in it?** Flood extent over a population grid gives exposed residents per barangay, and capsule need by guideline tier.
-3. **Who can still reach care?** Walking time over OpenStreetMap roads, with flooded segments slowed or closed.
-4. **Where should dose points go?** A maximal covering location model picks 3, 5 or 8 sites that put the most exposed residents within 30 minutes on foot.
-5. **Should hospitals get ready?** A separate rainfall-based alert, one to two weeks ahead, for case surges.
+> The flood was gone by the time Rosa's fever came. For six days she had waded through it to sell fish. The capsule that could have protected her was free. But it was on the other side of the water.
 
-The claim that floods cut residents off from prevention is a **hypothesis this tool tests**, not an assumption it relies on. If the access gap turns out to be small, the exposure and capsule estimates are still useful. The outcome we report is residents within reach of care, never lives saved.
+Rosa is a composite; the numbers are not. By September 2026 the Philippines had 10,936 suspected leptospirosis cases, 3,005 more than a year earlier, while 3.73 million doxycycline capsules sat in government warehouses (Villanueva, 2026). The country did not run short of medicine. We think it ran short of a map. LAMBAT is that map, for a city health office in the days after a flood. Pilot: Dagupan City.
+
+## The question is where, not how much
+
+| Step | Question | Module |
+|---|---|---|
+| 1 | Where is the water? NOAH hazard map now; Sentinel-1 radar (threshold vs U-Net) when a pass arrives | `flood.py` |
+| 2 | Who was in it, and how many capsules do they need? | `exposure.py` |
+| 3 | Who can still walk to care in 30 minutes, with flooded roads slowed or closed? | `access.py` |
+| 4 | Which 3, 5 or 8 sites would cover the most exposed residents? (maximal covering model) | `siting.py` |
+| 5 | Should hospitals get ready? A rainfall alert two weeks ahead, on a separate clock | `alert.py` |
+
+The **access gap** is the number of residents who can reach care on a dry day but not during the flood. That floods create such a gap is our **hypothesis**, not our premise: no study we found has measured it. If the gap turns out to be zero, the officer still gets exposure and capsule counts per barangay, which nobody hands them today. We report residents within reach of care, never lives saved.
+
+## What the data says so far
+
+We tested heat, air quality and waterborne disease first, on [Project CCHAIN](https://www.kaggle.com/datasets/thinkdatasci/project-cchain). They showed nothing (correlations within 0.02 of zero). Rain did: leptospirosis follows it 2 to 4 weeks later (pooled r = 0.29, Dagupan r = 0.45).
+
+Is that enough to warn a hospital? Modestly. Trained on 2008 to 2016 and tested on 2017 to 2019, two weeks ahead (`scripts/run_alert.py`):
+
+| Method | Correlation | Mean error (cases/week) | Outbreak weeks caught | False alerts |
+|---|---|---|---|---|
+| Seasonal average for that week | 0.50 | 1.24 | 21% | 6.8% |
+| Last week's count | 0.48 | 1.53 | 26% | 5.1% |
+| **Rain model** | **0.65** | **1.14** | **36%** | **1.7%** |
+
+All three get the same number of alerts. That is an alert, not a forecast, and we call it one.
+
+## What one run produces
+
+`scripts/run_pipeline.py` runs steps 2 to 4 for Dagupan in about 5 seconds. For a 25-year flood:
+
+- **71,868** of 208,322 residents live in flood-hazard areas: **143,737 capsules** for each week the water stays.
+- **36** clinics and hospitals on OpenStreetMap. Within a 30-minute walk of one: 62,625 exposed residents on a dry day, 60,140 in the flood. The access gap is **2,485** people, smaller than we expected, and we say so.
+- Most exposed residents who cannot reach care cannot reach it on dry days either. **3 temporary dose points** cover 6,030 of them, raising coverage to 92%; **8** reach 97%.
+- Checked against 13 flood events named in the news, the barangay ranking barely agrees (Spearman -0.10). Coverage favours downtown and river barangays, and NOAH maps rain floods, not the tidal floods Dagupan reports most. That is the next thing to fix.
+
+Barangay table, GeoJSON maps and a JSON summary land in `results/`.
 
 ## Status
 
 | Part | State |
 |---|---|
-| Signal tests on Project CCHAIN (`analysis/`) | Done. Leptospirosis follows rain 2 to 4 weeks earlier (pooled r = 0.29, Dagupan r = 0.45) |
-| Dose-point siting (`src/lambat/siting.py`) | Greedy and exact MCLP solvers, tested |
-| Data download and cleaning | Not started |
-| Flood extent, exposure, access | Not started |
-| Outbreak alert | Not started |
-| Dashboard (`web/`) | Not started |
+| Data, alert, exposure, access, siting, end-to-end script | Working, tested, in CI |
+| Flood mapping (threshold vs U-Net on Sen1Floods11) | Code and tests done; final training run pending |
+| Dashboard | Placeholder; deploys to GitHub Pages |
 
-## Setup
+## Run it
 
-Requires [uv](https://docs.astral.sh/uv/). uv installs the right Python version for you.
+Needs [uv](https://docs.astral.sh/uv/). Data download steps are in [data/README.md](data/README.md).
 
 ```bash
 uv sync
 uv run pytest
+uv run python scripts/run_alert.py
+uv run python scripts/run_pipeline.py --scenario 25yr
+uv sync --extra cv        # optional: PyTorch for the U-Net
 ```
-
-The computer-vision part (U-Net) has heavier dependencies and is optional:
-
-```bash
-uv sync --extra cv
-```
-
-## Layout
-
-```
-analysis/        signal tests used to choose the disease (Node.js, no packages)
-data/            raw and processed data, not committed (see data/README.md)
-docs/            method notes and figures
-notebooks/       exploration
-src/lambat/      the pipeline, one module per step above
-tests/           pytest
-web/             dashboard (MapLibre GL, reads GeoJSON written by the pipeline)
-```
-
-## Data
-
-All inputs are public and hold no personal data. Sources and licences are listed in [data/README.md](data/README.md).
 
 ## Limits
 
-- Case data is weekly, city-level and ends in 2022, so barangay figures are shares of exposure, not case forecasts.
-- The rainfall alert cannot see tidal flooding; the flood map can.
-- Access is modelled from maps and has not been checked on the ground.
-- Each dose point assumes a prescriber is present.
-- The tool counts places, not patients. Pregnant and lactating women are flagged for referral, not counted.
+Case data is weekly, city-level and ends in 2022. The rain alert cannot see tidal flooding. Access is modelled from maps, not checked on the ground. Each dose point assumes a prescriber. The tool counts places, not patients: pregnant and lactating women are flagged for referral, and the undiagnosed do not appear.
+
+For Rosa, all of this comes down to one line on a printed sheet: her barangay, near the top of the list, before the fever comes.
+
+<sub>Built for the Philippine Junior Data Science Challenge 2026. Data: Project CCHAIN (CC BY 4.0), UP NOAH, OpenStreetMap, Sentinel-1, Sen1Floods11.</sub>
