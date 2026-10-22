@@ -108,31 +108,44 @@ def to_db(power) -> np.ndarray:
 # Geometry: GCPs, window, grid
 # --------------------------------------------------------------------------
 
-def fit_geo_to_pixel(gcps, lon, lat, k: int = 12):
-    """Local affine fit from the k GCPs nearest (lon, lat).
+def _design(lon, lat, center, quadratic: bool):
+    x = np.asarray(lon, float) - center[0]
+    y = np.asarray(lat, float) - center[1]
+    cols = [x, y, np.ones_like(x)]
+    if quadratic:
+        cols += [x * x, x * y, y * y]
+    return np.stack(cols, axis=-1)
+
+
+def fit_geo_to_pixel(gcps, lon, lat, k: int = 9):
+    """Local fit from the k GCPs nearest (lon, lat): quadratic when there are at
+    least 8 GCPs, affine otherwise. The GCP grid bends across a scene: on the
+    Egay scene a leave-one-out check near Dagupan gave a median error of about
+    1 px for a quadratic on the 9 nearest GCPs, against 13 px for an affine fit.
 
     gcps: (N, 4) array of [line, pixel, lon, lat] (GDAL convention: 0,0 is the
-    top-left corner of the first pixel). Returns (coef, rmse_px) where
-    [line, pixel] = [lon, lat, 1] @ coef, coef shape (3, 2).
+    top-left corner of the first pixel). Returns (coef, rmse_px); pass coef to
+    apply_fit.
     """
     g = np.asarray(gcps, float)
     d = (g[:, 2] - lon) ** 2 + (g[:, 3] - lat) ** 2
     sel = g[np.argsort(d)[: max(k, 4)]]
-    A = np.column_stack([sel[:, 2], sel[:, 3], np.ones(len(sel))])
-    coef, *_ = np.linalg.lstsq(A, sel[:, :2], rcond=None)
-    resid = A @ coef - sel[:, :2]
+    center = (float(lon), float(lat))
+    quadratic = len(sel) >= 8
+    A = _design(sel[:, 2], sel[:, 3], center, quadratic)
+    m, *_ = np.linalg.lstsq(A, sel[:, :2], rcond=None)
+    resid = A @ m - sel[:, :2]
+    coef = {"center": center, "quadratic": quadratic, "m": m}
     return coef, float(np.sqrt((resid ** 2).sum(axis=1).mean()))
 
 
 def apply_fit(coef, lon, lat):
     """lon/lat arrays -> (line, pixel) arrays in GCP convention."""
-    lon = np.asarray(lon, float)
-    lat = np.asarray(lat, float)
-    return (lon * coef[0, 0] + lat * coef[1, 0] + coef[2, 0],
-            lon * coef[0, 1] + lat * coef[1, 1] + coef[2, 1])
+    out = _design(lon, lat, coef["center"], coef["quadratic"]) @ coef["m"]
+    return out[..., 0], out[..., 1]
 
 
-def window_from_gcps(gcps, bbox, pad: int = 100, shape=None, k: int = 12):
+def window_from_gcps(gcps, bbox, pad: int = 100, shape=None, k: int = 9):
     """Pixel window (r0, r1, c0, c1), half-open, covering bbox (west, south, east, north)
     plus `pad` pixels. Clipped to shape = (n_lines, n_pixels) if given. Returns
     (window, rmse_px)."""
