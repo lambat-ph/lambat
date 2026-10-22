@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "dose_points_25yr",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": "r12322576", "name": "Bolosan Elementary School", "kind": "school", "rank": 1 }, "geometry": { "type": "Point", "coordinates": [ 120.365280198930506, 16.0457731 ] } },
+{ "type": "Feature", "properties": { "id": "r12322593", "name": "Carael Elementary School", "kind": "school", "rank": 2 }, "geometry": { "type": "Point", "coordinates": [ 120.316020894365266, 16.03802915 ] } },
+{ "type": "Feature", "properties": { "id": "r17882000", "name": "Federico N. Ceralde Integrated School", "kind": "school", "rank": 3 }, "geometry": { "type": "Point", "coordinates": [ 120.379046771498409, 16.10294435 ] } },
+{ "type": "Feature", "properties": { "id": "w68854163", "name": "Saint Michael School by the Sea", "kind": "school", "rank": 4 }, "geometry": { "type": "Point", "coordinates": [ 120.348785250435853, 16.07991945 ] } },
+{ "type": "Feature", "properties": { "id": "w237832258", "name": "Kingfisher School", "kind": "school", "rank": 5 }, "geometry": { "type": "Point", "coordinates": [ 120.325592867201209, 16.02234875 ] } },
+{ "type": "Feature", "properties": { "id": "w797749288", "name": "Salapingao Elementary School", "kind": "school", "rank": 6 }, "geometry": { "type": "Point", "coordinates": [ 120.315543147395431, 16.05515765 ] } },
+{ "type": "Feature", "properties": { "id": "w808135262", "name": "Leon-Francisco Maramba Elementary School", "kind": "school", "rank": 7 }, "geometry": { "type": "Point", "coordinates": [ 120.361170997788435, 16.07211815 ] } },
+{ "type": "Feature", "properties": { "id": "w1215767998", "name": "Tebeng Barangay Hall", "kind": "townhall", "rank": 8 }, "geometry": { "type": "Point", "coordinates": [ 120.3600853, 16.03466325 ] } }
+]
+}

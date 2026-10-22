@@ -57,7 +57,7 @@ Clouds hide floods from ordinary satellites; radar sees through them, and still 
 | Flood mapping (threshold vs U-Net on Sen1Floods11) | Trained and scored (pooled IoU 0.64 vs 0.21) |
 | Validation against news reports | Done, with confidence intervals; no detectable agreement |
 | Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Code tested; running on the downloaded scenes |
-| Dashboard | Placeholder; deploys to GitHub Pages |
+| Dashboard (`web/`, MapLibre) | Map, priority table, dose points, alert chart; deploys to GitHub Pages once public |
 
 ## Run it
 

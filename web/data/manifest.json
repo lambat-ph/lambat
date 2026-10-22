@@ -1,0 +1,9 @@
+{
+  "files": [
+    "alert_predictions_dagupan.csv",
+    "alert_scores_dagupan.json",
+    "barangays_25yr.geojson",
+    "dose_points_25yr.geojson",
+    "summary_25yr.json"
+  ]
+}

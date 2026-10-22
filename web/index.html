@@ -3,14 +3,396 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LAMBAT</title>
+<title>LAMBAT: where to put leptospirosis doses after a flood</title>
+<meta name="description" content="Leptospirosis Alert, Mapping and Barangay Allocation Tool. A map for the Dagupan City health office after a flood.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
-body{font-family:system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1rem;line-height:1.5}
+:root{
+  --navy:#12304A; --teal:#1F7A8C; --amber:#E0A33B; --amber-text:#8A5A0B;
+  --paper:#F6F3EC; --ink:#142231; --tint:#D7E9EC; --lagoon:#7CC4D1;
+  --muted:#4A5A68; --line:#D9D4C7; --card:#FFFFFF;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Public Sans",system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.45;font-size:15px}
+h1,h2,h3{font-family:"Space Grotesk",system-ui,sans-serif;margin:0;color:var(--navy)}
+a{color:var(--teal)}
+header{background:var(--navy);color:var(--paper);padding:12px 20px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+header h1{color:#fff;font-size:1.5rem;letter-spacing:.04em}
+header p{margin:0;color:var(--lagoon);font-size:.95rem}
+.layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(360px,1fr);height:calc(100vh - 58px);min-height:560px}
+.mapwrap{position:relative;min-height:0}
+#map{position:absolute;inset:0}
+.panel{overflow-y:auto;padding:16px 18px 24px;border-left:1px solid var(--line)}
+.maptools{position:absolute;top:10px;left:10px;z-index:2;background:rgba(246,243,236,.96);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:calc(100% - 20px);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.maptools label.t{font-weight:600;font-size:.8rem;display:block;margin-bottom:4px;color:var(--navy)}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px}
+.seg button{font:inherit;font-size:.82rem;border:1px solid var(--teal);background:#fff;color:var(--navy);padding:4px 9px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.seg button:focus-visible,th button:focus-visible,tr:focus-visible{outline:3px solid var(--amber);outline-offset:1px}
+.toggles{margin-top:6px;font-size:.82rem;display:flex;flex-direction:column;gap:2px}
+.legend{position:absolute;bottom:26px;left:10px;z-index:2;background:rgba(246,243,236,.96);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.78rem}
+.legend b{display:block;margin-bottom:4px;color:var(--navy)}
+.legend .row{display:flex;align-items:center;gap:6px;margin:2px 0}
+.legend .sw{width:22px;height:12px;border:1px solid rgba(20,34,49,.35)}
+.legend .dot{width:14px;height:14px;border-radius:50%;background:var(--amber);border:2px solid var(--navy)}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card .n{font-family:"Space Grotesk",sans-serif;font-size:1.55rem;font-weight:700;color:var(--navy);line-height:1.1}
+.card .l{font-size:.8rem;color:var(--muted);margin-top:2px}
+.card.accent{border-left:5px solid var(--amber)}
+section{margin-top:20px}
+section h2{font-size:1.1rem;margin-bottom:6px}
+.small{font-size:.82rem;color:var(--muted)}
+.note{background:var(--tint);border-radius:8px;padding:8px 10px;font-size:.82rem;margin:8px 0}
+.warn{color:var(--amber-text)}
+table{width:100%;border-collapse:collapse;font-size:.82rem;background:#fff;border:1px solid var(--line)}
+th,td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--line)}
+th:nth-child(2),td:nth-child(2){text-align:left}
+th{background:var(--tint);position:sticky;top:0}
+th button{all:unset;cursor:pointer;font-weight:600;color:var(--navy)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#F0F6F7}
+tbody tr.sel{background:#FBEFD2;outline:2px solid var(--amber);outline-offset:-2px}
+.tablewrap{max-height:340px;overflow:auto;border-radius:6px}
+#detail{background:#FFF8E6;border:1px solid var(--amber);border-radius:8px;padding:8px 10px;font-size:.85rem;margin-top:8px}
+#detail h3{font-size:1rem}
+#detail dl{display:grid;grid-template-columns:auto auto;gap:2px 12px;margin:6px 0 0}
+#detail dt{color:var(--muted)} #detail dd{margin:0;text-align:right;font-weight:600}
+.alertgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.alertgrid .card .n{font-size:1.2rem}
+.chart{width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:8px}
+.chart text{font-family:"Public Sans",sans-serif;font-size:10px;fill:var(--muted)}
+.keyline{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;margin-top:4px}
+.keyline i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:4px}
+footer{background:var(--navy);color:var(--paper);padding:14px 20px;font-size:.8rem}
+footer a{color:var(--lagoon)}
+.maplibregl-popup-content{font-family:"Public Sans",sans-serif;font-size:.85rem}
+.rank{width:26px;height:26px;border-radius:50%;background:var(--amber);border:2px solid var(--navy);color:var(--navy);font:700 .8rem "Space Grotesk",sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#err{display:none;background:#FBE3D6;color:#6B2A0A;padding:10px 20px}
+@media (max-width:767px){
+  .layout{display:block;height:auto}
+  .mapwrap{height:62vh;min-height:380px}
+  .panel{border-left:0;overflow:visible}
+  header h1{font-size:1.25rem}
+  .cards{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<h1>LAMBAT</h1>
-<p>Leptospirosis Alert, Mapping and Barangay Allocation Tool.</p>
-<p>The dashboard is coming. For now, read the <a href="https://github.com/bih-science/lambat#readme">project README</a>.</p>
+<header>
+  <h1>LAMBAT</h1>
+  <p>Leptospirosis Alert, Mapping and Barangay Allocation Tool. Pilot: Dagupan City, 25-year flood.</p>
+</header>
+<div id="err" role="alert"></div>
+<main class="layout">
+  <div class="mapwrap">
+    <div id="map" role="application" aria-label="Map of Dagupan City barangays"></div>
+    <div class="maptools">
+      <label class="t" id="mlabel">Color the map by</label>
+      <div class="seg" id="metricSeg" role="group" aria-labelledby="mlabel"></div>
+      <div class="toggles">
+        <label><input type="checkbox" id="tgDose" checked> Show dose points (ranked)</label>
+        <label id="tgS1wrap" hidden><input type="checkbox" id="tgS1"> Show radar flood share (Typhoon Egay, Sentinel-1)</label>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <aside class="panel" aria-label="Details">
+    <h2>If the water stays for a week</h2>
+    <p class="small" id="lede"></p>
+    <div class="cards" id="cards"></div>
+
+    <section>
+      <h2>Where to put temporary dose points</h2>
+      <div class="seg" id="planSeg" role="group" aria-label="Number of dose points"></div>
+      <p id="planText" style="margin:8px 0 0"></p>
+      <div class="note" id="planNote"></div>
+      <ol class="small" id="siteList" style="margin:0;padding-left:20px"></ol>
+    </section>
+
+    <section>
+      <h2>Barangays by priority</h2>
+      <p class="small">Click a row or a barangay on the map. Click a column name to sort. "Out of reach" means exposed residents who cannot walk to care in 30 minutes during the flood.</p>
+      <div class="tablewrap">
+        <table id="tbl">
+          <thead><tr>
+            <th><button data-k="priority" title="Sort by priority">Priority</button></th>
+            <th><button data-k="name" title="Sort by name">Barangay</button></th>
+            <th><button data-k="exposed" title="Sort by exposed residents">Exposed</button></th>
+            <th><button data-k="unreached" title="Sort by residents out of reach">Out of reach</button></th>
+            <th><button data-k="capsules" title="Sort by capsules">Capsules/wk</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="detail" hidden></div>
+    </section>
+
+    <section>
+      <h2>Should hospitals get ready?</h2>
+      <p class="small" id="alertLede"></p>
+      <div class="alertgrid" id="alertCards"></div>
+      <svg class="chart" id="chart" viewBox="0 0 600 230" role="img" aria-label="Weekly leptospirosis cases 2017 to 2019: actual, rain model and seasonal average"></svg>
+      <div class="keyline">
+        <span><i style="border-color:#142231"></i>Actual cases</span>
+        <span><i style="border-color:#1F7A8C"></i>Rain model</span>
+        <span><i style="border-color:#E0A33B;border-top-style:dashed"></i>Seasonal average</span>
+      </div>
+      <p class="small">Two weeks ahead, test period only. This is an alert, not a forecast. City-level weekly counts; case data ends in 2022.</p>
+    </section>
+
+    <section>
+      <h2>Can we trust the ranking?</h2>
+      <div class="note">Not yet confirmed. Checked against 13 flood events named in the news, the ranking shows no detectable agreement (Spearman -0.10, 95% CI -0.48 to 0.30). News reports mostly follow where people live, so they are a weak ruler.
+        <a href="https://github.com/bih-science/lambat/blob/main/docs/validation.md">Read the validation notes</a>.</div>
+      <p class="small">Other limits: access is modelled from maps, not checked on the ground. Each dose point needs a prescriber. We report residents within reach of care, never lives saved.</p>
+    </section>
+  </aside>
+</main>
+<footer>
+  <div>Data: <a href="https://www.kaggle.com/datasets/thinkdatasci/project-cchain">Project CCHAIN</a> (CC BY 4.0), UP NOAH flood hazard maps, &copy; OpenStreetMap contributors, WorldPop population estimates, Copernicus Sentinel-1 radar.</div>
+  <div style="margin-top:4px"><a href="https://github.com/bih-science/lambat">Source code and method on GitHub</a></div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function(){
+"use strict";
+var RAMP=["#EAF4F6","#BFDEE4","#86BDC8","#3F90A1","#1B5568"];
+var AMBER="#E0A33B", NAVY="#12304A";
+var nf=new Intl.NumberFormat("en-US",{maximumFractionDigits:0});
+var fmt=function(v){return nf.format(Math.round(v));};
+var pct=function(v,d){return (v*100).toFixed(d==null?0:d)+"%";};
+var $=function(id){return document.getElementById(id);};
+
+function fail(msg){var e=$("err");e.textContent=msg;e.style.display="block";}
+function getJSON(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(u+" "+r.status);return r.json();});}
+function getText(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(u+" "+r.status);return r.text();});}
+
+var METRICS=[
+ {key:"exposed",label:"Exposed residents",get:function(p){return p.exposed;},f:fmt},
+ {key:"unreached",label:"Out of reach in the flood",get:function(p){return p.exposed_unreached_flood;},f:fmt},
+ {key:"share",label:"Share of area flooded",get:function(p){return p.flooded_share;},f:function(v){return pct(v,0);}}
+];
+
+Promise.all([
+  getJSON("data/barangays_25yr.geojson"),
+  getJSON("data/dose_points_25yr.geojson"),
+  getJSON("data/summary_25yr.json"),
+  getJSON("data/alert_scores_dagupan.json"),
+  getText("data/alert_predictions_dagupan.csv"),
+  getJSON("data/manifest.json").catch(function(){return {files:[]};})
+]).then(function(r){ init(r[0],r[1],r[2],r[3],r[4],r[5]); })
+  .catch(function(e){ fail("Could not load the data files ("+e.message+"). If you opened this page as a file, serve the folder with a web server instead."); });
+
+function init(brgy,dose,sum,alertS,csv,manifest){
+  var feats=brgy.features;
+  var rows=feats.map(function(f){var p=f.properties;return {code:p.adm4_pcode,name:p.adm4_en,priority:p.priority,exposed:p.exposed,unreached:p.exposed_unreached_flood,capsules:p.weekly_capsules,share:p.flooded_share,pop:p.population,covered:p.exposed_covered_by_dose_points,gap:p.exposed_gap};});
+  var byCode={};rows.forEach(function(r){byCode[r.code]=r;});
+  var metric=METRICS[0], selected=null, plan="3", sortK="priority", sortDir=1;
+
+  /* headline */
+  $("lede").textContent="Dagupan City, "+fmt(sum.population)+" residents, "+rows.length+" barangays. Numbers are for a 25-year flood.";
+  var plans=sum.dose_point_plans;
+  var cards=[
+    {n:fmt(sum.exposed),l:"residents live in flood-hazard areas ("+pct(sum.exposed/sum.population)+" of the city)"},
+    {n:fmt(sum.weekly_capsules),l:"doxycycline capsules needed for each week the water stays"},
+    {n:fmt(sum.exposed_access_gap),l:"access gap: can reach care on a dry day but not in the flood (a hypothesis we test, and it turns out small)",accent:true},
+    {n:fmt(sum.exposed_unreached_in_flood),l:"exposed residents out of reach of care in the flood, most of them on dry days too"}
+  ];
+  $("cards").innerHTML=cards.map(function(c){return '<div class="card'+(c.accent?" accent":"")+'"><div class="n">'+c.n+'</div><div class="l">'+c.l+'</div></div>';}).join("");
+
+  /* quantile breaks */
+  var breaks={};
+  METRICS.forEach(function(m){
+    var v=feats.map(function(f){return m.get(f.properties);}).sort(function(a,b){return a-b;});
+    var b=[];for(var i=1;i<RAMP.length;i++){b.push(v[Math.floor(i*v.length/RAMP.length)]);}
+    breaks[m.key]=b;
+  });
+
+  var map=new maplibregl.Map({
+    container:"map",
+    style:{version:8,sources:{osm:{type:"raster",tiles:["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],tileSize:256,maxzoom:19,attribution:"&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"}},layers:[{id:"osm",type:"raster",source:"osm"}]},
+    center:[120.34,16.06],zoom:11,attributionControl:{compact:true}
+  });
+  map.addControl(new maplibregl.NavigationControl({showCompass:false}),"top-right");
+  var bounds=new maplibregl.LngLatBounds();
+  feats.forEach(function(f){(function walk(c){if(typeof c[0]==="number")bounds.extend(c);else c.forEach(walk);})(f.geometry.coordinates);});
+  map.fitBounds(bounds,{padding:30,animate:false});
+
+  function fillExpr(){
+    var m=metric,b=breaks[m.key];
+    var e=["step",["get",propFor(m)],RAMP[0]];
+    for(var i=0;i<b.length;i++){e.push(b[i],RAMP[i+1]);}
+    return e;
+  }
+  function propFor(m){return m.key==="exposed"?"exposed":m.key==="unreached"?"exposed_unreached_flood":"flooded_share";}
+
+  function legend(){
+    var b=breaks[metric.key],f=metric.f,h='<b>'+metric.label+'</b>';
+    for(var i=0;i<RAMP.length;i++){
+      var lo=i===0?null:b[i-1],hi=i===b.length?null:b[i];
+      var t=lo==null?"under "+f(hi):hi==null?f(lo)+" or more":f(lo)+" to "+f(hi);
+      h+='<div class="row"><span class="sw" style="background:'+RAMP[i]+'"></span>'+t+'</div>';
+    }
+    h+='<div class="row" style="margin-top:6px"><span class="dot"></span>Dose point (number = rank)</div>';
+    $("legend").innerHTML=h;
+  }
+
+  var markers=[];
+  map.on("load",function(){
+    map.addSource("b",{type:"geojson",data:brgy,promoteId:"adm4_pcode"});
+    map.addLayer({id:"b-fill",type:"fill",source:"b",paint:{"fill-color":fillExpr(),"fill-opacity":0.78}});
+    map.addLayer({id:"b-line",type:"line",source:"b",paint:{"line-color":NAVY,"line-width":0.8,"line-opacity":0.6}});
+    map.addLayer({id:"b-sel",type:"line",source:"b",filter:["==",["get","adm4_pcode"],""],paint:{"line-color":AMBER,"line-width":4}});
+    map.on("click","b-fill",function(e){select(e.features[0].properties.adm4_pcode,false);});
+    map.on("mouseenter","b-fill",function(){map.getCanvas().style.cursor="pointer";});
+    map.on("mouseleave","b-fill",function(){map.getCanvas().style.cursor="";});
+
+    dose.features.forEach(function(f){
+      var el=document.createElement("div");el.className="rank";el.textContent=f.properties.rank;
+      el.title="Rank "+f.properties.rank+": "+f.properties.name;el.setAttribute("aria-label",el.title);
+      var mk=new maplibregl.Marker({element:el}).setLngLat(f.geometry.coordinates)
+        .setPopup(new maplibregl.Popup({offset:14}).setHTML("<b>Rank "+f.properties.rank+"</b><br>"+esc(f.properties.name)+"<br><span class=\"small\">"+esc(f.properties.kind)+"</span>"))
+        .addTo(map);
+      markers.push(mk);
+    });
+
+    if(manifest.files.indexOf("s1_egay_flood.geojson")>=0){
+      getJSON("data/s1_egay_flood.geojson").then(function(s1){
+        var key=pickShareKey(s1);
+        if(!key)return;
+        map.addSource("s1",{type:"geojson",data:s1});
+        map.addLayer({id:"s1-fill",type:"fill",source:"s1",layout:{visibility:"none"},paint:{"fill-color":["interpolate",["linear"],["get",key],0,"#FFF3D6",1,"#8A5A0B"],"fill-opacity":0.7}},"b-line");
+        $("tgS1wrap").hidden=false;
+        $("tgS1").addEventListener("change",function(){map.setLayoutProperty("s1-fill","visibility",this.checked?"visible":"none");});
+      }).catch(function(){});
+    }
+  });
+  function pickShareKey(s1){
+    var p=(s1.features[0]||{}).properties||{};
+    var ks=Object.keys(p).filter(function(k){return /share|flood/i.test(k)&&typeof p[k]==="number";});
+    return ks[0]||null;
+  }
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+
+  $("tgDose").addEventListener("change",function(){var on=this.checked;markers.forEach(function(m){m.getElement().style.display=on?"":"none";});});
+
+  /* metric selector */
+  var seg=$("metricSeg");
+  METRICS.forEach(function(m){
+    var b=document.createElement("button");b.type="button";b.textContent=m.label;b.setAttribute("aria-pressed",m===metric);
+    b.addEventListener("click",function(){
+      metric=m;Array.prototype.forEach.call(seg.children,function(x){x.setAttribute("aria-pressed",x===b);});
+      if(map.getLayer("b-fill"))map.setPaintProperty("b-fill","fill-color",fillExpr());
+      legend();
+    });
+    seg.appendChild(b);
+  });
+  legend();
+
+  /* plan selector */
+  var ranked=dose.features.map(function(f){return f.properties;}).sort(function(a,b){return a.rank-b.rank;});
+  var rankOf={};ranked.forEach(function(p){rankOf[p.id]=p.rank;});
+  var prefix=["3","5","8"].every(function(k){
+    var ids=plans[k].sites.slice().sort().join();
+    return ids===ranked.slice(0,+k).map(function(p){return p.id;}).sort().join();
+  });
+  $("planNote").innerHTML=prefix?"The 3 and 5 point plans are the first sites of the ranking.":
+    "<b>The three plans are separate optimizations, not slices of one list.</b> The 3 and 5 point plans use sites that are not all in the 8 point plan, so the map shows only the 8 point ranking (numbers 1 to 8, in the order the greedy search picked them). The coverage numbers below come from each plan on its own.";
+  var pseg=$("planSeg");
+  ["3","5","8"].forEach(function(k){
+    var b=document.createElement("button");b.type="button";b.textContent=k+" points";b.setAttribute("aria-pressed",k===plan);
+    b.addEventListener("click",function(){plan=k;Array.prototype.forEach.call(pseg.children,function(x){x.setAttribute("aria-pressed",x===b);});showPlan();});
+    pseg.appendChild(b);
+  });
+  function showPlan(){
+    var p=plans[plan];
+    $("planText").innerHTML="<b>"+plan+" points</b> bring "+fmt(p.exposed_newly_covered)+" more exposed residents within a 30 minute walk of care. That puts <b>"+pct(p.share_of_exposed_within_reach_after)+"</b> of exposed residents ("+fmt(p.exposed_within_reach_after)+") within reach.";
+    var present=p.sites.filter(function(id){return rankOf[id]!=null;});
+    $("siteList").innerHTML=prefix?"":"";
+    var s='<li style="list-style:none;margin-left:-20px">'+(present.length===p.sites.length?"All "+plan+" sites appear on the map.":present.length+" of this plan's "+plan+" sites appear on the map as ranks "+(present.map(function(id){return rankOf[id];}).sort(function(a,b){return a-b;}).join(", ")||"none")+". The rest are only in this plan.")+"</li>";
+    $("siteList").innerHTML=s;
+  }
+  showPlan();
+
+  /* table */
+  function renderTable(){
+    var rs=rows.slice().sort(function(a,b){
+      var x=a[sortK],y=b[sortK];
+      if(typeof x==="string")return sortDir*x.localeCompare(y);
+      return sortDir*(x-y);
+    });
+    var tb=document.querySelector("#tbl tbody");
+    tb.innerHTML=rs.map(function(r){
+      return '<tr tabindex="0" data-c="'+r.code+'"'+(r.code===selected?' class="sel"':'')+'><td>'+r.priority+'</td><td>'+esc(r.name)+'</td><td>'+fmt(r.exposed)+'</td><td>'+fmt(r.unreached)+'</td><td>'+fmt(r.capsules)+'</td></tr>';
+    }).join("");
+  }
+  document.querySelector("#tbl tbody").addEventListener("click",function(e){var tr=e.target.closest("tr");if(tr)select(tr.dataset.c,true);});
+  document.querySelector("#tbl tbody").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){var tr=e.target.closest("tr");if(tr){e.preventDefault();select(tr.dataset.c,true);}}});
+  document.querySelectorAll("th button").forEach(function(b){b.addEventListener("click",function(){
+    var k=b.dataset.k;if(sortK===k)sortDir=-sortDir;else{sortK=k;sortDir=(k==="priority"||k==="name")?1:-1;}
+    renderTable();});});
+  renderTable();
+
+  function select(code,fromTable){
+    selected=selected===code&&fromTable?null:code;
+    if(map.getLayer("b-sel"))map.setFilter("b-sel",["==",["get","adm4_pcode"],selected||""]);
+    renderTable();
+    var d=$("detail");
+    if(!selected){d.hidden=true;return;}
+    var r=byCode[selected];
+    d.hidden=false;
+    d.innerHTML='<h3>'+esc(r.name)+' (priority '+r.priority+' of '+rows.length+')</h3><dl>'+
+      '<dt>Residents</dt><dd>'+fmt(r.pop)+'</dd>'+
+      '<dt>Area flooded</dt><dd>'+pct(r.share,0)+'</dd>'+
+      '<dt>Exposed residents</dt><dd>'+fmt(r.exposed)+'</dd>'+
+      '<dt>Out of reach in the flood</dt><dd>'+fmt(r.unreached)+'</dd>'+
+      '<dt>Covered by the 8 dose points</dt><dd>'+fmt(r.covered)+'</dd>'+
+      '<dt>Capsules per flood week</dt><dd>'+fmt(r.capsules)+'</dd></dl>';
+    var sr=document.querySelector('#tbl tr.sel');if(sr&&sr.scrollIntoView)sr.scrollIntoView({block:"nearest"});
+    var f=feats.filter(function(x){return x.properties.adm4_pcode===selected;})[0];
+    var bb=new maplibregl.LngLatBounds();
+    (function walk(c){if(typeof c[0]==="number")bb.extend(c);else c.forEach(walk);})(f.geometry.coordinates);
+    map.fitBounds(bb,{padding:60,maxZoom:14,duration:600});
+  }
+
+  /* alert */
+  var sc={};alertS.scores.forEach(function(s){sc[s.method]=s;});
+  var rm=sc.rain_model,se=sc.seasonal;
+  $("alertLede").textContent="A rainfall alert two weeks ahead, tested on "+alertS.test_years[0]+" to "+alertS.test_years[1]+" after training on "+alertS.train_years[0]+" to "+alertS.train_years[1]+". An outbreak week has more than "+alertS.outbreak_threshold.toFixed(0)+" case. Both methods raise the same number of alerts ("+rm.alerts+").";
+  function ac(l,a,b){return '<div class="card"><div class="l" style="margin:0 0 4px;font-weight:600;color:#142231">'+l+'</div><div class="n" style="color:#1F7A8C">'+a+'</div><div class="l">Rain model</div><div class="n" style="font-size:1rem;color:#4A5A68">'+b+'</div><div class="l">Seasonal average</div></div>';}
+  $("alertCards").innerHTML=
+    ac("Correlation with actual cases",rm.correlation.toFixed(2),se.correlation.toFixed(2))+
+    ac("Outbreak weeks caught",pct(rm.sensitivity,0),pct(se.sensitivity,0))+
+    ac("False alerts",pct(rm.false_alert_rate,1),pct(se.false_alert_rate,1))+
+    ac("Average miss (cases per week)",rm.mae.toFixed(2),se.mae.toFixed(2));
+  drawChart(csv);
+
+  function drawChart(text){
+    var lines=text.trim().split(/\r?\n/);var hd=lines.shift().split(",");
+    var ix={};hd.forEach(function(h,i){ix[h]=i;});
+    var d=lines.map(function(l){var c=l.split(",");return {w:c[ix.week],a:+c[ix.actual],s:+c[ix.seasonal],r:+c[ix.rain_model]};});
+    var W=600,H=230,L=34,R=10,T=10,B=26,n=d.length;
+    var mx=Math.max.apply(null,d.map(function(x){return Math.max(x.a,x.s,x.r);}));
+    mx=Math.ceil(mx);
+    var X=function(i){return L+(W-L-R)*i/(n-1);},Y=function(v){return T+(H-T-B)*(1-v/mx);};
+    var svg="";
+    for(var g=0;g<=mx;g++){svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="#E6E1D4"/><text x="'+(L-5)+'" y="'+(Y(g)+3)+'" text-anchor="end">'+g+'</text>';}
+    svg+='<text x="4" y="8">cases per week</text>';
+    var seen={};d.forEach(function(x,i){var y=x.w.slice(0,4);if(!seen[y]){seen[y]=1;svg+='<line x1="'+X(i)+'" x2="'+X(i)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="#E6E1D4"/><text x="'+(X(i)+3)+'" y="'+(H-8)+'">'+y+'</text>';}});
+    function pl(key,color,w,dash){return '<polyline fill="none" stroke="'+color+'" stroke-width="'+w+'" stroke-linejoin="round"'+(dash?' stroke-dasharray="5 3"':'')+' points="'+d.map(function(x,i){return X(i).toFixed(1)+","+Y(x[key]).toFixed(1);}).join(" ")+'"/>';}
+    svg+=pl("s","#E0A33B",2,true)+pl("r","#1F7A8C",2.2)+pl("a","#142231",1.4);
+    $("chart").innerHTML=svg;
+  }
+}
+})();
+</script>
 </body>
 </html>
