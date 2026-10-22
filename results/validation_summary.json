@@ -1,0 +1,56 @@
+{
+  "n_barangays": 31,
+  "n_events": 13,
+  "n_barangays_reported": 26,
+  "n_candidates_in_family": 18,
+  "n_boot": 5000,
+  "n_perm": 10000,
+  "seed": 20261023,
+  "selection_rule": "Keep the baseline (25yr flooded share, all depth classes) unless an alternative meets BOTH: (1) the paired-bootstrap 95% CI of rho(alternative) - rho(baseline) excludes 0, and (2) its Holm-adjusted permutation p-value is below 0.05, computed over the whole pre-registered family. If several qualify, take the one with the larger Spearman. If none qualify, the baseline stays.",
+  "selection": {
+    "chosen": "noah_25yr_all",
+    "switched": false,
+    "qualified": []
+  },
+  "headline_candidate": "noah_25yr_all",
+  "headline": {
+    "rho": -0.105,
+    "ci_lo": -0.4845,
+    "ci_hi": 0.3036,
+    "p": 0.5724,
+    "p_holm": 1.0,
+    "partial_rho": -0.1572,
+    "partial_lo": -0.4952,
+    "partial_hi": 0.2378,
+    "partial_p": 0.4055,
+    "auc_mean": 0.4375,
+    "auc_lo": 0.3354,
+    "auc_hi": 0.5276,
+    "auc_p": 0.3035,
+    "n_events": 5.0
+  },
+  "news_bias_population_vs_events": {
+    "population": {
+      "rho": 0.3469,
+      "ci_lo": 0.0479,
+      "ci_hi": 0.5713,
+      "p": 0.0582
+    },
+    "log_population": {
+      "rho": 0.3469,
+      "ci_lo": 0.0479,
+      "ci_hi": 0.5713,
+      "p": 0.0582
+    },
+    "pop_density": {
+      "rho": 0.6382,
+      "ci_lo": 0.3458,
+      "ci_hi": 0.828,
+      "p": 0.0003
+    }
+  },
+  "best_by_rho_for_information_only": "noah_5yr_med",
+  "n_candidates_p_holm_below_0.05": 1,
+  "n_candidates_p_raw_below_0.05": 3,
+  "caveat": "31 barangays, 13 events, news-biased sample. Agreement is a rough check, not a skill score."
+}

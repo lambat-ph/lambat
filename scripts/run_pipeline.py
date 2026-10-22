@@ -22,15 +22,11 @@ import geopandas as gpd
 import pandas as pd
 
 from lambat import access, data, exposure, siting
+from lambat import validation as V
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "results"
 REPORTS = ROOT / "data" / "validation" / "dagupan_flood_reports.csv"
-
-
-def spearman(a: pd.Series, b: pd.Series) -> float:
-    a, b = a.align(b, join="inner")
-    return float(a.rank().corr(b.rank()))
 
 
 def main() -> None:
@@ -92,11 +88,15 @@ def main() -> None:
         events = rep.groupby("barangay").event_name.nunique()
         names = tab.set_index("adm4_en")
         events = events.reindex(names.index).fillna(0)
+        ci = V.bootstrap_ci(names.flooded_share, events)
         validation = {
             "barangays_reported": int((events > 0).sum()),
             "events": int(rep.event_name.nunique()),
-            "spearman_events_vs_flooded_share": spearman(names.flooded_share, events),
-            "spearman_events_vs_exposed": spearman(names.exposed, events),
+            "spearman_events_vs_flooded_share": V.spearman(names.flooded_share, events),
+            "spearman_events_vs_flooded_share_ci95": list(ci),
+            "spearman_events_vs_flooded_share_perm_p": V.permutation_p(names.flooded_share, events),
+            "spearman_events_vs_exposed": V.spearman(names.exposed, events),
+            "see": "scripts/run_validation.py and docs/validation.md for all candidates, CIs and the population control",
             "note": "News coverage is biased toward downtown and river barangays; treat as a rough check.",
         }
 
@@ -147,7 +147,8 @@ def main() -> None:
               f"{p['share_of_exposed_within_reach_after']:.1%} of exposed within reach")
     if validation:
         print(f"Validation vs {validation['events']} reported events: Spearman(flooded share, events) = "
-              f"{validation['spearman_events_vs_flooded_share']:.2f}")
+              f"{validation['spearman_events_vs_flooded_share']:.2f} "
+              f"(95% CI {ci[0]:.2f} to {ci[1]:.2f}); all candidates: scripts/run_validation.py")
     print("Top 5 priority barangays:", ", ".join(tab.adm4_en.head(5)))
     print(f"Done in {summary['runtime_s']} s; outputs in {OUT}")
 

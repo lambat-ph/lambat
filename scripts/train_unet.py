@@ -120,8 +120,11 @@ def main():
     u_preds = predict(test)
     o_preds = []
     for x, _ in test:
+        if not np.isfinite(x[0]).any():  # all no-data chip: nothing to threshold
+            o_preds.append(np.zeros(x[0].shape, dtype=bool))
+            continue
         thr = flood.otsu_threshold(x[0])
-        o_preds.append(np.nan_to_num(x[0], nan=0.0) < thr)
+        o_preds.append(np.isfinite(x[0]) & (x[0] < thr))
     for name, preds in (("U-Net", u_preds), ("Otsu (VV)", o_preds)):
         per = np.array([flood.iou(p, t) for p, t in zip(preds, truths)])
         per = per[~np.isnan(per)]

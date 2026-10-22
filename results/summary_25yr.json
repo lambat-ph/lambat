@@ -54,9 +54,15 @@
   "validation": {
     "barangays_reported": 26,
     "events": 13,
-    "spearman_events_vs_flooded_share": -0.10496801612099324,
-    "spearman_events_vs_exposed": 0.2608794138427817,
+    "spearman_events_vs_flooded_share": -0.10496801612099328,
+    "spearman_events_vs_flooded_share_ci95": [
+      -0.47873621877175687,
+      0.28652842235009995
+    ],
+    "spearman_events_vs_flooded_share_perm_p": 0.585941405859414,
+    "spearman_events_vs_exposed": 0.26087941384278174,
+    "see": "scripts/run_validation.py and docs/validation.md for all candidates, CIs and the population control",
     "note": "News coverage is biased toward downtown and river barangays; treat as a rough check."
   },
-  "runtime_s": 4.2
+  "runtime_s": 2.7
 }

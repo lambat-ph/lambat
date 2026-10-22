@@ -41,16 +41,22 @@ All three get the same number of alerts. That is an alert, not a forecast, and w
 - **71,868** of 208,322 residents live in flood-hazard areas: **143,737 capsules** for each week the water stays.
 - **36** clinics and hospitals on OpenStreetMap. Within a 30-minute walk of one: 62,625 exposed residents on a dry day, 60,140 in the flood. The access gap is **2,485** people, smaller than we expected, and we say so.
 - Most exposed residents who cannot reach care cannot reach it on dry days either. **3 temporary dose points** cover 6,030 of them, raising coverage to 92%; **8** reach 97%.
-- Checked against 13 flood events named in the news, the barangay ranking barely agrees (Spearman -0.10). Coverage favours downtown and river barangays, and NOAH maps rain floods, not the tidal floods Dagupan reports most. That is the next thing to fix.
+- Checked against 13 flood events named in the news, the ranking shows no detectable agreement (Spearman -0.10, 95% CI -0.48 to 0.30, 31 barangays). We tested 18 alternatives fixed in advance; none beats it after correcting for multiple comparisons. The reports mostly follow where people live (density correlation 0.64), so they are a weak ruler. We read this as "cannot confirm the ranking yet", not as proof it is wrong ([docs/validation.md](docs/validation.md)).
 
 Barangay table, GeoJSON maps and a JSON summary land in `results/`.
+
+## Seeing the water from orbit
+
+Clouds hide floods from ordinary satellites; radar sees through them, and still water shows up dark. We trained a U-Net (resnet34 encoder, VV and VH bands in, water mask out) on the hand-labelled [Sen1Floods11](https://github.com/cloudtostreet/Sen1Floods11) chips. On 90 held-out chips from floods in other countries, it scores a pooled IoU of **0.64** against **0.21** for an Otsu threshold, and beats the threshold on 67 of the 82 chips that contain water (median per-chip IoU 0.33 vs 0.05). That is a global test, not a Dagupan one ([docs/flood.md](docs/flood.md)).
 
 ## Status
 
 | Part | State |
 |---|---|
 | Data, alert, exposure, access, siting, end-to-end script | Working, tested, in CI |
-| Flood mapping (threshold vs U-Net on Sen1Floods11) | Code and tests done; final training run pending |
+| Flood mapping (threshold vs U-Net on Sen1Floods11) | Trained and scored (pooled IoU 0.64 vs 0.21) |
+| Validation against news reports | Done, with confidence intervals; no detectable agreement |
+| Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Code tested; running on the downloaded scenes |
 | Dashboard | Placeholder; deploys to GitHub Pages |
 
 ## Run it
