@@ -3,20 +3,20 @@ import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MI
 import { fmt, pct, esc, reducedMotion, useCss, skel, moreBelow } from "../format.js";
 
 const METRICS = [
-  { key: "exposed", seg: "Exposed", prop: "exposed", short: "Residents in the floodwater", desc: "People who live where the flood reaches.",
-    legend: "Residents in the floodwater, per barangay", unit: "residents", lo: "fewer", hi: "more", f: fmt },
-  { key: "unreached", seg: "No clinic", prop: "exposed_unreached_flood", short: "Residents who cannot reach a clinic", desc: `Exposed people more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`,
-    legend: `Residents who cannot walk to a clinic in ${WALK_MIN} minutes, per barangay`, unit: "residents", lo: "fewer", hi: "more", f: fmt },
-  { key: "share", seg: "Area flooded", prop: "flooded_share", short: "Area flooded", desc: "How much of each barangay's land is under water.",
-    legend: "Share of each barangay's area under water", unit: "of the area", lo: "less", hi: "more", f: (v) => pct(v, 0) },
+  { key: "exposed", seg: "Exposed", prop: "exposed", short: "Exposed residents", desc: "People who live where a 25-year flood reaches.",
+    legend: "Exposed residents, per barangay", unit: "residents", lo: "fewer", hi: "more", f: fmt },
+  { key: "unreached", seg: "Cut off", prop: "exposed_unreached_flood", short: "Residents cut off from care", desc: `Exposed residents more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`,
+    legend: `Residents cut off from care, per barangay`, unit: "residents", lo: "fewer", hi: "more", f: fmt },
+  { key: "share", seg: "Area flooded", prop: "flooded_share", short: "Area flooded", desc: "How much of each barangay's land a 25-year flood covers.",
+    legend: "Share of each barangay's area flooded", unit: "of the area", lo: "less", hi: "more", f: (v) => pct(v, 0) },
 ];
 const KINDS = {
   school: "School", townhall: "Barangay hall", town_hall: "Barangay hall", community_centre: "Community centre", community_center: "Community centre",
-  hospital: "Hospital", clinic: "Clinic", doctors: "Clinic", pharmacy: "Pharmacy", place_of_worship: "Place of worship", church: "Church",
+  hospital: "Hospital", clinic: "Health centre", doctors: "Health centre", health_post: "Health centre", healthcare: "Health centre", rural_health_unit: "Health centre", pharmacy: "Pharmacy", place_of_worship: "Place of worship", church: "Church",
   fire_station: "Fire station", police: "Police station", library: "Library", marketplace: "Market", sports_centre: "Sports centre",
   social_facility: "Social facility", kindergarten: "Kindergarten", college: "College", university: "University", government: "Government office",
 };
-const kindLabel = (k) => { if (!k) return "Site"; if (KINDS[k]) return KINDS[k]; const t = String(k).replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
+const kindLabel = (k) => { if (!k) return "Dose point"; if (KINDS[k]) return KINDS[k]; const t = String(k).replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
 const SEEN_KEY = "lambat.tourSeen";
 const PLANS = ["3", "5", "8"];
 const YEARS_DEFAULT = 25;
@@ -25,23 +25,29 @@ const CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill=
 const TEMPLATE = `
 <div class="mapwrap" id="mapwrap">
   <aside class="col closed" id="col" aria-label="The answer and the ranked sites">
-    <button class="handle" id="handle" type="button" aria-expanded="false" aria-controls="colMore" aria-label="Show more of the panel"></button>
+    <button class="handle" id="handle" type="button" aria-expanded="false" aria-controls="colMore"><span class="handle-t" id="handleT">Show the plan</span></button>
     <header class="col-top" id="colTop" hidden>
+      <button class="col-collapse" id="colCollapse" type="button" aria-expanded="true" aria-controls="col" aria-label="Hide the panel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
       <p class="eyebrow" id="eyebrow"></p>
       <h1 class="q" id="stripQ"></h1>
-      <div class="a" id="answer" role="status" aria-live="polite"></div>
+      <div class="a" id="answer"></div>
       <button class="linkbtn" id="tourBtn" type="button" hidden>New here? Take the tour</button>
+      <p class="src" id="srcNote">Modelled from the UP NOAH 25-year flood map, WorldPop and OpenStreetMap. Not checked on the ground.</p>
     </header>
     <div class="col-more" id="colMore">
       <section class="sec sec-sites" id="sites" aria-labelledby="sitesH" hidden>
         <div class="plan-h">
-          <h2 id="sitesH">Where to set up first</h2>
-          <div class="plan-pick" id="planPick"><div class="pseg" id="planSeg" role="radiogroup" aria-label="Number of sites to open"></div><span class="plan-u" aria-hidden="true">sites</span></div>
+          <h2 id="sitesH">Where to open first</h2>
+          <div class="plan-pick" id="planPick"><div class="pseg" id="planSeg" role="radiogroup" aria-label="Plan size: how many dose points to open"></div><span class="plan-u" aria-hidden="true">dose points</span></div>
         </div>
         <p class="cov" id="planCov"></p>
         <ol class="sitelist" id="siteList"></ol>
         <p class="map-note" id="siteNote" hidden></p>
-        <p class="what" id="what"><b>What is a dose point?</b> A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline capsules for a few weeks after the flood.</p>
+        <p class="map-note order" id="orderNote">Dose point order (1 opens first) covers the most cut-off residents first. Barangay priority ranks barangays by cut-off residents alone, so the two orders can differ. This ranking has not yet been confirmed against flood reports. <a href="#/method">See Method.</a></p>
+        <div class="acts" id="acts"><button class="act" id="copyLink" type="button">Copy link</button><button class="act" id="dlPlan" type="button">Download plan (CSV)</button><span class="sr-only" id="actLive" role="status" aria-live="polite"></span></div>
+        <p class="what" id="what"><b>What is a dose point?</b> A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood.</p>
       </section>
       <section class="sec sec-cities" id="cities" aria-labelledby="citiesH" hidden>
         <h2 id="citiesH">Pick a city</h2>
@@ -50,21 +56,27 @@ const TEMPLATE = `
         <ul class="citylist" id="cityList"></ul>
       </section>
       <section class="sec sec-legend" id="legend" aria-label="Legend"></section>
+      <p class="src src-m" id="srcNoteM">Modelled from the UP NOAH 25-year flood map, WorldPop and OpenStreetMap. Not checked on the ground.</p>
     </div>
   </aside>
 
   <div class="mapside">
     <div id="map" role="region" aria-label="Map of flood exposure by barangay, with numbered dose points. The list in the side panel and the city dashboard give the same information as text."></div>
     <div class="loading" id="loading" role="status" hidden></div>
+    <div class="island" id="island" hidden><div class="isl" id="isl" aria-hidden="true"></div></div>
+    <p class="sr-only" id="islLive" role="status" aria-live="polite"></p>
+    <button class="show-panel" id="showPanel" type="button" aria-label="Show the panel" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span>Show panel</span>
+    </button>
     <div class="loader" id="loader" role="status" aria-live="polite">
       <div class="loader-box">
         <img class="loader-logo" src="assets/favicon.svg" alt="" width="72" height="72">
         <h2 class="loader-title">Loading the flood map</h2>
-        <p class="loader-step" id="loaderStep">Getting the basemap.</p>
+        <p class="loader-step" id="loaderStep"></p>
         <div class="loader-bar" id="loaderBar" aria-hidden="true"></div>
       </div>
     </div>
-    <button class="opt-btn" id="optBtn" type="button" aria-expanded="false" aria-controls="opts" hidden>
+    <button class="opt-btn" id="optBtn" type="button" aria-expanded="false" aria-controls="opts" aria-label="More options" hidden>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
       <span>More options</span>
     </button>
@@ -96,13 +108,16 @@ const TEMPLATE = `
 
 const POP = typeof HTMLElement !== "undefined" && typeof HTMLElement.prototype.showPopover === "function";
 const SHEET_Q = "(max-width:599px)";
+// Status island state (one island per page; reset in render()).
+const I = { key: null, kind: null, stage: null, chip: null, chipT: 0, cur: null, hover: null, rolled: null, live: "" };
 
-let map, tip, host, S, mobile, ro, ro2, onKey, tipEl, onDown, onTipKey, onOptKey, onTourResize, onColScroll;
+let map, host, S, mobile, ro, ro2, ro3, onKey, tipEl, onDown, onTipKey, onOptKey, onTourResize, onColScroll, onTipResize;
 let moreOff = [], moreDrawer = null;
 let loaderOn = false, loaderT, loaderFade;
 
 /* ---------- loading screen ---------- */
-const loaderStep = (t) => { const e = loaderOn && host.querySelector("#loaderStep"); if (e) e.textContent = t; };
+// The step text lives in the status island now; the overlay only shows the logo and a calm bar.
+const loaderStep = (n, t) => stage(n, t);
 function hideLoader() {
   if (!loaderOn) return;
   loaderOn = false; clearTimeout(loaderT);
@@ -118,6 +133,7 @@ function loaderStuck(html) {
   clearTimeout(loaderT);
   e.innerHTML = html || 'This is taking longer than usual. Check your connection, then <button class="btn sm loader-retry" type="button" id="loaderRetry">Try again</button>';
   const bar = host.querySelector("#loaderBar"); if (bar) bar.hidden = true;
+  stage(I.stage ? I.stage.n : 1, "Taking longer than usual");
   const b = host.querySelector("#loaderRetry"); if (b) b.addEventListener("click", () => location.reload());
 }
 const $ = (s) => host.querySelector(s);
@@ -130,7 +146,9 @@ export async function render(el, params) {
   useCss("map");
   host = el;
   mobile = window.matchMedia(SHEET_Q);
-  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "3", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], sites: [], active: null, hover: null, open: null, rollKey: null, peek: 320, cityMarkers: [], tour: null, params, dead: false };
+  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "3", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], sites: [], active: null, hover: null, open: null, rollKey: null, peek: 320, cityMarkers: [], tour: null, params, dead: false, ready: false, colHidden: false };
+  clearTimeout(I.chipT);
+  Object.assign(I, { key: null, kind: null, stage: null, chip: null, cur: null, hover: null, rolled: null, live: "" });
   el.innerHTML = TEMPLATE;
   tipEl = document.createElement("div");
   tipEl.id = "tipPop"; tipEl.className = "tipbox"; tipEl.setAttribute("role", "note");
@@ -138,6 +156,7 @@ export async function render(el, params) {
   $("#mapwrap").appendChild(tipEl);
   loaderOn = true; clearTimeout(loaderT); clearTimeout(loaderFade);
   loaderT = setTimeout(() => loaderStuck(), 45000);
+  stage(1, "Getting the basemap");
   try { S.cities = await getCities(); } catch { S.cities = []; }
   if (!S.cities.length) { loaderStuck("No city data found. Reload the page to try again."); return; }
   wire();
@@ -151,6 +170,10 @@ export function destroy() {
   if (host) { const l = host.querySelector("#loader"); if (l) l.remove(); }
   if (ro) { ro.disconnect(); ro = null; }
   if (ro2) { ro2.disconnect(); ro2 = null; }
+  if (ro3) { ro3.disconnect(); ro3 = null; }
+  if (I.ro) { I.ro.disconnect(); I.ro = null; }
+  clearTimeout(I.chipT); if (S) { clearTimeout(S.refitT); clearTimeout(S.readyT); }
+  window.removeEventListener("resize", onTipResize);
   if (mobile) mobile.removeEventListener("change", syncSheet);
   document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onTipKey); document.removeEventListener("keydown", onOptKey);
   moreOff.forEach((f) => f()); moreOff = [];
@@ -196,7 +219,6 @@ async function boot() {
   }
   map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: true, showCompass: true }), "bottom-right");
-  tip = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12, className: "tip", maxWidth: "260px" });
   window.__lambatMap = map;
   // The container can still be settling when the map starts; keep the canvas in step with it.
   ro = new ResizeObserver(() => { if (map) map.resize(); });
@@ -205,6 +227,9 @@ async function boot() {
   ro2 = new ResizeObserver(setPeek);
   ro2.observe($("#colTop"));
   setPeek();
+  // The island measures its free area; refit when that area changes.
+  ro3 = new ResizeObserver(() => islRefit());
+  ro3.observe($("#island"));
   map.on("error", (e) => console.warn("map error:", e.error && e.error.message));
   map.on("load", onLoad);
   map.once("idle", () => { const l = $("#loading"); if (l) l.hidden = true; });
@@ -234,8 +259,9 @@ function quietBasemap() {
 }
 
 async function onLoad() {
-  loaderStep("Basemap ready. Loading barangay outlines.");
+  loaderStep(2, "Loading barangay outlines");
   quietBasemap();
+  addHatch();
   const sym = map.getStyle().layers.find((l) => l.type === "symbol" && (!l.layout || l.layout.visibility !== "none"));
   S.before = sym ? sym.id : undefined;
   map.addSource("dem", { type: "raster-dem", tiles: [TERRARIUM], encoding: "terrarium", tileSize: 256, maxzoom: 15, attribution: "Terrain: Mapzen, AWS Open Data" });
@@ -249,8 +275,8 @@ async function onLoad() {
   if (q.get("view") === "3d") S.view = "3d";
   if (code === "all") {
     showNational(true);
-    loaderStep("Placing the cities.");
-    map.once("idle", hideLoader);
+    loaderStep(3, "Placing the cities");
+    mapReady();
   } else if (code && S.cities.some((c) => c.code === code)) {
     await selectCity(code, true);
     maybeTour();
@@ -274,7 +300,7 @@ function buildNational() {
   S.cities.forEach((c) => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "city-pin";
-    b.innerHTML = `<b>${esc(c.name)}</b><span>${fmt(c.exposed)} exposed</span>`;
+    b.innerHTML = `<b>${esc(c.name)}</b><span>${fmt(c.exposed)} exposed residents</span>`;
     b.setAttribute("aria-label", `${c.name}, ${fmt(c.exposed)} residents exposed. Open this city.`);
     b.addEventListener("click", () => selectCity(c.code));
     b.style.display = "none";
@@ -283,15 +309,29 @@ function buildNational() {
 }
 // The side column no longer covers the map on desktop, so the padding is small. On phones the sheet covers the bottom.
 function pad() {
-  if (mobile.matches) return { top: 64, left: 24, right: 24, bottom: S.peek + 24 };
-  const col = document.getElementById("col");
-  return { top: 72, left: (col ? col.offsetWidth + 16 : 0) + 40, right: 40, bottom: 48 };
+  const col = document.getElementById("col"), ms = document.querySelector(".mapside");
+  if (mobile.matches) {
+    // The visible part of the map is what the sheet leaves above it, at whatever height the sheet has now.
+    const H = (ms && ms.clientHeight) || window.innerHeight;
+    const sheet = col && !col.classList.contains("closed") ? col.offsetHeight : S.peek;
+    const bottom = sheet + 16;
+    return { top: Math.min(72, Math.max(16, H - bottom - 88)), left: 24, right: 24, bottom };
+  }
+  return { top: 72, left: (col && !S.colHidden ? col.offsetWidth + 16 : 0) + 40, right: 40, bottom: 48 };
+}
+// The map is ready (first idle): hide the loader and let the island show the answer.
+function mapReady() {
+  clearTimeout(S.readyT);
+  const done = () => { if (!S || S.dead) return; clearTimeout(S.readyT); hideLoader(); S.ready = true; islRender(); };
+  map.once("idle", done);
+  S.readyT = setTimeout(done, 15000);
 }
 function showNational(first) {
   endTour(false);
   S.city = null; S.data = null; S.active = null; S.hover = null; clearSel();
   setCityLayers(false);
   if (map.getLayer("b-hov")) { map.setLayoutProperty("b-hov", "visibility", "none"); S.hovB = null; }
+  I.hover = null; if (!first) S.ready = true;
   map.setTerrain(null);
   map.setLayoutProperty("hill", "visibility", "none");
   map.setLayoutProperty("nat-dot", "visibility", "visible");
@@ -327,20 +367,31 @@ function breaksFor(m, feats) {
   return { breaks: out, min: v[0], max: v[v.length - 1] || 1 };
 }
 function colorExpr(withSel) {
-  const base = ["step", ["coalesce", ["get", S.metric.prop], 0], RAMP[0]];
-  S.breaks.forEach((b, i) => base.push(b, RAMP[i + 1]));
+  const stepped = ["step", ["coalesce", ["get", S.metric.prop], 0], RAMP[0]];
+  S.breaks.forEach((b, i) => stepped.push(b, RAMP[i + 1]));
+  // zero has its own class, so "none" is never confused with the palest band or the basemap
+  const base = S.hasZero ? ["case", ["<=", valExpr(), 0], ZERO, stepped] : stepped;
   if (!withSel) return base;
   // 3D: neighbours in the palest band alternate between two near-identical tints so their edges still show without lines
   const first = S.breaks.length ? S.breaks[0] : Infinity;
-  return ["case", ["boolean", ["feature-state", "sel"], false], COLORS.ink, ["all", ["<", valExpr(), first], ["==", ["%", codeNum, 2], 1]], TOP_ALT, base];
+  return ["case", ["boolean", ["feature-state", "sel"], false], COLORS.ink, ["all", [">", valExpr(), 0], ["<", valExpr(), first], ["==", ["%", codeNum, 2], 1]], TOP_ALT, base];
 }
 const codeNum = ["to-number", ["slice", ["get", "adm4_pcode"], 8], 0];
-const LOW = 0.15, TOP_ALT = "#DAE1EE";
+const LOW = 0.15, TOP_ALT = "#DAE1EE", ZERO = "#F7F8FB";
+// Diagonal hatch for barangays at exactly zero, drawn over the 2D fill.
+function addHatch() {
+  if (map.hasImage("zero-hatch")) return;
+  const n = 16, d = new Uint8ClampedArray(n * n * 4);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if ((x - y + n) % n < 3) { const i = (y * n + x) * 4; d[i] = 120; d[i + 1] = 128; d[i + 2] = 152; d[i + 3] = 215; }
+  }
+  map.addImage("zero-hatch", { width: n, height: n, data: d }, { pixelRatio: 2 });
+}
 const valExpr = () => ["coalesce", ["get", S.metric.prop], 0];
 // a very low plinth under every barangay, stepped by code (3 levels), so neighbours with the same value still show an edge in 3D
 const heightExpr = () => ["+", ["*", S.scaleH * 0.003, ["+", 1, ["%", codeNum, 3]]], ["*", ["coalesce", ["get", S.metric.prop], 0], S.scaleH / S.max]];
 function setCityLayers(on) {
-  ["b-ext", "b-flat", "b-case", "b-line", "b-sel", "b-case3", "b-line3"].forEach((id) => { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); });
+  ["b-ext", "b-flat", "b-zero", "b-case", "b-line", "b-sel-c", "b-sel", "b-case3", "b-line3"].forEach((id) => { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); });
   if (on) applyView();
 }
 function applyView() {
@@ -349,7 +400,9 @@ function applyView() {
   map.setLayoutProperty("b-flat", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-case", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-line", "visibility", d3 ? "none" : "visible");
+  if (map.getLayer("b-zero")) map.setLayoutProperty("b-zero", "visibility", d3 || !S.hasZero ? "none" : "visible");
   map.setLayoutProperty("b-sel", "visibility", d3 ? "none" : "visible");
+  map.setLayoutProperty("b-sel-c", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-case3", "visibility", d3 ? "visible" : "none");
   map.setLayoutProperty("b-line3", "visibility", d3 ? "visible" : "none");
   map.setLayoutProperty("b-hov", "visibility", "visible");
@@ -358,6 +411,13 @@ function applyView() {
 function paintMetric() {
   const b = breaksFor(S.metric, S.data.barangays.features);
   S.breaks = b.breaks; S.max = b.max || 1; S.min = b.min;
+  const vals = S.data.barangays.features.map((f) => +f.properties[S.metric.prop] || 0);
+  S.hasZero = vals.some((v) => v <= 0);
+  S.minPos = Math.min(...vals.filter((v) => v > 0), S.max);
+  if (map.getLayer("b-zero")) {
+    map.setLayoutProperty("b-zero", "visibility", S.view === "3d" || !S.hasZero ? "none" : "visible");
+    map.setFilter("b-zero", ["<=", valExpr(), 0]);
+  }
   map.setPaintProperty("b-ext", "fill-extrusion-color", colorExpr(true));
   map.setPaintProperty("b-ext", "fill-extrusion-height", heightExpr());
   map.setPaintProperty("b-flat", "fill-color", colorExpr(false));
@@ -369,7 +429,7 @@ function paintMetric() {
 function setMetric(m) {
   S.metric = m;
   syncMeasure();
-  paintMetric(); syncUrl();
+  paintMetric(); syncUrl(); islRender();
 }
 // "Colour the map by": a sliding thumb under the chosen measure, and its one-line description.
 function syncMeasure() {
@@ -383,13 +443,16 @@ function ensureCityLayers() {
   map.addSource("brgy", { type: "geojson", data: S.data.barangays, promoteId: "adm4_pcode" });
   map.addLayer({ id: "b-ext", type: "fill-extrusion", source: "brgy", layout: { visibility: "none" }, paint: { "fill-extrusion-color": RAMP[0], "fill-extrusion-height": 0, "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.94 } });
   map.addLayer({ id: "b-flat", type: "fill", source: "brgy", layout: { visibility: "none" }, paint: { "fill-color": RAMP[0], "fill-opacity": 0.88 } }, S.before);
+  map.addLayer({ id: "b-zero", type: "fill", source: "brgy", layout: { visibility: "none" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "fill-pattern": "zero-hatch" } }, S.before);
   // dark casing under a white line: the border reads on both the palest and the darkest fills
   map.addLayer({ id: "b-case", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": COLORS.ink, "line-opacity": 0.6, "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 4] } }, S.before);
   map.addLayer({ id: "b-line", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 1.75] } }, S.before);
   // 3D: the same casing and white line drawn above the columns for low barangays (filter set in paintMetric)
   map.addLayer({ id: "b-case3", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": COLORS.ink, "line-opacity": 0.6, "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 4] } });
   map.addLayer({ id: "b-line3", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 1.75] } });
-  map.addLayer({ id: "b-sel", type: "line", source: "brgy", layout: { visibility: "none" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "line-color": COLORS.ink, "line-width": 3 } }, S.before);
+  // selected shape: white halo under a dark outline, so it stands out on every fill
+  map.addLayer({ id: "b-sel-c", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "line-color": "#FFFFFF", "line-width": 8 } }, S.before);
+  map.addLayer({ id: "b-sel", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "line-color": COLORS.ink, "line-width": 3.5 } }, S.before);
   // Intro highlight: a dark casing under a gold line, visible in both 2D and 3D.
   const none = ["==", ["get", "adm4_pcode"], ""];
   map.addLayer({ id: "b-tour-c", type: "line", source: "brgy", filter: none, paint: { "line-color": COLORS.ink, "line-width": 7 } }, S.before);
@@ -408,12 +471,9 @@ function ensureCityLayers() {
     const code = pick(e);
     map.getCanvas().style.cursor = code ? "pointer" : "";
     if (S.hovB !== code) { S.hovB = code; map.setFilter("b-hov", ["==", ["get", "adm4_pcode"], code || ""]); }
-    if (!code) { tip.remove(); return; }
-    const r = S.data.rows.find((x) => x.id === code);
-    const v = S.metric.key === "share" ? r.share : S.metric.key === "unreached" ? r.unreached : r.exposed;
-    tip.setLngLat(e.lngLat).setHTML(`${esc(r.name)}<span>${esc(S.metric.short)}: ${S.metric.f(v)}</span>`).addTo(map);
+    if (I.hover !== code) { I.hover = code; islRender(); }
   });
-  map.getCanvas().addEventListener("mouseleave", () => { tip.remove(); S.hovB = null; map.setFilter("b-hov", ["==", ["get", "adm4_pcode"], ""]); });
+  map.getCanvas().addEventListener("mouseleave", () => { S.hovB = null; map.setFilter("b-hov", ["==", ["get", "adm4_pcode"], ""]); if (I.hover) { I.hover = null; islRender(); } });
 }
 
 async function probeTerrain(c) {
@@ -438,18 +498,20 @@ async function selectCity(code, first) {
   const c = S.cities.find((x) => x.code === code);
   if (!c) return;
   endTour(false);
+  S.ready = false; I.hover = null; clearTimeout(S.readyT);
+  stage(loaderOn ? 2 : 1, loaderOn ? "Loading barangay outlines" : "Loading " + c.name);
   const ld = $("#loading"); if (!loaderOn) { ld.hidden = false; ld.textContent = "Loading " + c.name; }
   let data;
   try { data = await getCity(code); } catch (e) { data = { error: e.message }; }
   if (S.dead || !map) return;
   ld.hidden = true;
   if (!data || data.error || !data.barangays) {
-    hideLoader(); unbusy(); $("#sites").hidden = true;
+    hideLoader(); unbusy(); $("#sites").hidden = true; S.ready = true; islRender();
     $("#answer").removeAttribute("aria-busy"); $("#answer").textContent = "The numbers could not be loaded.";
     const n = $("#info"); n.hidden = false; n.innerHTML = `<p class="notice">Could not load ${esc(c.name)}: ${esc((data && data.error) || "no data")}</p>`;
     return;
   }
-  loaderStep("Barangays ready. Placing dose sites.");
+  loaderStep(3, "Placing dose points");
   S.data = data; S.city = code; S.active = null; S.hover = null; clearSel();
   const hasUnreached = data.rows.some((r) => r.unreached != null);
   const ui = $('#measures input[value="unreached"]');
@@ -479,8 +541,8 @@ async function selectCity(code, first) {
   map.fitBounds(bb, { padding: pad(), maxZoom: 14.5, pitch: d3 ? 50 : 0, bearing: d3 ? -12 : 0, duration: first ? 0 : dur(2200) });
   highlightList(code);
   syncUrl();
-  loaderStep("Almost ready. Drawing the map.");
-  map.once("idle", hideLoader);
+  loaderStep(4, "Drawing the map");
+  mapReady();
   await probeTerrain(c);
   if (S.dead || !map) return;
   $("#lyRelief").disabled = !S.reliefOK;
@@ -509,37 +571,58 @@ function loadS1() {
 function clearSel() {
   if (S.sel && map && map.getSource("brgy")) map.setFeatureState({ source: "brgy", id: S.sel }, { sel: false });
   S.sel = null;
-  if (map && map.getLayer("b-sel")) map.setFilter("b-sel", ["==", ["get", "adm4_pcode"], ""]);
-  $("#info").hidden = true;
+  if (map && map.getLayer("b-sel")) { const none = ["==", ["get", "adm4_pcode"], ""]; map.setFilter("b-sel", none); map.setFilter("b-sel-c", none); }
+  const inf = $("#info"); if (inf) inf.hidden = true;
   const bp = $("#brgyPick"); if (bp) bp.value = "";
+  islRender();
 }
 function selectBrgy(code, fly) {
   if (S.sel) map.setFeatureState({ source: "brgy", id: S.sel }, { sel: false });
   S.sel = code;
   map.setFeatureState({ source: "brgy", id: code }, { sel: true });
   map.setFilter("b-sel", ["==", ["get", "adm4_pcode"], code]);
+  map.setFilter("b-sel-c", ["==", ["get", "adm4_pcode"], code]);
   $("#brgyPick").value = code;
   const r = S.data.rows.find((x) => x.id === code);
   const info = $("#info");
   info.hidden = false;
   const said = [];
-  if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents in ${esc(r.name)} live where the flood reaches.`);
-  else said.push(`${fmt(r.exposed)} residents in ${esc(r.name)} live where the flood reaches.`);
-  if (r.unreached != null && r.exposed) said.push(`${fmt(r.unreached)} of them cannot walk to a clinic within ${WALK_MIN} minutes while the flood is on.`);
-  if (r.share != null) said.push(`${pct(r.share, 0)} of the barangay's area is under water.`);
+  if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents in ${esc(r.name)} live where a ${years()}-year flood reaches.`);
+  else said.push(`${fmt(r.exposed)} residents in ${esc(r.name)} live where a ${years()}-year flood reaches.`);
+  if (r.unreached != null && r.exposed) said.push(`${fmt(r.unreached)} of them are cut off from care: more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`);
+  if (r.share != null) said.push(`${pct(r.share, 0)} of the barangay's area is flooded.`);
   info.innerHTML = `<button class="close" type="button" aria-label="Close details">&times;</button>
     <h2>${esc(r.name)}</h2><p class="said">${said.join(" ")}</p>
-    <p class="muted xs" style="margin:0">Dose point priority ${r.priority} of ${S.data.rows.length} (1 is first).</p>
+    <p class="muted xs" style="margin:0">Barangay priority ${r.priority} of ${S.data.rows.length} (1 is first).</p>
     <dl><dt>Residents</dt><dd>${fmt(r.pop)}</dd>
-    <dt>Exposed</dt><dd>${fmt(r.exposed)}${r.pop ? " (" + pct(r.exposed / r.pop, 0) + ")" : ""}</dd>
-    ${r.unreached != null ? `<dt>Cannot reach a clinic in the flood</dt><dd>${fmt(r.unreached)}</dd>` : ""}
+    <dt>Exposed residents</dt><dd>${fmt(r.exposed)}${r.pop ? " (" + pct(r.exposed / r.pop, 0) + ")" : ""}</dd>
+    ${r.unreached != null ? `<dt>Cut off from care</dt><dd>${fmt(r.unreached)}</dd>` : ""}
     <dt>Area flooded</dt><dd>${pct(r.share, 0)}</dd>
     <dt>Capsules per flood week</dt><dd>${fmt(r.capsules)}</dd></dl>
     <a href="${cityHref(S.city, "barangays")}">Open city dashboard</a>`;
   info.querySelector(".close").addEventListener("click", clearSel);
-  if (fly) {
-    const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === code);
-    map.fitBounds(boundsOf(f), { padding: pad(), maxZoom: S.view === "3d" ? 13 : 15, duration: dur(900), pitch: S.view === "3d" ? 45 : 0 });
+  const feat = S.data.barangays.features.find((x) => x.properties.adm4_pcode === code);
+  if (fly) map.fitBounds(boundsOf(feat), { padding: pad(), maxZoom: S.view === "3d" ? 13 : 15, duration: dur(900), pitch: S.view === "3d" ? 45 : 0 });
+  placeInfo(feat);
+  if (fly && !reducedMotion()) map.once("moveend", () => { if (S.sel === code) placeInfo(feat); });
+  islRender();
+}
+// Keep the details card away from the selected shape: it goes on the side of the free map area the shape is not on.
+function placeInfo(feat) {
+  const info = $("#info"), ms = $(".mapside");
+  if (!info || info.hidden || !feat || !map) return;
+  const mw = ms.clientWidth, p = map.project(boundsOf(feat).getCenter());
+  if (!mobile.matches) {
+    const col = $("#col"), left = col && !S.colHidden ? col.offsetWidth + 16 : 0;
+    $("#colRight").classList.toggle("on-left", p.x > left + (mw - left) / 2);
+    return;
+  }
+  // phones: the card sits at the top; slide the map so the shape is below it
+  const need = info.getBoundingClientRect().bottom - ms.getBoundingClientRect().top + 24 - p.y;
+  const room = ms.clientHeight - S.peek - 24 - p.y;
+  if (need > 0 && need < room + 40 && !S.tour) {
+    const c = map.project(map.getCenter());
+    map.easeTo({ center: map.unproject([c.x, c.y - need]), duration: dur(350) });
   }
 }
 function boundsOf(f) {
@@ -612,7 +695,7 @@ function drawDose() {
     b.addEventListener("mouseenter", () => setHover(s.id));
     b.addEventListener("mouseleave", () => setHover(null));
     const mk = new maplibregl.Marker({ element: b }).setLngLat(s.coords)
-      .setPopup(new maplibregl.Popup({ offset: 20, closeButton: false, className: "tip" }).setHTML(`${esc(s.name)}<span>${esc(s.sub)}</span>`));
+      .setPopup(new maplibregl.Popup({ offset: 22, closeButton: false, className: "tip", maxWidth: "280px" }).setHTML(sitePopup(s, s.rank ?? i + 1)));
     if (show) mk.addTo(map);
     s.marker = mk; s.el = b;
     S.markers.push(mk);
@@ -621,30 +704,45 @@ function drawDose() {
   renderSentence();
   paintMarkers();
 }
+// What the marker popup says: the same numbers as the row, in plain words.
+function sitePopup(s, n) {
+  const r = s.row, l = [`Dose point order: ${n} (1 opens first)`];
+  if (s.reach != null) l.push(`Brings ${fmt(s.reach)} more exposed residents within a ${WALK_MIN}-minute walk`);
+  if (r) {
+    const b = [];
+    if (r.exposed != null) b.push(`${fmt(r.exposed)} exposed residents here`);
+    if (r.unreached != null) b.push(`cut off from care: ${fmt(r.unreached)}`);
+    if (b.length) l.push(b.join(" · "));
+    if (r.priority != null) l.push(`Barangay priority ${r.priority} of ${S.data.rows.length}`);
+  }
+  return `<b>${esc(s.name)}</b><span>${esc(s.sub)}</span>${l.map((t) => `<span class="pn">${esc(t)}</span>`).join("")}`;
+}
 // One row per site. The row expands in place to show what the data says about the site; nothing is estimated here.
 function siteDetail(s) {
   const r = s.row, d = [];
   if (s.where) d.push(["Barangay", esc(s.where)]);
   d.push(["Type", esc(s.kind)]);
-  if (s.reach != null) d.push(["Newly reached", fmt(s.reach)]);
-  if (r && r.exposed != null) d.push(["Exposed here", fmt(r.exposed) + (r.pop ? " of " + fmt(r.pop) : "")]);
-  if (r && r.unreached != null) d.push(["No clinic in reach", fmt(r.unreached)]);
+  if (s.reach != null) d.push([`Newly within a ${WALK_MIN}-minute walk`, fmt(s.reach)]);
+  if (r && r.priority != null) d.push(["Barangay priority", `${r.priority} of ${S.data.rows.length}`]);
+  if (r && r.exposed != null) d.push(["Exposed residents here", fmt(r.exposed) + (r.pop ? " of " + fmt(r.pop) : "")]);
+  if (r && r.unreached != null) d.push(["Cut off from care", fmt(r.unreached)]);
   return `<dl>${d.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
 }
+const pri = (s) => (s.row && s.row.priority != null ? `Barangay priority ${s.row.priority} of ${S.data.rows.length}` : "");
 function renderSites(total) {
   $("#sites").hidden = false; unbusy();
   const ol = $("#siteList");
   ol.innerHTML = S.sites.map((s, i) => {
     const n = s.rank ?? i + 1, id = esc(s.id), did = "sd-" + i;
-    return `<li class="srow"><button type="button" class="site" data-id="${id}" aria-expanded="false" aria-controls="${did}" aria-label="Number ${n}: ${esc(s.name)}, ${esc(s.sub)}${s.reach != null ? ", reaches " + fmt(s.reach) + " more residents" : ""}">
+    return `<li class="srow"><button type="button" class="site" data-id="${id}" aria-expanded="false" aria-controls="${did}" aria-label="Dose point ${n}: ${esc(s.name)}, ${esc(s.sub)}${pri(s) ? ", " + pri(s).toLowerCase() : ""}${s.reach != null ? ", brings " + fmt(s.reach) + " more exposed residents within reach" : ""}">
       <span class="badge-n" aria-hidden="true">${n}</span>
-      <span class="site-t"><span class="site-name">${esc(s.name)}</span><span class="site-sub">${esc(s.sub)}</span></span>${CHEV}
+      <span class="site-t"><span class="site-name">${esc(s.name)}</span><span class="site-sub">${esc(s.sub)}</span>${pri(s) ? `<span class="site-pri">${pri(s)}</span>` : ""}</span>${CHEV}
     </button><div class="sdet" id="${did}"><div>${siteDetail(s)}</div></div></li>`;
   }).join("");
   const n = $("#siteNote");
   const missing = total - S.sites.length;
   n.hidden = missing <= 0;
-  n.textContent = missing > 0 ? `Showing ${S.sites.length} of the ${total} sites in this plan so far.` : "";
+  n.textContent = missing > 0 ? `Showing ${S.sites.length} of the ${total} dose points in this plan so far.` : "";
   paintList();
 }
 function toggleOpen(id) { S.open = S.open === id ? null : id; paintList(); }
@@ -680,7 +778,7 @@ function buildPlanSeg() {
   const seg = $("#planSeg"), av = availPlans();
   seg.style.setProperty("--n", av.length);
   seg.style.setProperty("--i", Math.max(0, av.indexOf(S.plan)));
-  seg.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + av.map((k) => `<label><input type="radio" name="plan" value="${k}"${k === S.plan ? " checked" : ""}><span>${k}<span class="sr-only"> sites</span></span></label>`).join("");
+  seg.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + av.map((k) => `<label><input type="radio" name="plan" value="${k}"${k === S.plan ? " checked" : ""}><span>${k}<span class="sr-only"> dose points</span></span></label>`).join("");
 }
 
 /* ---------- headline strip, answer sentence, legend ---------- */
@@ -688,7 +786,7 @@ function buildPlanSeg() {
 function preStrip(params) {
   if (params.code === "all") return;
   const c = S.cities.find((x) => x.code === params.code) || S.cities[0];
-  $("#eyebrow").textContent = `${c.name} · after a ${YEARS_DEFAULT}-year flood`;
+  $("#eyebrow").innerHTML = eyebrowHtml(c.name, false);
   $("#stripQ").textContent = "Where should the city hand out free leptospirosis medicine?";
   const a = $("#answer");
   a.setAttribute("aria-busy", "true");
@@ -704,12 +802,15 @@ function unbusy() {
   $("#sites").removeAttribute("aria-busy"); busyParts(false);
 }
 const nb = (t) => `<span class="nb">${t}</span>`;
+// Two short lines: where, then the flood the numbers are for (with its definition one tap away).
+const eyebrowHtml = (name, canChange) => `<span class="eb-l">${esc(name)}${canChange ? ` · <button class="eb-change" id="changeCity" type="button">change</button>` : ""}</span><span class="eb-l">After a ${nb(tipBtn("flood25", `${years()}-year flood`, `What is a ${years()}-year flood?`))}</span>`;
 const WALK = nb(`${WALK_MIN}-minute walk`);
 // A small "?" next to a term opens a one-line definition.
 // The term itself is the button: dotted blue underline plus a small solid "?" glyph.
 const tipBtn = (k, term, label) => `<button class="tip-q" type="button" data-tip="${k}" aria-label="${label}" aria-expanded="false" aria-controls="tipPop"><span class="tip-t">${term}</span><span class="tip-g" aria-hidden="true">?</span></button>`;
 const TIPS = () => ({
-  exposed: { t: "Exposed", b: `Lives where a ${years()}-year flood reaches.` },
+  flood25: { t: `${years()}-year flood`, b: `A flood big enough that it has about a ${Math.round(100 / years())}% chance of happening in any year (UP NOAH hazard map).` },
+  exposed: { t: "Exposed residents", b: `People who live where a ${years()}-year flood reaches.` },
   dose: { t: "Dose point", b: "A temporary spot, like a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood." },
 });
 // A number that counts up once. The final value is already in the text, so reduced motion and screen readers get it at once.
@@ -733,14 +834,14 @@ function renderStrip() {
   $("#answer").removeAttribute("aria-busy");
   const q = $("#stripQ"), eb = $("#eyebrow");
   if (!S.city) {
-    eb.textContent = `Philippines · after a ${YEARS_DEFAULT}-year flood`;
+    eb.innerHTML = eyebrowHtml("Philippines", false);
     q.textContent = "Where does a flood put the most people at risk of leptospirosis?";
     const tot = S.cities.reduce((t, c) => t + (c.exposed || 0), 0);
     $("#answer").innerHTML = `<p class="a-lead">${rollNum(tot, "n")} residents in ${S.cities.length} ${S.cities.length === 1 ? "city are" : "cities are"} ${nb(tipBtn("exposed", "exposed", "What does exposed mean?"))} to a ${YEARS_DEFAULT}-year flood.</p><p class="a-main">Pick a city to see where to hand out free medicine first.</p>`;
     roll($("#answer"));
     return;
   }
-  eb.textContent = `${cityName()} · after a ${years()}-year flood`;
+  eb.innerHTML = eyebrowHtml(cityName(), S.cities.length > 1);
   q.textContent = "Where should the city hand out free leptospirosis medicine?";
   renderSentence();
 }
@@ -755,6 +856,7 @@ function renderSentence() {
   const now = cov.flood != null ? cov.flood : null;
   const a = $("#answer");
   a.removeAttribute("aria-busy");
+  trackPlan(share);
   const lead = exposed != null ? `<p class="a-lead">${rollNum(exposed, "n")} residents are ${nb(tipBtn("exposed", "exposed", "What does exposed mean?"))} to a ${years()}-year flood.</p>` : "";
   let html;
   if (share != null) {
@@ -776,25 +878,38 @@ function renderSentence() {
       ? `<b>${pct(share, 0)}</b> of exposed residents within a ${WALK}${now != null ? `, up from ${pct(now, 0)}` : ""}.`
       : "Coverage is not computed for this plan yet.";
   }
+  islRender();
+}
+// A plan change shows how many points of coverage it added or took away, for three seconds.
+function trackPlan(share) {
+  const prev = I.cur;
+  I.cur = { city: S.city, plan: S.plan, share };
+  if (!(S.ready && prev && prev.city === S.city && prev.plan !== S.plan && prev.share != null && share != null)) return;
+  const d = Math.round(share * 100) - Math.round(prev.share * 100);
+  clearTimeout(I.chipT);
+  if (!d) { I.chip = null; return; }
+  I.chip = `${d > 0 ? "+" : "\u2212"}${Math.abs(d)} pts`;
+  I.chipT = setTimeout(() => { I.chip = null; islRender(); }, 3000);
 }
 
 function renderLegend() {
   const lg = $("#legend");
   if (!S.city) {
-    lg.innerHTML = `<div class="metric-name">Circle size: residents in the floodwater</div><p class="map-note" style="margin:0">A bigger circle means more residents live where a ${YEARS_DEFAULT}-year flood reaches. Pick a city to open its map.</p>`;
+    lg.innerHTML = `<div class="metric-name">Circle size: exposed residents</div><p class="map-note" style="margin:0">A bigger circle means more exposed residents: people who live where a ${YEARS_DEFAULT}-year flood reaches. Pick a city to open its map.</p>`;
     return;
   }
-  const m = S.metric, edges = [S.min, ...S.breaks, S.max], n = Math.max(1, S.breaks.length + 1);
+  const m = S.metric, edges = [S.hasZero ? S.minPos : S.min, ...S.breaks, S.max], n = Math.max(1, S.breaks.length + 1);
   const label = (v) => (m.key === "share" ? pct(v, 0) : fmt(sig2(v)));
   const labs = edges.map(label);
   // Drop the second-to-last label when it would run into the last one.
   const ticks = labs.map((t, i) => (i === labs.length - 2 && labs.length > 3 && t.length + labs[i + 1].length > 9 ? "" : `<span style="left:${(i / n) * 100}%">${t}</span>`)).join("");
+  const zero = S.hasZero ? `<div class="lg-zero"><i class="zsw${S.view === "3d" ? " flat" : ""}" aria-hidden="true"></i><span><b>0</b> ${m.key === "share" ? "none flooded" : "none"}</span></div>` : "";
   lg.innerHTML = `<div class="metric-name" id="lgT">${m.legend}</div>
-    <div class="ramp" aria-hidden="true">${RAMP.slice(0, n).map((c) => `<i style="background:${c}"></i>`).join("")}</div>
+    ${zero}<div class="ramp" aria-hidden="true">${RAMP.slice(0, n).map((c) => `<i style="background:${c}"></i>`).join("")}</div>
     <div class="ticks" aria-hidden="true">${ticks}</div>
     <div class="lg-words" aria-hidden="true"><span>${m.lo}</span><span>${m.hi}</span></div>
-    <p class="sr-only">${m.legend}, from ${m.f(S.min)} to ${m.f(S.max)} ${m.unit}. Darker means more.</p>
-    <div class="key"><span class="dot-gold"></span>Gold number: a dose point. 1 is the first to open.${S.view === "3d" ? " Column height follows the colour." : ""}</div>`;
+    <p class="sr-only">${m.legend}, from ${m.f(S.hasZero ? S.minPos : S.min)} to ${m.f(S.max)} ${m.unit}. Darker means more.${S.hasZero ? " Barangays with 0 are hatched." : ""}</p>
+    <div class="key"><span class="dot-gold"></span>Gold number: a dose point. 1 opens first.${S.view === "3d" ? " Column height follows the colour." : ""}</div>`;
 }
 function highlightList(code) {
   host.querySelectorAll("#cityList button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.c === code)));
@@ -816,16 +931,16 @@ function tourSteps() {
   steps.push({
     title: "Who was in the water",
     metric: "exposed", plan: null, hi: topE, val: fmt(topE.exposed), spot: null, pref: ["right", "left", "top", "bottom"],
-    body: `Darker barangays have more residents who waded through floodwater. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
+    body: `Darker barangays have more exposed residents: people who live where a ${years()}-year flood reaches. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
   });
   const p3 = sum.dose_point_plans && sum.dose_point_plans["3"];
   const share = S.data.coverage && S.data.coverage.plans && S.data.coverage.plans["3"];
   const has3 = availPlans().includes("3");
   const n = has3 ? 3 : Math.min(3, S.data.dosePoints.features.length) || 3;
   steps.push({
-    title: "Where to set up first",
+    title: "Where to open first",
     metric: "exposed", plan: has3 ? "3" : null, top: n, hi: null, spot: "#sites", pref: ["right", "top"],
-    body: `The panel ranks the sites. The gold numbers 1 to ${n} on the map match it. ${p3 && share != null ? `Opening these ${n} brings ${pct(share, 0)} of exposed residents within a ${WALK_MIN}-minute walk of free medicine. ` : ""}Tap a site to see more and find it on the map.`,
+    body: `The panel lists the dose points in the order to open them. The gold numbers 1 to ${n} on the map match it. ${p3 && share != null ? `Opening these ${n} brings ${pct(share, 0)} of exposed residents within a ${WALK_MIN}-minute walk of free medicine. ` : ""}Tap a dose point to see more and find it on the map.`,
   });
   steps.push({
     title: "More options",
@@ -844,6 +959,7 @@ function startTour(user) {
   if (!S.city || !S.data) return;
   endTour(false, true);
   closeOpts();
+  if (S.colHidden) setCollapsed(false);
   S.tour = { i: 0, steps: tourSteps(), restore: { metric: S.metric, plan: S.plan }, tag: null, user, from: user ? document.activeElement : null, timer: 0, tick: 0 };
   const side = $(".mapside");
   // The cut-out: a box over the described element whose huge shadow dims everything else.
@@ -905,7 +1021,7 @@ function tourPlace(track) {
     const cx = a.x + a.w / 2, cy = a.h > 160 ? a.y + 40 : a.y + a.h / 2;
     if (pick === "right" || pick === "left") {
       side = pick; left = pick === "right" ? a.x + a.w + G : a.x - G - W;
-      top = clamp(cy - 36, E, m.height - H - E); ay = clamp(cy - top, 22, H - 22);
+      top = clamp(cy - 36, 68, m.height - H - E); ay = clamp(cy - top, 22, H - 22);
     } else if (pick) {
       side = pick; top = pick === "bottom" ? a.y + a.h + G : a.y - G - H;
       left = clamp(cx - W / 2, E, m.width - W - E); ax = clamp(cx - left, 22, W - 22);
@@ -942,7 +1058,7 @@ function tourStep(i) {
     const flt = ["==", ["get", "adm4_pcode"], st.hi.id];
     map.setFilter("b-tour-c", flt); map.setFilter("b-tour", flt);
     const el = document.createElement("div");
-    el.className = "tour-tag"; el.innerHTML = `<b>${esc(st.hi.name)}</b><span>${st.val} exposed</span>`;
+    el.className = "tour-tag"; el.innerHTML = `<b>${esc(st.hi.name)}</b><span>${st.val} exposed residents</span>`;
     t.tag = new maplibregl.Marker({ element: el, anchor: "bottom" }).setLngLat(boundsOf(f).getCenter()).addTo(map);
   }
   const dots = t.steps.map((_, j) => `<i${j === i ? ' class="on"' : ""}></i>`).join("");
@@ -1001,6 +1117,144 @@ function endTour(refocus, quiet, keepView) {
   if (refocus) { const b = $("#tourBtn"); if (b && !b.hidden) b.focus({ preventScroll: true }); }
 }
 
+/* ---------- status island ---------- */
+// A navy pill at the top of the free map area. One line while loading and for the answer, two lines for a barangay.
+// It is aria-hidden (rolling numbers and hover text are not for screen readers); #islLive carries the state changes.
+const STAGE_N = 4;
+function stage(n, text) { I.stage = { n, text }; islRender(); }
+const loadHtml = (st) => `<svg class="isl-ring" viewBox="0 0 24 24" width="22" height="22"><circle class="trk" cx="12" cy="12" r="9"/><circle class="arc" cx="12" cy="12" r="9" pathLength="100" style="stroke-dashoffset:${100 - (st.n / STAGE_N) * 100}"/></svg><span class="isl-t"><b>Step ${st.n} of ${STAGE_N}</b><span class="isl-sep"> · </span><span class="isl-lt">${esc(st.text)}</span></span>`;
+function brgyHtml(r) {
+  const ex = r.exposed != null ? `${fmt(r.exposed)} exposed residents` : null;
+  const cut = r.unreached != null ? `cut off from care: ${fmt(r.unreached)}` : null;
+  const ar = r.share != null ? `${pct(r.share, 0)} of the area flooded` : null;
+  const k = S.metric.key;
+  const line = (k === "unreached" ? [cut, ex] : k === "share" ? [ar, ex, cut] : [ex, cut]).filter(Boolean).join(" · ");
+  return `<span class="isl-2"><b>${esc(r.name)}</b>${line ? `<span>${line}</span>` : ""}</span>`;
+}
+function islWant() {
+  if (!S || !host) return null;
+  const code = I.hover || S.sel;
+  if (S.ready && S.city && S.data && code) {
+    const r = S.data.rows.find((x) => x.id === code);
+    if (r) return { kind: "brgy", key: `b|${code}|${S.metric.key}`, html: brgyHtml(r) };
+  }
+  if (!S.ready) { const st = I.stage || { n: 1, text: "Getting the basemap" }; return { kind: "load", key: "load", st, html: loadHtml(st), live: "Loading the map." }; }
+  if (!S.city || !S.data) {
+    const tot = S.cities.reduce((t, c) => t + (c.exposed || 0), 0), n = S.cities.length;
+    const text = `${fmt(tot)} exposed residents in ${n} ${n === 1 ? "city" : "cities"}`;
+    return { kind: "nat", key: "n|" + tot, html: `<span class="isl-t"><b class="n">${fmt(tot)}</b> exposed residents in ${n} ${n === 1 ? "city" : "cities"}</span>`, live: text + "." };
+  }
+  const sum = S.data.summary || {}, meta = S.data.meta || {}, cov = S.data.coverage || {};
+  const exposed = sum.exposed != null ? sum.exposed : meta.exposed;
+  const plan = sum.dose_point_plans && sum.dose_point_plans[S.plan];
+  let share = cov.plans && cov.plans[S.plan] != null ? cov.plans[S.plan] : null;
+  if (share == null && plan && plan.share_of_exposed_within_reach_after != null) { const v = +plan.share_of_exposed_within_reach_after; share = v > 1 ? v / 100 : v; }
+  if (share != null) {
+    const p = Math.round(share * 100), chip = I.chip;
+    return { kind: "answer", key: `a|${S.city}|${S.plan}|${chip || ""}`, roll: `${S.city}|${S.plan}`,
+      html: `<span class="isl-badge">${S.plan}</span><span class="isl-t"><b class="n" data-to="${share * 100}" data-f="p">${p}%</b> <span class="isl-xtra">of exposed residents </span>within a ${WALK_MIN}-minute walk</span>${chip ? `<span class="isl-chip">${chip}</span>` : ""}`,
+      live: `Plan of ${S.plan} dose points. ${p}% of exposed residents within a ${WALK_MIN}-minute walk.` };
+  }
+  if (exposed != null) { const t = `${fmt(exposed)} exposed residents in ${cityName()}`; return { kind: "answer", key: "e|" + S.city, html: `<span class="isl-t"><b class="n">${fmt(exposed)}</b> exposed residents in ${esc(cityName())}</span>`, live: t + "." }; }
+  return { kind: "answer", key: "x|" + S.city, html: `<span class="isl-t">No flood data for ${esc(cityName())} yet</span>`, live: "No flood data for this city yet." };
+}
+function islFit(pill, c) {
+  const wrap = $("#island");
+  if (!wrap || wrap.hidden || !pill || !c) return;
+  const cs = getComputedStyle(wrap);
+  const avail = Math.max(140, wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+  pill.style.setProperty("--avail", avail + "px");
+  const w = Math.ceil(c.offsetWidth), h = Math.ceil(c.offsetHeight);
+  pill.style.width = w + "px"; pill.style.height = h + "px"; pill.style.borderRadius = Math.min(h / 2, 28) + "px";
+}
+function islRefit() { const p = host && $("#isl"); if (p) islFit(p, p.querySelector(".isl-c:not(.out)")); }
+// Old content blurs and scales out while the pill springs to the new size; new content fades in.
+function islPut(html, key) {
+  const wrap = $("#island"), pill = $("#isl");
+  if (!wrap || I.key === key) return null;
+  I.key = key;
+  const first = wrap.hidden;
+  wrap.hidden = false;
+  const old = pill.querySelector(".isl-c:not(.out)");
+  const c = document.createElement("div");
+  c.className = "isl-c in"; c.innerHTML = html;
+  pill.appendChild(c);
+  if (first) pill.style.transition = "none";
+  islFit(pill, c);
+  // fonts arriving late change the natural width; follow it
+  if (I.ro) I.ro.disconnect();
+  I.ro = new ResizeObserver(() => islFit(pill, c));
+  I.ro.observe(c);
+  if (first) { void pill.offsetWidth; pill.style.transition = ""; }
+  if (old) {
+    if (reducedMotion()) old.remove();
+    else { old.classList.add("out"); setTimeout(() => old.remove(), 260); }
+  }
+  return c;
+}
+function islRender() {
+  if (!host || !S || S.dead || !$("#island")) return;
+  const w = islWant();
+  if (!w) return;
+  const pill = $("#isl");
+  if (w.kind === "load" && I.kind === "load") {
+    // same state, next step: move the ring and swap the words in place
+    const c = pill.querySelector(".isl-c:not(.out)");
+    if (c) {
+      const arc = c.querySelector(".arc"), t = c.querySelector(".isl-lt"), b = c.querySelector("b");
+      if (arc) arc.style.strokeDashoffset = 100 - (w.st.n / STAGE_N) * 100;
+      if (t) t.textContent = w.st.text;
+      if (b) b.textContent = `Step ${w.st.n} of ${STAGE_N}`;
+      islFit(pill, c);
+      return;
+    }
+  }
+  const c = islPut(w.html, w.key);
+  I.kind = w.kind;
+  if (c && w.roll && I.rolled !== w.roll) { I.rolled = w.roll; roll(c); }
+  if (w.kind !== "brgy" && w.live && w.live !== I.live) { I.live = w.live; const l = $("#islLive"); if (l) l.textContent = w.live; }
+}
+
+/* ---------- collapsible panel ---------- */
+function setCollapsed(on, focus) {
+  S.colHidden = on;
+  $("#mapwrap").classList.toggle("col-off", on);
+  $("#col").inert = on;
+  $("#colCollapse").setAttribute("aria-expanded", String(!on));
+  $("#showPanel").hidden = !on;
+  if (focus) (on ? $("#showPanel") : $("#colCollapse")).focus({ preventScroll: true });
+  if (map && !S.tour) map.easeTo({ padding: pad(), duration: dur(500) });
+  if (S.sel && S.data) { const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === S.sel); if (f) setTimeout(() => placeInfo(f), dur(520)); }
+}
+
+/* ---------- share and download ---------- */
+async function copyLink() {
+  const b = $("#copyLink");
+  let ok = false;
+  try { await navigator.clipboard.writeText(location.href); ok = true; }
+  catch {
+    try { const t = document.createElement("textarea"); t.value = location.href; t.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove(); } catch {}
+  }
+  if (!b) return;
+  b.textContent = ok ? "Link copied" : "Could not copy";
+  $("#actLive").textContent = ok ? "Link copied to the clipboard." : "Could not copy the link.";
+  clearTimeout(S.copyT); S.copyT = setTimeout(() => { b.textContent = "Copy link"; }, 2200);
+}
+// Text cells starting with = + - @ would run as formulas in a spreadsheet; a leading apostrophe stops that.
+const csvCell = (v, text) => { let t = v == null ? "" : String(v); if (text && /^[=+\-@\t\r]/.test(t)) t = "'" + t; return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+function downloadPlan() {
+  if (!S.data || !S.sites.length) return;
+  const head = ["Name", "Type", "Barangay", "Order", "Longitude", "Latitude", "Exposed covered"];
+  const rows = S.sites.map((s, i) => [csvCell(s.name, true), csvCell(s.kind, true), csvCell(s.where || "", true), s.rank ?? i + 1, (+s.coords[0]).toFixed(6), (+s.coords[1]).toFixed(6), s.reach == null ? "" : Math.round(s.reach)]);
+  const csv = "\uFEFF" + [head.join(","), ...rows.map((r) => r.join(","))].join("\r\n") + "\r\n";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `lambat-${cityName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "city"}-plan-${S.plan}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  $("#actLive").textContent = `Downloaded the plan of ${S.plan} dose points.`;
+}
+
 /* ---------- widgets ---------- */
 // More options is a side panel over the right edge of the map. While open: scrim behind, focus trapped, Esc and scrim close.
 function openOpts(open) {
@@ -1041,16 +1295,34 @@ function openSheet(open) {
   const col = $("#col"), h = $("#handle");
   col.classList.toggle("closed", !open);
   h.setAttribute("aria-expanded", String(open));
-  h.setAttribute("aria-label", open ? "Show less of the panel" : "Show more of the panel");
+  $("#handleT").textContent = open ? "Hide the plan" : "Show the plan";
   $("#colMore").inert = mobile.matches && !open;
+  if (mobile.matches) refit();
+}
+// After the sheet changes height, fit the city (or the selected barangay) into the map that is left above it.
+function refit(ms) {
+  if (!map || !S || !S.city || !S.data || S.tour) return;
+  clearTimeout(S.refitT);
+  S.refitT = setTimeout(() => {
+    if (!map || !S.data || !mobile.matches || S.tour) return;
+    const f = S.sel && S.data.barangays.features.find((x) => x.properties.adm4_pcode === S.sel);
+    map.fitBounds(f ? boundsOf(f) : S.data.bbox, { padding: pad(), maxZoom: f ? 15 : 14.5, pitch: map.getPitch(), bearing: map.getBearing(), duration: dur(450) });
+    if (f) placeInfo(f);
+  }, ms == null ? 340 : ms);
 }
 function setPeek() {
   const t = $("#colTop");
   if (!t || !mobile.matches) return;
+  const was = S.peek;
   S.peek = t.offsetTop + t.offsetHeight;
   $("#mapwrap").style.setProperty("--peek", S.peek + "px");
+  if (Math.abs(S.peek - was) > 8 && S.data) refit(250);
 }
 function syncSheet() {
+  // On phones the plan picker joins the question and answer, so it shows in the peek state.
+  const pp = $("#planPick"), ph = $(".plan-h");
+  if (mobile.matches) { if (pp.parentNode !== $("#colTop")) $("#colTop").insertBefore(pp, $("#tourBtn")); }
+  else if (pp.parentNode !== ph) ph.appendChild(pp);
   setPeek(); attachMore();
   if (!mobile.matches) { $("#colMore").inert = false; $("#col").style.transform = ""; }
   else openSheet(!$("#col").classList.contains("closed"));
@@ -1097,19 +1369,33 @@ function hideTip() {
   if (POP) { try { if (tipEl.matches(":popover-open")) tipEl.hidePopover(); } catch {} } else tipEl.hidden = true;
   if (S && S.tipBtn) { S.tipBtn.setAttribute("aria-expanded", "false"); S.tipBtn.removeAttribute("aria-describedby"); S.tipBtn = null; }
 }
+// The definition never sits on the sentence it explains. On desktop it opens beside the card, on the free map,
+// level with the term. On phones, or when there is no room beside, it opens just below the paragraph (or above it).
 function showTip(btn) {
   if (S.tipBtn === btn) { hideTip(); return; }
   hideTip();
   const tp = TIPS()[btn.dataset.tip] || { t: "", b: "" };
-  tipEl.innerHTML = `<b class="tip-h">${esc(tp.t)}</b><span class="tip-b">${esc(tp.b)}</span><i class="tip-arrow" aria-hidden="true"></i>`;
+  tipEl.innerHTML = `<b class="tip-h">${esc(tp.t)}</b><span class="tip-b">${esc(tp.b)}</span><svg class="tip-arrow" width="16" height="9" viewBox="0 0 16 9" aria-hidden="true"><path class="tf" d="M0 9 8 1 16 9Z"/><path class="ts" d="M0 8.5 8 .5 16 8.5"/></svg>`;
   if (POP) tipEl.showPopover(); else tipEl.hidden = false;
-  const r = btn.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
-  const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
-  const below = !(r.bottom + 12 + h > window.innerHeight - 8);
-  const top = below ? r.bottom + 12 : Math.max(8, r.top - h - 12);
+  const r = btn.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight, vw = window.innerWidth, vh = window.innerHeight, G = 12, E = 8;
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
+  const card = btn.closest(".col-top, .sec");
+  const cr = card ? card.getBoundingClientRect() : null;
+  let side, left, top;
+  if (!mobile.matches && cr && cr.right + G + w <= vw - E) {
+    side = "right"; left = cr.right + G;
+    top = clamp(r.top + r.height / 2 - 26, E, vh - h - E);
+    tipEl.style.setProperty("--ay", clamp(r.top + r.height / 2 - top, 16, h - 16) + "px");
+  } else {
+    const blk = (btn.closest("p, h1, .eyebrow") || btn).getBoundingClientRect();
+    const below = blk.bottom + G + h <= vh - E;
+    side = below ? "bottom" : "top";
+    top = below ? blk.bottom + G : Math.max(E, blk.top - h - G);
+    left = clamp(r.left + r.width / 2 - w / 2, E, vw - w - E);
+    tipEl.style.setProperty("--ax", clamp(r.left + r.width / 2 - left, 16, w - 16) + "px");
+  }
   tipEl.style.left = left + "px"; tipEl.style.top = top + "px";
-  tipEl.dataset.side = below ? "bottom" : "top";
-  tipEl.style.setProperty("--ax", Math.min(Math.max(16, r.left + r.width / 2 - left), w - 16) + "px");
+  tipEl.dataset.side = side;
   S.tipBtn = btn; btn.setAttribute("aria-expanded", "true"); btn.setAttribute("aria-describedby", "tipPop");
 }
 function wireTips() {
@@ -1118,6 +1404,9 @@ function wireTips() {
   onTipKey = (e) => { if (e.key === "Escape" && S.tipBtn) { const b = S.tipBtn; hideTip(); b.focus(); } };
   document.addEventListener("pointerdown", onDown);
   document.addEventListener("keydown", onTipKey);
+  onTipResize = () => hideTip();
+  window.addEventListener("resize", onTipResize);
+  $("#col").addEventListener("scroll", onTipResize, { passive: true });
 }
 
 function wire() {
@@ -1133,6 +1422,11 @@ function wire() {
   $("#pickBack").addEventListener("click", () => showNational(false));
   $("#brgyPick").addEventListener("change", (e) => { if (e.target.value) { selectBrgy(e.target.value, true); closeOpts(true); } else clearSel(); });
   $("#tourBtn").addEventListener("click", () => startTour(true));
+  $("#colCollapse").addEventListener("click", () => setCollapsed(true, true));
+  $("#showPanel").addEventListener("click", () => setCollapsed(false, true));
+  $("#eyebrow").addEventListener("click", (e) => { if (e.target.closest("#changeCity")) showNational(false); });
+  $("#copyLink").addEventListener("click", copyLink);
+  $("#dlPlan").addEventListener("click", downloadPlan);
 
   // site list: hover and focus light up the marker, click pans to it
   const sl = $("#siteList");
