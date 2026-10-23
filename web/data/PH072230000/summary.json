@@ -1,0 +1,33 @@
+{
+  "city": "PH072230000",
+  "city_name": "Mandaue City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": false,
+    "siting": false
+  },
+  "step_notes": {
+    "access": "skipped: no NOAH 25yr flood hazard in any barangay, so nobody is exposed",
+    "siting": "skipped: nobody is exposed"
+  },
+  "access_scope": null,
+  "population": 356164.89697265625,
+  "barangays": 27,
+  "barangays_flooded": 0,
+  "exposed": 0.0,
+  "weekly_capsules": 0.0,
+  "health_facilities": null,
+  "facilities_closed_by_flood": null,
+  "candidate_sites_usable": null,
+  "exposed_on_road_network": null,
+  "exposed_within_reach_dry": null,
+  "exposed_within_reach_flood": null,
+  "exposed_access_gap": null,
+  "exposed_unreached_in_flood": null,
+  "dose_point_plans": {},
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 0.1
+}

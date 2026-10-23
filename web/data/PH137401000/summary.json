@@ -1,0 +1,58 @@
+{
+  "city": "PH137401000",
+  "city_name": "City of Mandaluyong",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 411208.22607421875,
+  "barangays": 27,
+  "barangays_flooded": 26,
+  "exposed": 135446.7254154783,
+  "weekly_capsules": 270893.4508309566,
+  "health_facilities": 40,
+  "facilities_closed_by_flood": 0,
+  "candidate_sites_usable": 97,
+  "exposed_on_road_network": 135214.1553988425,
+  "exposed_within_reach_dry": 135092.73943641546,
+  "exposed_within_reach_flood": 121037.25887015546,
+  "exposed_access_gap": 14055.480566260001,
+  "exposed_unreached_in_flood": 14176.896528687046,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w27788537",
+        "w264398781"
+      ],
+      "exposed_newly_covered": 586.8438183973735,
+      "exposed_within_reach_after": 121624.10268855284,
+      "share_of_exposed_within_reach_after": 0.899492381768736
+    },
+    "5": {
+      "sites": [
+        "w27788537",
+        "w264398781"
+      ],
+      "exposed_newly_covered": 586.8438183973735,
+      "exposed_within_reach_after": 121624.10268855284,
+      "share_of_exposed_within_reach_after": 0.899492381768736
+    },
+    "8": {
+      "sites": [
+        "w27788537",
+        "w264398781"
+      ],
+      "exposed_newly_covered": 586.8438183973735,
+      "exposed_within_reach_after": 121624.10268855284,
+      "share_of_exposed_within_reach_after": 0.899492381768736
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 1056.0
+}

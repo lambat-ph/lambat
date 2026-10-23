@@ -1,0 +1,378 @@
+[
+  {
+    "code": "PH015518000",
+    "name": "Dagupan City",
+    "region": "Region I",
+    "province": "Pangasinan",
+    "lon": 120.34492,
+    "lat": 16.05413,
+    "bbox": [
+      120.30772,
+      16.00855,
+      120.38632,
+      16.1134
+    ],
+    "barangays": 31,
+    "population": 208322,
+    "exposed": 71868,
+    "exposed_share": 0.345,
+    "weekly_capsules": 143737,
+    "lepto_cases_2008_2022": 508,
+    "access_gap": 2485,
+    "coverage_after": {
+      "3": 0.9231324836009056,
+      "5": 0.9480936960468268,
+      "8": 0.9702745155694507
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.6537589378203872,
+      "caught": 0.358974358974359,
+      "false_alerts": 0.01694915254237288,
+      "baseline_correlation": 0.5015466893272698
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH034919000",
+    "name": "Palayan City",
+    "region": "Region III",
+    "province": "Nueva Ecija",
+    "lon": 121.11031,
+    "lat": 15.49342,
+    "bbox": [
+      121.02819,
+      15.40298,
+      121.18184,
+      15.60821
+    ],
+    "barangays": 19,
+    "population": 55563,
+    "exposed": 17576,
+    "exposed_share": 0.3163,
+    "weekly_capsules": 35151,
+    "lepto_cases_2008_2022": 62,
+    "access_gap": 1876,
+    "coverage_after": {
+      "3": 0.482040339002397,
+      "5": 0.550543569524324,
+      "8": 0.5898078458118928
+    },
+    "alert": {
+      "status": "too_few_cases",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH050506000",
+    "name": "Legazpi City",
+    "region": "Region V",
+    "province": "Albay",
+    "lon": 123.75318,
+    "lat": 13.09915,
+    "bbox": [
+      123.68355,
+      12.98618,
+      123.86231,
+      13.25321
+    ],
+    "barangays": 70,
+    "population": 198162,
+    "exposed": 34154,
+    "exposed_share": 0.1724,
+    "weekly_capsules": 68307,
+    "lepto_cases_2008_2022": 60,
+    "access_gap": 1459,
+    "coverage_after": {
+      "3": 0.982471636437488,
+      "5": 0.9856963184084099,
+      "8": 0.9856963184084099
+    },
+    "alert": {
+      "status": "too_few_cases",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH063022000",
+    "name": "Iloilo City",
+    "region": "Region VI",
+    "province": "Iloilo",
+    "lon": 122.55518,
+    "lat": 10.72353,
+    "bbox": [
+      122.49478,
+      10.67923,
+      122.60062,
+      10.7832
+    ],
+    "barangays": 180,
+    "population": 424837,
+    "exposed": 2642,
+    "exposed_share": 0.0062,
+    "weekly_capsules": 5284,
+    "lepto_cases_2008_2022": 3948,
+    "access_gap": 0,
+    "coverage_after": {
+      "3": 1.0000000000000002,
+      "5": 1.0000000000000002,
+      "8": 1.0000000000000002
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.6091699219634711,
+      "caught": 0.7,
+      "false_alerts": 0.05442176870748299,
+      "baseline_correlation": 0.5319366308030368
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH072230000",
+    "name": "Mandaue City",
+    "region": "Region VII",
+    "province": "Cebu",
+    "lon": 123.94086,
+    "lat": 10.34539,
+    "bbox": [
+      123.91293,
+      10.311,
+      123.97613,
+      10.38981
+    ],
+    "barangays": 27,
+    "population": 356165,
+    "exposed": 0,
+    "exposed_share": 0.0,
+    "weekly_capsules": 0,
+    "lepto_cases_2008_2022": 39,
+    "access_gap": null,
+    "coverage_after": null,
+    "alert": {
+      "status": "too_few_cases",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "steps": {
+      "exposure": true,
+      "access": false,
+      "siting": false
+    }
+  },
+  {
+    "code": "PH083747000",
+    "name": "Tacloban City",
+    "region": "Region VIII",
+    "province": "Leyte",
+    "lon": 124.95249,
+    "lat": 11.2729,
+    "bbox": [
+      124.88757,
+      11.1862,
+      125.04831,
+      11.35377
+    ],
+    "barangays": 138,
+    "population": 200382,
+    "exposed": 6133,
+    "exposed_share": 0.0306,
+    "weekly_capsules": 12265,
+    "lepto_cases_2008_2022": 122,
+    "access_gap": 32,
+    "coverage_after": {
+      "3": 0.9570842210524656,
+      "5": 0.9570842210524656,
+      "8": 0.9570842210524656
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.27877913520052705,
+      "caught": 0.2857142857142857,
+      "false_alerts": 0.05426356589147287,
+      "baseline_correlation": 0.15716379120657564
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH097332000",
+    "name": "Zamboanga City",
+    "region": "Region IX",
+    "province": "Zamboanga del Sur",
+    "lon": 122.13159,
+    "lat": 7.14676,
+    "bbox": [
+      121.8975,
+      6.87348,
+      122.37384,
+      7.51373
+    ],
+    "barangays": 101,
+    "population": 860500,
+    "exposed": 191991,
+    "exposed_share": 0.2231,
+    "weekly_capsules": 383982,
+    "lepto_cases_2008_2022": 530,
+    "access_gap": 45211,
+    "coverage_after": {
+      "3": 0.607839803094129,
+      "5": 0.6483081568534942,
+      "8": 0.6994140873471751
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.20355694247027778,
+      "caught": 0.4,
+      "false_alerts": 0.03289473684210526,
+      "baseline_correlation": 0.03175361307243782
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH104305000",
+    "name": "Cagayan de Oro City",
+    "region": "Region X",
+    "province": "Misamis Oriental",
+    "lon": 124.598,
+    "lat": 8.36988,
+    "bbox": [
+      124.45561,
+      8.16015,
+      124.80295,
+      8.52148
+    ],
+    "barangays": 80,
+    "population": 752065,
+    "exposed": 285533,
+    "exposed_share": 0.3797,
+    "weekly_capsules": 571065,
+    "lepto_cases_2008_2022": 1054,
+    "access_gap": 99761,
+    "coverage_after": {
+      "3": 0.6059002115910473,
+      "5": 0.6285996431634381,
+      "8": 0.6488721391892563
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.16584712004182048,
+      "caught": 0.2727272727272727,
+      "false_alerts": 0.03424657534246575,
+      "baseline_correlation": 0.06154551104388664
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH112402000",
+    "name": "Davao City",
+    "region": "Region XI",
+    "province": "Davao del Sur",
+    "lon": 125.41685,
+    "lat": 7.26548,
+    "bbox": [
+      125.22347,
+      6.96094,
+      125.66448,
+      7.56545
+    ],
+    "barangays": 183,
+    "population": 1706762,
+    "exposed": 346421,
+    "exposed_share": 0.203,
+    "weekly_capsules": 692842,
+    "lepto_cases_2008_2022": 843,
+    "access_gap": 85042,
+    "coverage_after": {
+      "3": 0.6652201022898054,
+      "5": 0.669395463664107,
+      "8": 0.6744073110286932
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.14457813850464143,
+      "caught": 0.16666666666666666,
+      "false_alerts": 0.052980132450331126,
+      "baseline_correlation": -0.0662954794526551
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137401000",
+    "name": "City of Mandaluyong",
+    "region": "National Capital Region",
+    "province": "NCR, Second District",
+    "lon": 121.04139,
+    "lat": 14.58309,
+    "bbox": [
+      121.01704,
+      14.56724,
+      121.06002,
+      14.60164
+    ],
+    "barangays": 27,
+    "population": 411208,
+    "exposed": 135447,
+    "exposed_share": 0.3294,
+    "weekly_capsules": 270893,
+    "lepto_cases_2008_2022": 175,
+    "access_gap": 14055,
+    "coverage_after": {
+      "3": 0.899492381768736,
+      "5": 0.899492381768736,
+      "8": 0.899492381768736
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.4749121422534265,
+      "caught": 0.21052631578947367,
+      "false_alerts": 0.04201680672268908,
+      "baseline_correlation": 0.49371542101847016
+    },
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  }
+]

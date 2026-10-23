@@ -36,6 +36,18 @@ const mq = window.matchMedia("(max-width:767px)");
 let current = null;
 let seq = 0;
 
+// One highlight that slides between sidebar items (or tab-bar items on phones) instead of jumping.
+function placeInd() {
+  const ind = nav.querySelector(".nav-ind"), a = nav.querySelector('ul a.item[aria-current="page"]');
+  if (!ind) return;
+  if (!a) { ind.style.opacity = "0"; return; }
+  const ul = ind.parentNode.getBoundingClientRect(), r = a.getBoundingClientRect();
+  ind.style.opacity = "1";
+  ind.style.width = r.width + "px"; ind.style.height = r.height + "px";
+  ind.style.transform = `translate(${r.left - ul.left}px, ${r.top - ul.top}px)`;
+}
+window.addEventListener("resize", () => placeInd());
+
 function mountNav() {
   nav.setAttribute("aria-label", "Main");
   nav.innerHTML = `
@@ -43,10 +55,10 @@ function mountNav() {
       <a class="nav-brand" href="#/" aria-label="LAMBAT home"><img src="assets/logo-reversed.svg" alt="" width="32" height="32"><span>LAMBAT</span></a>
       <button class="nav-toggle" type="button" aria-label="Collapse the sidebar" aria-expanded="true">${ICON.chev}</button>
     </div>
-    <ul>${NAV.map((n) => `<li><a class="item" data-id="${n.id}" href="${n.href}" title="${n.label}">${ICON[n.icon]}<span class="lbl"></span></a></li>`).join("")}</ul>
+    <ul><span class="nav-ind" aria-hidden="true"></span>${NAV.map((n) => `<li><a class="item" data-id="${n.id}" href="${n.href}" title="${n.label}">${ICON[n.icon]}<span class="lbl"></span></a></li>`).join("")}</ul>
     <div class="nav-foot"><a class="item" href="${REPO_URL}" title="Source code on GitHub" rel="noopener">${ICON.code}<span>Source code</span></a></div>`;
   const labels = () => nav.querySelectorAll("ul a.item").forEach((a, i) => { a.querySelector(".lbl").textContent = mq.matches ? NAV[i].tab : NAV[i].label; });
-  labels(); mq.addEventListener("change", labels);
+  labels(); mq.addEventListener("change", () => { labels(); placeInd(); });
   const btn = nav.querySelector(".nav-toggle");
   const sync = () => {
     const open = root.dataset.nav !== "closed";
@@ -56,7 +68,7 @@ function mountNav() {
   sync();
   btn.addEventListener("click", () => {
     root.dataset.nav = root.dataset.nav === "closed" ? "open" : "closed";
-    try { localStorage.setItem("lambat.nav", root.dataset.nav); } catch {}
+    try { localStorage.setItem("lambat.nav", root.dataset.nav); } catch {} setTimeout(placeInd, 250);
     sync();
     setTimeout(() => window.dispatchEvent(new Event("resize")), 260);
   });
@@ -89,6 +101,7 @@ async function go() {
   nav.querySelectorAll("ul a.item").forEach((a) => {
     if (r && a.dataset.id === r.nav) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
+  placeInd();
   if (!r) return message("Page not found", "That address does not match a LAMBAT page.");
   view.setAttribute("aria-busy", "true");
   let mod;
@@ -104,6 +117,9 @@ async function go() {
   current = { mod };
   try {
     await mod.render(view, { code: p.code, tab: p.tab, query: p.query, segments: p.segments });
+    // the new page eases in; the sidebar highlight has already slid to its tab
+    if (my === seq && !matchMedia("(prefers-reduced-motion: reduce)").matches && view.animate)
+      view.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 240, easing: "cubic-bezier(.3,.9,.3,1)" });
   } catch (e) {
     console.error(e);
     message("Something went wrong", "This page could not be drawn: " + e.message);

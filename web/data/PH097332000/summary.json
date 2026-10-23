@@ -1,0 +1,70 @@
+{
+  "city": "PH097332000",
+  "city_name": "Zamboanga City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {
+    "access_scope": "walk graph limited to 87 of 101 barangays: those with NOAH 25yr flood hazard plus any touching a 2 km buffer around them"
+  },
+  "access_scope": "flooded",
+  "population": 860499.6948437691,
+  "barangays": 101,
+  "barangays_flooded": 68,
+  "exposed": 191990.7743257981,
+  "weekly_capsules": 383981.5486515962,
+  "health_facilities": 36,
+  "facilities_closed_by_flood": 0,
+  "candidate_sites_usable": 240,
+  "exposed_on_road_network": 191733.5450073233,
+  "exposed_within_reach_dry": 140936.01554252845,
+  "exposed_within_reach_flood": 95724.60818131457,
+  "exposed_access_gap": 45211.407361213875,
+  "exposed_unreached_in_flood": 96008.9368260087,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w275267011",
+        "w275986787",
+        "w1370380128"
+      ],
+      "exposed_newly_covered": 20818.672062476133,
+      "exposed_within_reach_after": 116543.28024379071,
+      "share_of_exposed_within_reach_after": 0.607839803094129
+    },
+    "5": {
+      "sites": [
+        "w275267011",
+        "w275986787",
+        "w286004569",
+        "w1064821005",
+        "w1370380128"
+      ],
+      "exposed_newly_covered": 28577.812989369682,
+      "exposed_within_reach_after": 124302.42117068425,
+      "share_of_exposed_within_reach_after": 0.6483081568534942
+    },
+    "8": {
+      "sites": [
+        "w274068116",
+        "w275267011",
+        "w275986787",
+        "w286004569",
+        "w347932941",
+        "w1012953160",
+        "w1064821005",
+        "w1370380128"
+      ],
+      "exposed_newly_covered": 38376.53421382098,
+      "exposed_within_reach_after": 134101.14239513554,
+      "share_of_exposed_within_reach_after": 0.6994140873471751
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 1992.2
+}

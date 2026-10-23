@@ -722,14 +722,12 @@ function sitePopup(s, n) {
 }
 // One row per site. The row expands in place to show what the data says about the site; nothing is estimated here.
 function siteDetail(s) {
+  // Only what the row header does not already say (name, type, barangay and priority are above).
   const r = s.row, d = [];
-  if (s.where) d.push(["Barangay", esc(s.where)]);
-  d.push(["Type", esc(s.kind)]);
-  if (s.reach != null) d.push([`Newly within a ${WALK_MIN}-minute walk`, fmt(s.reach)]);
-  if (r && r.priority != null) d.push(["Barangay priority", `${r.priority} of ${S.data.rows.length}`]);
-  if (r && r.exposed != null) d.push(["Exposed residents here", fmt(r.exposed) + (r.pop ? " of " + fmt(r.pop) : "")]);
-  if (r && r.unreached != null) d.push(["Cut off from care", fmt(r.unreached)]);
-  return `<dl>${d.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+  if (s.reach != null) d.push([fmt(s.reach), "newly in reach"]);
+  if (r && r.exposed != null) d.push([fmt(r.exposed), `exposed in ${esc(s.where || "this barangay")}`]);
+  if (r && r.unreached != null) d.push([fmt(r.unreached), "cut off from care"]);
+  return d.length ? `<dl>${d.map(([v, k]) => `<div><dd>${v}</dd><dt>${k}</dt></div>`).join("")}</dl>` : "";
 }
 const pri = (s) => (s.row && s.row.priority != null ? `Barangay priority ${s.row.priority} of ${S.data.rows.length}` : "");
 function renderSites(total) {

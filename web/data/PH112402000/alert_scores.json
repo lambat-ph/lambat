@@ -1,0 +1,50 @@
+{
+  "status": "evaluated",
+  "total_cases": 843,
+  "horizon_weeks": 2,
+  "train_years": [
+    2008,
+    2016
+  ],
+  "test_years": [
+    2017,
+    2019
+  ],
+  "outbreak_threshold": 3.0,
+  "alert_rate": 0.0603448275862069,
+  "scores": [
+    {
+      "method": "seasonal",
+      "correlation": -0.0662954794526551,
+      "mae": 1.2014685067232835,
+      "sensitivity": 0.0,
+      "false_alert_rate": 0.059602649006622516,
+      "alerts": 9,
+      "outbreak_weeks": 6
+    },
+    {
+      "method": "last_week",
+      "correlation": 0.05184098105074587,
+      "mae": 1.4522292993630572,
+      "sensitivity": 0.0,
+      "false_alert_rate": 0.059602649006622516,
+      "alerts": 9,
+      "outbreak_weeks": 6
+    },
+    {
+      "method": "rain_model",
+      "correlation": 0.14457813850464143,
+      "mae": 1.2051678553560845,
+      "sensitivity": 0.16666666666666666,
+      "false_alert_rate": 0.052980132450331126,
+      "alerts": 9,
+      "outbreak_weeks": 6
+    }
+  ],
+  "rain_coefficients": {
+    "rain_l2": 0.22416829947774775,
+    "rain_l3": 0.24203251938625042,
+    "rain_l4": 0.23251873790857086,
+    "rain_l5": 0.3038233686838332
+  }
+}
