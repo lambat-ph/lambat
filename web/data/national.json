@@ -1,14 +1,37 @@
 {
-  "cities": 10,
   "scenario": "25yr",
-  "barangays": 856,
-  "population": 5173966,
-  "exposed": 1091765,
-  "weekly_capsules": 2183526,
-  "lepto_cases_2008_2022": 7341,
-  "cities_with_access": 9,
-  "access_gap": 249921,
-  "alert_cities_evaluated": 7,
+  "cities": 7,
+  "city_codes": [
+    "PH015518000",
+    "PH034919000",
+    "PH050506000",
+    "PH097332000",
+    "PH104305000",
+    "PH112402000",
+    "PH137401000"
+  ],
+  "barangays": 511,
+  "population": 4192582,
+  "exposed": 1082990,
+  "weekly_capsules": 2165977,
+  "lepto_cases_2008_2022": 3232,
+  "cities_with_access": 7,
+  "access_gap": 249889,
+  "alert_cities_evaluated": 5,
+  "cities_100yr": {
+    "scenario": "100yr",
+    "note": "No 25-year flood map for this city. Showing the 100-year flood, which is larger.",
+    "cities": 0,
+    "city_codes": [],
+    "barangays": 0,
+    "population": 0,
+    "exposed": 0,
+    "weekly_capsules": 0,
+    "lepto_cases_2008_2022": 0,
+    "cities_with_access": 0,
+    "access_gap": 0,
+    "alert_cities_evaluated": 0
+  },
   "pooled_alert": {
     "horizon_weeks": 2,
     "train_years": [
@@ -73,5 +96,5 @@
     },
     "status": "evaluated"
   },
-  "note": "Access figures cover only the cities where the access step ran (see each city's steps). News-report validation exists for Dagupan only."
+  "note": "Totals cover the 25-year cities only. Cities with no 25-year flood map are listed under cities_100yr and use the larger 100-year flood, so the two are never summed. Access figures cover only cities where the access step ran (see each city's steps). News-report validation exists for Dagupan only."
 }

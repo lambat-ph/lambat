@@ -59,5 +59,6 @@
   },
   "validation": null,
   "validation_note": "News-report validation exists for Dagupan only.",
-  "runtime_s": 3.8
+  "runtime_s": 3.8,
+  "scenario_note": null
 }

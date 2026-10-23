@@ -55,7 +55,20 @@ def _access(brgy, pop, hazard, scenario, ks, limit_min):
     best = plans.get(max(ks))
     covered_by_k = set().union(*(reach[s] for s in best.sites)) if best and best.sites else set()
     newly = missed[missed.index.isin(covered_by_k)].groupby("adm4").exposed.sum()
-    return gap, facilities, closed, candidates, plans, newly
+    # Per-plan detail for the web map: who is within reach after each plan, and which site serves whom
+    exposed_pts = demand.exposed[demand.exposed > 0].to_dict()
+    pt_brgy = demand.adm4.to_dict()
+    detail: dict = {"reach": {}, "serves": {}}
+    for k, r in plans.items():
+        sites = [s for s in r.sites if s in reach]
+        covered = covered_by_facilities.union(*(reach[s] for s in sites))
+        detail["reach"][k] = siting.reach_by_barangay(exposed_pts, pt_brgy, covered)
+        att = siting.attribute_new_coverage(sites, reach, covered_by_facilities, weights, pt_brgy)
+        detail["serves"][k] = {s: [{"pcode": b, "residents": round(v, 1)} for b, v in sorted(m.items())] for s, m in att.items()}
+    if not plans:  # no dose points possible: clinic reach only, so cut-off figures still exist
+        for k in ks:
+            detail["reach"][k] = siting.reach_by_barangay(exposed_pts, pt_brgy, covered_by_facilities)
+    return gap, facilities, closed, candidates, plans, newly, detail
 
 
 def run_city(city: str, scenario: str, ks: list[int], limit_min: float, scope: str = "auto") -> dict:
@@ -84,13 +97,15 @@ def run_city(city: str, scenario: str, ks: list[int], limit_min: float, scope: s
         notes["siting"] = "skipped: nobody is exposed"
     else:
         area = float(brgy.to_crs(data.CRS_METRIC).area.sum() / 1e6)
-        if scope in ("full", "flooded"):
+        if scope == "none":
+            order = []
+        elif scope in ("full", "flooded"):
             order = [scope]
         elif area > BIG_CITY_KM2:
             order = ["flooded", "full"]
         else:
             order = ["full", "flooded"]
-        errors = []
+        errors = ["access step not attempted (--scope none): the OSM Overpass service kept timing out"] if scope == "none" else []
         for sc in order:
             sub = brgy if sc == "full" else cities.flooded_scope(brgy, hazard, scenario)
             try:
@@ -117,17 +132,20 @@ def run_city(city: str, scenario: str, ks: list[int], limit_min: float, scope: s
 
     # Barangay table and priority ranking
     if acc is not None:
-        gap, facilities, closed, candidates, plans, newly = acc
+        gap, facilities, closed, candidates, plans, newly, detail = acc
         tab = exp.join(gap.drop(columns=["population"]).rename(columns={"exposed": "exposed_network"}), how="left")
         acols = [c for c in tab.columns if c not in exp.columns]
         in_scope = tab.index.isin(scope_codes)
         tab.loc[in_scope, acols] = tab.loc[in_scope, acols].fillna(0.0)
         tab["exposed_unreached_flood"] = tab.exposed_network - tab.exposed_reach_flood
         tab["exposed_covered_by_dose_points"] = newly.reindex(tab.index).fillna(0.0).where(in_scope)
+        for k, rb in detail["reach"].items():
+            tab[f"reach_after_{k}"] = pd.Series({b: v[0] for b, v in rb.items()}, dtype=float).reindex(tab.index).fillna(0.0).where(in_scope)
+            tab[f"cut_off_after_{k}"] = pd.Series({b: v[1] for b, v in rb.items()}, dtype=float).reindex(tab.index).fillna(0.0).where(in_scope)
         tab = tab.sort_values(["exposed_unreached_flood", "exposed"], ascending=False, na_position="last")
     else:
         facilities = candidates = None
-        closed, plans = set(), {}
+        closed, plans, detail = set(), {}, {"reach": {}, "serves": {}}
         tab = exp.sort_values("exposed", ascending=False)
     tab["priority"] = range(1, len(tab) + 1)
 
@@ -191,7 +209,7 @@ def run_city(city: str, scenario: str, ks: list[int], limit_min: float, scope: s
 
     geo = brgy.set_index("adm4_pcode")[["geometry"]].join(tab, how="inner")
     geo_json = gpd.GeoDataFrame(geo, geometry="geometry", crs=brgy.crs).reset_index().to_json(na="null")
-    dose_json = json.dumps(cities.dose_point_collection(candidates, plans))
+    dose_json = json.dumps(cities.dose_point_collection(candidates, plans, detail["serves"]))
     targets = [out] + ([OUT] if city == data.DAGUPAN else [])  # Dagupan keeps its flat legacy paths
     for d in targets:
         tab.to_csv(d / f"barangays_{scenario}.csv", index_label="adm4_pcode")
@@ -220,7 +238,7 @@ def main() -> None:
     ap.add_argument("--scenario", default="25yr", choices=["5yr", "25yr", "100yr"])
     ap.add_argument("--k", type=int, nargs="+", default=[3, 5, 8])
     ap.add_argument("--limit-min", type=float, default=access.WALK_LIMIT_MIN)
-    ap.add_argument("--scope", default="auto", choices=["auto", "full", "flooded"],
+    ap.add_argument("--scope", default="auto", choices=["auto", "full", "flooded", "none"],
                     help="walk-graph extent: whole city, or flooded barangays plus a 2 km buffer; "
                          "auto starts with the flooded scope for cities over 400 km2 and falls back to the other on failure")
     args = ap.parse_args()

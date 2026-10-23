@@ -149,3 +149,33 @@ def test_dose_point_collection_has_every_plan_site():
     assert cities.dose_point_collection(sites, {})["features"] == []
     only3 = cities.dose_point_collection(sites, {3: NS(sites=["a"])})
     assert only3["features"][0]["properties"]["rank"] == 1
+
+
+def test_effective_scenario_rule():
+    def hz(n25, n100, n=10):
+        h = pd.DataFrame(0.0, index=[f"B{i}" for i in range(n)],
+                         columns=[f"{s}_{k}" for s in ("25yr", "100yr") for k in ("low", "med", "high")])
+        h.iloc[:n25, h.columns.get_loc("25yr_low")] = 5.0
+        h.iloc[:n100, h.columns.get_loc("100yr_low")] = 5.0
+        return h
+
+    assert cities.effective_scenario(hz(0, 9)) == "100yr"      # like Mandaue
+    assert cities.effective_scenario(hz(2, 9)) == "100yr"      # 20% < 25%
+    assert cities.effective_scenario(hz(3, 9)) == "25yr"       # 30% is enough
+    assert cities.effective_scenario(hz(0, 3)) == "25yr"       # 100yr is no better, nothing to switch to
+    assert cities.effective_scenario(hz(10, 10)) == "25yr"
+
+
+def test_dose_point_collection_serves_and_newly_reached():
+    from types import SimpleNamespace as NS
+
+    sites = gpd.GeoDataFrame(
+        {"id": ["a", "b"], "name": ["A", "B"], "kind": ["school"] * 2},
+        geometry=gpd.points_from_xy([121.0, 121.1], [14.0] * 2), crs="EPSG:4326")
+    plans = {3: NS(sites=["a"]), 5: NS(sites=["a", "b"])}
+    serves = {3: {"a": [{"pcode": "X", "residents": 10.4}]},
+              5: {"a": [{"pcode": "X", "residents": 4.0}], "b": [{"pcode": "Y", "residents": 6.2}, {"pcode": "X", "residents": 1.0}]}}
+    props = {f["properties"]["id"]: f["properties"] for f in cities.dose_point_collection(sites, plans, serves)["features"]}
+    assert props["a"]["newly_reached"] == {"3": 10, "5": 4}
+    assert props["b"]["newly_reached"] == {"5": 7} and set(props["b"]["serves"]) == {"5"}
+    assert "serves" not in cities.dose_point_collection(sites, plans)["features"][0]["properties"]

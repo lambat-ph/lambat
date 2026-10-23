@@ -37,6 +37,14 @@ Raw data is not committed. `data/raw/cchain/` needs these six Project CCHAIN tab
 
 `scripts/run_pipeline.py` ties steps 2-4 together and compares the barangay ranking with `data/validation/dagupan_flood_reports.csv`.
 
+### Plan detail fields (for the web map)
+
+Written by `scripts/run_pipeline.py`, passed through by `scripts/build_web.py`. All use the same ~200 m demand points, exposed weights and reach sets as the siting step, aggregated to barangay. Existing fields are unchanged.
+
+- `barangays_<scenario>.csv/.geojson`, for k in 3, 5, 8: `reach_after_k` = exposed residents within the walking limit of a clinic or a dose point of the k-point plan; `cut_off_after_k` = exposed residents still without reach. They sum to the barangay's `exposed_network`. Null for barangays outside the walk-graph scope.
+- `dose_points_<scenario>.geojson`, per site: `serves` = `{"3": [{"pcode", "residents"}, ...], "5": ..., "8": ...}` (only plans that include the site), the barangays whose cut-off residents the site newly reaches; `newly_reached` = `{"3": n, ...}` (rounded residents). Each newly covered demand point is credited to the first site in plan order (`rank_in_plan`) that reaches it, so per-site numbers add up to the plan's `exposed_newly_covered` (within rounding). Plans are solved independently, so a site can serve different barangays in different plans.
+- Logic lives in `siting.attribute_new_coverage` and `siting.reach_by_barangay`.
+
 ## Current results (25-year NOAH scenario, Dagupan)
 
 - 71,868 of 208,322 residents exposed; 143,737 capsules per flood week.

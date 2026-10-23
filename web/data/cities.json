@@ -31,6 +31,8 @@
       "false_alerts": 0.01694915254237288,
       "baseline_correlation": 0.5015466893272698
     },
+    "scenario": "25yr",
+    "scenario_note": null,
     "steps": {
       "exposure": true,
       "access": true,
@@ -69,6 +71,8 @@
       "false_alerts": null,
       "baseline_correlation": null
     },
+    "scenario": "25yr",
+    "scenario_note": null,
     "steps": {
       "exposure": true,
       "access": true,
@@ -107,116 +111,8 @@
       "false_alerts": null,
       "baseline_correlation": null
     },
-    "steps": {
-      "exposure": true,
-      "access": true,
-      "siting": true
-    }
-  },
-  {
-    "code": "PH063022000",
-    "name": "Iloilo City",
-    "region": "Region VI",
-    "province": "Iloilo",
-    "lon": 122.55518,
-    "lat": 10.72353,
-    "bbox": [
-      122.49478,
-      10.67923,
-      122.60062,
-      10.7832
-    ],
-    "barangays": 180,
-    "population": 424837,
-    "exposed": 2642,
-    "exposed_share": 0.0062,
-    "weekly_capsules": 5284,
-    "lepto_cases_2008_2022": 3948,
-    "access_gap": 0,
-    "coverage_after": {
-      "3": 1.0000000000000002,
-      "5": 1.0000000000000002,
-      "8": 1.0000000000000002
-    },
-    "alert": {
-      "status": "evaluated",
-      "correlation": 0.6091699219634711,
-      "caught": 0.7,
-      "false_alerts": 0.05442176870748299,
-      "baseline_correlation": 0.5319366308030368
-    },
-    "steps": {
-      "exposure": true,
-      "access": true,
-      "siting": true
-    }
-  },
-  {
-    "code": "PH072230000",
-    "name": "Mandaue City",
-    "region": "Region VII",
-    "province": "Cebu",
-    "lon": 123.94086,
-    "lat": 10.34539,
-    "bbox": [
-      123.91293,
-      10.311,
-      123.97613,
-      10.38981
-    ],
-    "barangays": 27,
-    "population": 356165,
-    "exposed": 0,
-    "exposed_share": 0.0,
-    "weekly_capsules": 0,
-    "lepto_cases_2008_2022": 39,
-    "access_gap": null,
-    "coverage_after": null,
-    "alert": {
-      "status": "too_few_cases",
-      "correlation": null,
-      "caught": null,
-      "false_alerts": null,
-      "baseline_correlation": null
-    },
-    "steps": {
-      "exposure": true,
-      "access": false,
-      "siting": false
-    }
-  },
-  {
-    "code": "PH083747000",
-    "name": "Tacloban City",
-    "region": "Region VIII",
-    "province": "Leyte",
-    "lon": 124.95249,
-    "lat": 11.2729,
-    "bbox": [
-      124.88757,
-      11.1862,
-      125.04831,
-      11.35377
-    ],
-    "barangays": 138,
-    "population": 200382,
-    "exposed": 6133,
-    "exposed_share": 0.0306,
-    "weekly_capsules": 12265,
-    "lepto_cases_2008_2022": 122,
-    "access_gap": 32,
-    "coverage_after": {
-      "3": 0.9570842210524656,
-      "5": 0.9570842210524656,
-      "8": 0.9570842210524656
-    },
-    "alert": {
-      "status": "evaluated",
-      "correlation": 0.27877913520052705,
-      "caught": 0.2857142857142857,
-      "false_alerts": 0.05426356589147287,
-      "baseline_correlation": 0.15716379120657564
-    },
+    "scenario": "25yr",
+    "scenario_note": null,
     "steps": {
       "exposure": true,
       "access": true,
@@ -255,6 +151,8 @@
       "false_alerts": 0.03289473684210526,
       "baseline_correlation": 0.03175361307243782
     },
+    "scenario": "25yr",
+    "scenario_note": null,
     "steps": {
       "exposure": true,
       "access": true,
@@ -293,6 +191,8 @@
       "false_alerts": 0.03424657534246575,
       "baseline_correlation": 0.06154551104388664
     },
+    "scenario": "25yr",
+    "scenario_note": null,
     "steps": {
       "exposure": true,
       "access": true,
@@ -331,6 +231,8 @@
       "false_alerts": 0.052980132450331126,
       "baseline_correlation": -0.0662954794526551
     },
+    "scenario": "25yr",
+    "scenario_note": null,
     "steps": {
       "exposure": true,
       "access": true,
@@ -369,6 +271,8 @@
       "false_alerts": 0.04201680672268908,
       "baseline_correlation": 0.49371542101847016
     },
+    "scenario": "25yr",
+    "scenario_note": null,
     "steps": {
       "exposure": true,
       "access": true,

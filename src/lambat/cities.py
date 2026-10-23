@@ -164,13 +164,15 @@ def sanitize(obj):
     return clean_value(obj)
 
 
-def dose_point_collection(candidates: gpd.GeoDataFrame | None, plans: dict) -> dict:
+def dose_point_collection(candidates: gpd.GeoDataFrame | None, plans: dict, serves: dict | None = None) -> dict:
     """GeoJSON (EPSG:4326) of every site used by any plan.
 
     plans maps k -> an object with .sites (site ids in the order the solver listed them).
     Properties: id, name, kind, rank (position in the largest plan, else null),
     plans (sorted list of k values whose plan includes the site) and
     rank_in_plan ({"3": 1, ...}, keys only for plans that include it).
+    serves (optional): k -> site id -> [{"pcode", "residents"}]. When given, each site also gets
+    serves ({"3": [...]}, plans that include it) and newly_reached ({"3": n, ...}, rounded residents).
     """
     empty = {"type": "FeatureCollection", "features": []}
     if candidates is None or not plans:
@@ -184,11 +186,37 @@ def dose_point_collection(candidates: gpd.GeoDataFrame | None, plans: dict) -> d
     feats = []
     for _, row in sub.iterrows():
         rip = {str(k): plans[k].sites.index(row.id) + 1 for k in ks if row.id in plans[k].sites}
+        props = {"id": row.id, "name": row["name"], "kind": row.kind,
+                 "rank": rip.get(str(ks[-1])), "plans": sorted(int(k) for k in rip), "rank_in_plan": rip}
+        if serves is not None:
+            sv = {str(k): serves.get(k, {}).get(row.id, []) for k in ks if row.id in plans[k].sites}
+            props["serves"] = sv
+            props["newly_reached"] = {k: round(sum(e["residents"] for e in v)) for k, v in sv.items()}
         feats.append({
             "type": "Feature",
-            "properties": {"id": row.id, "name": row["name"], "kind": row.kind,
-                           "rank": rip.get(str(ks[-1])), "plans": sorted(int(k) for k in rip), "rank_in_plan": rip},
+            "properties": props,
             "geometry": {"type": "Point", "coordinates": [round(float(row.geometry.x), 5), round(float(row.geometry.y), 5)]},
         })
     feats.sort(key=lambda f: (f["properties"]["rank"] is None, f["properties"]["rank"] or 0, f["properties"]["id"]))
     return {"type": "FeatureCollection", "features": feats}
+
+
+SCENARIO_NOTE_100YR = "No 25-year flood map for this city. Showing the 100-year flood, which is larger."
+
+
+def effective_scenario(hazard: pd.DataFrame, preferred: str = "25yr", fallback: str = "100yr",
+                       max_share: float = 0.25, min_fallback_share: float = 0.5) -> str:
+    """The flood scenario to publish for a city.
+
+    The preferred map is treated as effectively missing when fewer than max_share of
+    the city's barangays have any hazard in it while at least min_fallback_share of
+    barangays have hazard in the fallback map. Then the fallback is used."""
+    def covered(sc: str) -> float:
+        cols = [f"{sc}_{k}" for k in ("low", "med", "high") if f"{sc}_{k}" in hazard]
+        if not cols or len(hazard) == 0:
+            return 0.0
+        return float((hazard[cols].fillna(0.0).sum(axis=1) > 0).mean())
+
+    if covered(preferred) < max_share and covered(fallback) >= min_fallback_share:
+        return fallback
+    return preferred

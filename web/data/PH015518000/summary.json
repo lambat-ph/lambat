@@ -76,5 +76,6 @@
     "note": "News coverage is biased toward downtown and river barangays; treat as a rough check."
   },
   "validation_note": null,
-  "runtime_s": 2.9
+  "runtime_s": 3.2,
+  "scenario_note": null
 }
