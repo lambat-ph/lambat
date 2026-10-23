@@ -33,6 +33,15 @@ function picsHTML(key) {
     <p class="caption">${ex.note}</p>`;
 }
 
+const FLOW = `
+<figure class="rd-flow">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="assets/radar/unet_flow.png">
+    <img src="assets/radar/unet_flow.gif" width="960" height="720" alt="Animation of the trained U-Net reading one radar image of a landscape with lakes. A radar picture enters at the top left. Four steps shrink it going down the left side: fine detail, shapes, regions, scene. At the bottom is a compact summary. Four steps grow it back going up the right side, with gold dashed lines passing detail across. At the top right is the water mask, which closely matches the hand-drawn label, with an overlap score (IoU) of 0.94.">
+  </picture>
+  <figcaption>The trained model reading one real radar image, step by step. Each square is what the model pays attention to at that step; it gets smaller and more abstract going down, then the decoder rebuilds a sharp water map going up. This chip is one of the easier ones (overlap 0.94); the typical chip scores 0.33, see the results below.</figcaption>
+</figure>`;
+
 const DIAGRAM = `
 <div class="rd-diagram-wrap">
 <svg class="rd-diagram" viewBox="0 0 760 420" role="img" aria-labelledby="unet-t unet-d">
@@ -186,7 +195,8 @@ export async function render(root) {
   <section class="rd-sec" aria-labelledby="rd-h2">
     <h2 id="rd-h2">2. The model</h2>
     <p class="lead">A threshold only looks at how dark each pixel is. A U-Net also looks at the shapes around it, so a dark farm field and a dark lake can be told apart. It reads two radar bands, VV and VH, which respond differently to water and land.</p>
-    <div class="card">${DIAGRAM}</div>
+    <div class="card">${FLOW}
+      <details class="rd-details"><summary>Show as diagram</summary>${DIAGRAM}</details></div>
   </section>
 
   <section class="rd-sec" aria-labelledby="rd-h3">

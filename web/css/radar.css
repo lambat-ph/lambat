@@ -49,3 +49,9 @@
   .rd-diagram-wrap{overflow-x:auto}
   .rd-diagram{min-width:640px}
 }
+.rd-flow{margin:0 0 var(--s2)}
+.rd-flow img{display:block;width:100%;height:auto;border-radius:var(--radius-sm);background:#fff}
+.rd-flow figcaption{font-size:var(--t-sm);color:var(--muted);margin-top:var(--s1);max-width:70ch}
+.rd-details summary{cursor:pointer;font-weight:700;color:var(--blue);padding:var(--s1) 0}
+.rd-details[open] summary{margin-bottom:var(--s1)}
+.rd-two>*{min-width:0}
