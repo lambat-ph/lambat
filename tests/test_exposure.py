@@ -76,3 +76,11 @@ def test_real_data_smoke():
     assert df.flooded_share.between(0, 1).all()
     assert (df.exposed <= df.population + 1e-9).all()
     assert df.exposed.sum() > 0
+
+
+def test_hazard_table_can_be_passed_in(synthetic):
+    idx = pd.Index(["A", "B", "C"], name="adm4_pcode")
+    radar = pd.DataFrame({"egay_low": 0.0, "egay_med": [0.0, 50.0, 0.0], "egay_high": 0.0}, index=idx)
+    df = exposure.exposed_by_barangay("egay", hazard=radar)
+    assert df.loc["B", "exposed"] == pytest.approx(1000)
+    assert df.loc["A", "exposed"] == 0

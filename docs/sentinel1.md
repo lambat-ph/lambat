@@ -6,6 +6,17 @@ A real flood, mapped from radar and compared with the UP NOAH hazard map and wit
 uv run python scripts/run_s1_flood.py          # needs the two scenes in data/raw/s1/
 ```
 
+## On the map
+
+The radar result can replace the NOAH map as the flood the whole pipeline plans for. `flood.radar_hazard` turns `s1_egay_barangays.csv` into the same per-barangay table as the NOAH hazard, with the flooded share in one level (radar has no depth; default `med`: roads slowed to a quarter speed, not closed). Then exposure, flooded roads and dose points rerun on the observed flood:
+
+```bash
+uv run python scripts/run_pipeline.py --scenario egay      # options: --radar-method threshold|otsu|unet, --radar-level low|med|high
+uv run python scripts/build_web.py                         # writes web/data/PH015518000/egay/
+```
+
+The map then offers a Flood picker (25-year flood or Typhoon Egay). On Egay, the "News flood reports" switch outlines only the barangays the news named for Egay, and `summary_egay.json` records the AUC of the radar flooded share against those reports (`validation.event`).
+
 ## Scenes
 
 | Role | Scene (Sentinel-1A, IW GRDH, VV+VH) | Date |

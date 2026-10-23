@@ -8,7 +8,10 @@ Contract (the web page reads exactly this):
   web/data/national.json    totals across cities, pooled alert result
   web/data/manifest.json    {"files": [paths relative to web/data]}
   web/data/<code>/barangays.geojson, dose_points.geojson, summary.json, alert_scores.json,
-                  alert_predictions.csv (evaluated cities only), s1_flood.geojson (Dagupan, only if present)
+                  alert_predictions.csv (evaluated cities only), s1_flood.geojson (Dagupan, only if present),
+                  flood_reports.json (Dagupan: news flood reports by barangay)
+  web/data/<code>/<scenario>/barangays.geojson, dose_points.geojson, summary.json
+                  extra flood sources, only if the pipeline ran them (egay: Typhoon Egay mapped from radar)
 """
 
 import argparse
@@ -25,6 +28,8 @@ ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 DATA = ROOT / "web" / "data"
 SCENARIO = "25yr"
+EXTRA_SCENARIOS = ("egay",)  # radar-observed floods; see RADAR_SCENARIOS in scripts/run_pipeline.py
+REPORTS = ROOT / "data" / "validation" / "dagupan_flood_reports.csv"
 BARANGAY_PROPS = ["adm4_pcode", "adm4_en", "population", "exposed", "flooded_share", "exposed_unreached_flood",
                   "weekly_capsules", "priority", "exposed_low", "exposed_med", "exposed_high"]
 LEGACY_FLAT = ["alert_predictions_dagupan.csv", "alert_scores_dagupan.json", "barangays_25yr.geojson",
@@ -33,6 +38,44 @@ LEGACY_FLAT = ["alert_predictions_dagupan.csv", "alert_scores_dagupan.json", "ba
 
 def _write_json(path: Path, obj) -> None:
     path.write_text(json.dumps(obj, indent=2, allow_nan=False))
+
+
+def flood_reports(reports: pd.DataFrame, barangays: pd.DataFrame) -> dict:
+    """News flood reports grouped by barangay code, for the map's report layer.
+
+    barangays needs adm4_pcode and adm4_en; reports are matched on the exact name.
+    """
+    code_of = dict(zip(barangays.adm4_en, barangays.adm4_pcode))
+    rep = reports.assign(code=reports.barangay.map(code_of)).sort_values(["event_date", "barangay"], kind="mergesort")
+    clean = lambda v: None if pd.isna(v) or v == "" else str(v)  # noqa: E731
+    by = {}
+    for r in rep[rep.code.notna()].itertuples():
+        by.setdefault(r.code, []).append({
+            "event": r.event_name, "date": str(r.event_date), "condition": clean(r.reported_condition),
+            "depth": clean(r.depth_text), "source": clean(r.source_title), "url": clean(r.source_url),
+            "source_date": clean(r.source_date)})
+    events = (rep.groupby(["event_date", "event_name"], sort=True).code.nunique().reset_index()
+              .rename(columns={"event_date": "date", "event_name": "name", "code": "barangays"}))
+    return {
+        "source": "data/validation/dagupan_flood_reports.csv",
+        "events": [{"name": e.name, "date": str(e.date), "barangays": int(e.barangays)} for e in events.itertuples()],
+        "barangays": by,
+        "unmatched": sorted(set(rep.barangay[rep.code.isna()])),
+    }
+
+
+def build_scenario(src: Path, out: Path, scenario: str) -> bool:
+    """Copy an extra flood source's results to web/data/<code>/<scenario>/, if the pipeline ran it."""
+    summ_path = src / f"summary_{scenario}.json"
+    if not summ_path.exists():
+        return False
+    d = out / scenario
+    d.mkdir(parents=True, exist_ok=True)
+    fc, _ = cities.fit_size(gpd.read_file(src / f"barangays_{scenario}.geojson"), BARANGAY_PROPS)
+    (d / "barangays.geojson").write_text(json.dumps(fc, separators=(",", ":")))
+    shutil.copyfile(src / f"dose_points_{scenario}.geojson", d / "dose_points.geojson")
+    _write_json(d / "summary.json", cities.sanitize(json.loads(summ_path.read_text())))
+    return True
 
 
 def build_city(code: str, loc: pd.DataFrame) -> dict | None:
@@ -61,6 +104,9 @@ def build_city(code: str, loc: pd.DataFrame) -> dict | None:
             out / "alert_predictions.csv", index=False)
     if code == data.DAGUPAN and (RESULTS / "s1_egay_flood.geojson").exists():
         shutil.copyfile(RESULTS / "s1_egay_flood.geojson", out / "s1_flood.geojson")
+    if code == data.DAGUPAN and REPORTS.exists():
+        _write_json(out / "flood_reports.json", flood_reports(pd.read_csv(REPORTS), gdf))
+    extra = [sc for sc in EXTRA_SCENARIOS if build_scenario(src, out, sc)]
 
     lon, lat, bbox = cities.centroid_bbox(data.barangays(code))
     row = loc[loc.adm3_pcode == code].iloc[0]
@@ -84,6 +130,7 @@ def build_city(code: str, loc: pd.DataFrame) -> dict | None:
         "coverage_after": cities.coverage_after(summary),
         "alert": cities.alert_block(scores),
         "steps": summary["steps"],
+        "scenarios": [SCENARIO, *extra],
     }
     size = (out / "barangays.geojson").stat().st_size / 1e6
     print(f"{code} {row_out['name']}: simplify={tol}, barangays.geojson {size:.2f} MB")

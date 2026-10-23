@@ -112,6 +112,40 @@ def agreement(mask_a, mask_b):
 
 
 # --------------------------------------------------------------------------
+# Radar extent as a hazard scenario
+# --------------------------------------------------------------------------
+
+RADAR_LEVELS = ("low", "med", "high")
+
+
+def radar_hazard(table, scenario="egay", method="threshold", level="med"):
+    """Per-barangay radar flood shares in the same shape as `data.flood_hazard()`.
+
+    table is the s1_<event>_barangays.csv output of scripts/run_s1_flood.py, with
+    adm4_pcode and s1_<method>_share (0 to 1) columns. Radar sees water but not
+    depth, so the whole flooded share goes into one NOAH-style level (default
+    med: roads slow to a quarter speed but stay open, facilities stay usable).
+    Barangays the radar could not see (NaN share) count as dry.
+
+    Returns percent of area per barangay in columns <scenario>_low/_med/_high,
+    indexed by adm4_pcode, so the pipeline can run with scenario=<scenario>.
+    """
+    import pandas as pd
+
+    if level not in RADAR_LEVELS:
+        raise ValueError(f"level must be one of {RADAR_LEVELS}")
+    col = f"s1_{method}_share"
+    if col not in table.columns:
+        raise ValueError(f"no {col} column; methods present: "
+                         f"{sorted(c[3:-6] for c in table.columns if c.startswith('s1_') and c.endswith('_share'))}")
+    share = pd.to_numeric(table[col], errors="coerce").fillna(0.0).clip(0.0, 1.0).to_numpy()
+    out = pd.DataFrame(0.0, index=pd.Index(table.adm4_pcode, name="adm4_pcode"),
+                       columns=[f"{scenario}_{k}" for k in RADAR_LEVELS])
+    out[f"{scenario}_{level}"] = share * 100.0
+    return out
+
+
+# --------------------------------------------------------------------------
 # U-Net (torch imported lazily)
 # --------------------------------------------------------------------------
 

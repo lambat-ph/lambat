@@ -55,3 +55,20 @@ def test_normalise_db_range_and_nan():
     n = flood.normalise_db(x)
     assert n.min() >= -1 and n.max() <= 1
     assert n[0, 0, 2] == 0.0
+
+
+def test_radar_hazard_puts_share_in_one_level():
+    import pandas as pd
+
+    table = pd.DataFrame({"adm4_pcode": ["A", "B", "C"], "s1_threshold_share": [0.25, float("nan"), 1.4],
+                          "s1_otsu_share": [0.5, 0.0, 0.1]})
+    hz = flood.radar_hazard(table, scenario="egay")
+    assert list(hz.columns) == ["egay_low", "egay_med", "egay_high"]
+    assert hz.loc["A"].tolist() == [0.0, 25.0, 0.0]
+    assert hz.loc["B", "egay_med"] == 0.0  # not seen by the radar counts as dry
+    assert hz.loc["C", "egay_med"] == 100.0  # capped
+    assert flood.radar_hazard(table, method="otsu", level="high").loc["A", "egay_high"] == 50.0
+    with pytest.raises(ValueError):
+        flood.radar_hazard(table, method="unet")
+    with pytest.raises(ValueError):
+        flood.radar_hazard(table, level="deep")

@@ -1,13 +1,13 @@
-import { getCities, getCity, cityHref } from "../data.js";
+import { getCities, getCity, getFlood, cityHref } from "../data.js";
 import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
 import { fmt, pct, esc, reducedMotion, useCss, skel, moreBelow } from "../format.js";
 
 const METRICS = [
-  { key: "exposed", seg: "Exposed", prop: "exposed", short: "Exposed residents", desc: "People who live where a 25-year flood reaches.",
+  { key: "exposed", seg: "Exposed", prop: "exposed", short: "Exposed residents", desc: () => `People who live ${whereFlood()}.`,
     legend: "Exposed residents, per barangay", unit: "residents", lo: "fewer", hi: "more", f: fmt },
   { key: "unreached", seg: "Cut off", prop: "exposed_unreached_flood", short: "Residents cut off from care", desc: `Exposed residents more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`,
     legend: `Residents cut off from care, per barangay`, unit: "residents", lo: "fewer", hi: "more", f: fmt },
-  { key: "share", seg: "Area flooded", prop: "flooded_share", short: "Area flooded", desc: "How much of each barangay's land a 25-year flood covers.",
+  { key: "share", seg: "Area flooded", prop: "flooded_share", short: "Area flooded", desc: () => `How much of each barangay's land ${fl() ? "radar saw under water" : `a ${years()}-year flood covers`}.`,
     legend: "Share of each barangay's area flooded", unit: "of the area", lo: "less", hi: "more", f: (v) => pct(v, 0) },
 ];
 const KINDS = {
@@ -19,6 +19,17 @@ const KINDS = {
 const kindLabel = (k) => { if (!k) return "Dose point"; if (KINDS[k]) return KINDS[k]; const t = String(k).replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
 const SEEN_KEY = "lambat.tourSeen";
 const PLANS = ["3", "5", "8"];
+// Observed floods mapped from radar (the pipeline's scenario key), and how the page talks about them.
+const FLOODS = {
+  egay: {
+    seg: "Typhoon Egay", noun: "the Typhoon Egay flood", where: "where radar saw Typhoon Egay's flood water", event: "Typhoon Egay / habagat 2023",
+    tipT: "Typhoon Egay flood", tip: "Flood water seen by the Sentinel-1 radar satellite on 28 July 2023, two days after Typhoon Egay, compared with a dry pass on 11 April 2023. Radar shows where water was, not how deep, and can miss water between buildings.",
+    desc: "A real flood: water seen by radar on 28 July 2023, two days after Typhoon Egay. Depth is unknown, so flooded roads are slowed, not closed.",
+    src: "Mapped from the Sentinel-1 radar pass of 28 July 2023, WorldPop and OpenStreetMap. Not checked on the ground.",
+  },
+};
+const NOAH_DESC = "UP NOAH hazard map: where a flood this size would reach. Ready before any flood happens.";
+const REPORT = "#D9480F";
 const YEARS_DEFAULT = 25;
 
 const CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
@@ -86,6 +97,11 @@ const TEMPLATE = `
     <aside class="drawer" id="opts" role="dialog" aria-modal="true" aria-labelledby="optsT" inert>
       <div class="drawer-head"><h2 id="optsT">More options</h2><button class="x" id="optClose" type="button" aria-label="Close more options">&times;</button></div>
       <div class="drawer-body" id="optsBody">
+        <div id="floodWrap" hidden>
+          <h3 class="opts-h" id="floodH">Flood</h3>
+          <div class="mseg" id="floods" role="radiogroup" aria-labelledby="floodH"></div>
+          <p class="map-note mdesc" id="floodDesc"></p>
+        </div>
         <h3 class="opts-h" id="measureH">Colour the map by</h3>
         <div class="mseg" id="measures" role="radiogroup" aria-labelledby="measureH"></div>
         <p class="map-note mdesc" id="measureDesc"></p>
@@ -93,6 +109,7 @@ const TEMPLATE = `
         <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
         <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
         <label class="switch"><span>Show dose points on the map</span><input type="checkbox" role="switch" id="lyDose" checked></label>
+        <label class="switch" id="lyRepWrap" hidden><span>News flood reports</span><input type="checkbox" role="switch" id="lyRep"></label>
         <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
         <p class="map-note" id="reliefNote" hidden></p>
         <h3 class="opts-h">Go to</h3>
@@ -143,6 +160,11 @@ const $ = (s) => host.querySelector(s);
 const dur = (n) => (reducedMotion() ? 0 : n);
 const cityName = () => { const c = S.cities.find((x) => x.code === S.city); return c ? c.name : ""; };
 const years = () => { const m = S.data && S.data.summary && /(\d+)/.exec(S.data.summary.scenario || ""); return m ? +m[1] : YEARS_DEFAULT; };
+// The flood the numbers are for: an observed flood from FLOODS, or a NOAH return period.
+const fl = () => (S && S.data && FLOODS[S.flood]) || null;
+const floodNoun = () => (fl() ? fl().noun : `a ${years()}-year flood`);
+const whereFlood = () => (fl() ? fl().where : `where a ${years()}-year flood reaches`);
+const floodLabel = (f) => (FLOODS[f] ? FLOODS[f].seg : `${(/(\d+)/.exec(f) || [0, YEARS_DEFAULT])[1]}-year flood`);
 const sig2 = (v) => { if (v == null) return 0; if (Math.abs(v) < 100) return Math.round(v); const p = 10 ** (Math.floor(Math.log10(Math.abs(v))) - 1); return Math.round(v / p) * p; };
 
 export async function render(el, params) {
@@ -192,6 +214,7 @@ function syncUrl() {
   if (S.city) {
     const p = new URLSearchParams({ metric: S.metric.key, plan: S.plan });
     if (S.view === "3d") p.set("view", "3d");
+    if (S.flood && S.data && S.flood !== S.data.floods[0]) p.set("flood", S.flood);
     h = "#/map/" + encodeURIComponent(S.city) + "?" + p;
   }
   history.replaceState(null, "", h);
@@ -331,8 +354,8 @@ function mapReady() {
 }
 function showNational(first) {
   endTour(false);
-  S.city = null; S.data = null; S.active = null; S.hover = null; clearSel();
-  setCityLayers(false);
+  S.city = null; S.data = null; S.flood = null; S.active = null; S.hover = null; clearSel();
+  setCityLayers(false); paintReports();
   if (map.getLayer("b-hov")) { map.setLayoutProperty("b-hov", "visibility", "none"); S.hovB = null; }
   I.hover = null; if (!first) S.ready = true;
   map.setTerrain(null);
@@ -439,7 +462,7 @@ function syncMeasure() {
   const ms = $("#measures"), i = METRICS.indexOf(S.metric), inp = ms.querySelectorAll("input");
   if (inp[i]) inp[i].checked = true;
   ms.style.setProperty("--i", Math.max(0, i));
-  $("#measureDesc").textContent = S.metric.desc;
+  $("#measureDesc").textContent = S.metric.desc();
 }
 function ensureCityLayers() {
   if (map.getSource("brgy")) { map.getSource("brgy").setData(S.data.barangays); return; }
@@ -516,11 +539,9 @@ async function selectCity(code, first) {
   }
   loaderStep(3, "Placing dose points");
   S.data = data; S.city = code; S.active = null; S.hover = null; clearSel();
-  const hasUnreached = data.rows.some((r) => r.unreached != null);
-  const ui = $('#measures input[value="unreached"]');
-  ui.disabled = !hasUnreached; ui.parentNode.title = hasUnreached ? "" : "Not computed for this city yet";
-  if (!hasUnreached && S.metric.key === "unreached") S.metric = METRICS[0];
-  syncMeasure();
+  S.flood = data.floods[0];
+  S.base = { barangays: data.barangays, dosePoints: data.dosePoints, summary: data.summary, rows: data.rows, coverage: data.coverage };
+  syncUnreached();
   const bb = data.bbox;
   const diag = Math.hypot((bb[2] - bb[0]) * 111.32 * Math.cos((c.lat * Math.PI) / 180), (bb[3] - bb[1]) * 110.57) * 1000;
   S.scaleH = Math.max(300, diag * 0.06);
@@ -537,8 +558,13 @@ async function selectCity(code, first) {
   $("#dashLink").href = cityHref(code);
   $("#brgyPick").innerHTML = '<option value="">Choose a barangay</option>' + [...data.rows].sort((a, b) => a.name.localeCompare(b.name)).map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
   buildPlanSeg();
+  buildFloodSeg();
+  paintReports();
   drawDose();
   renderStrip();
+  const want = first && S.params.query.get("flood");
+  if (want && want !== S.flood && data.floods.includes(want)) await setFlood(want);
+  if (S.dead || !map || S.city !== code) return;
   const d3 = S.view === "3d";
   map.resize();
   map.fitBounds(bb, { padding: pad(), maxZoom: 14.5, pitch: d3 ? 50 : 0, bearing: d3 ? -12 : 0, duration: first ? 0 : dur(2200) });
@@ -553,6 +579,73 @@ async function selectCity(code, first) {
   $("#reliefNote").textContent = S.reliefOK ? "" : "Terrain tiles could not be loaded.";
   applyRelief();
   loadS1();
+}
+
+function syncUnreached() {
+  const hasUnreached = S.data.rows.some((r) => r.unreached != null);
+  const ui = $('#measures input[value="unreached"]');
+  ui.disabled = !hasUnreached; ui.parentNode.title = hasUnreached ? "" : "Not computed for this city yet";
+  if (!hasUnreached && S.metric.key === "unreached") S.metric = METRICS[0];
+  syncMeasure();
+}
+
+/* ---------- flood source: the NOAH hazard map, or an observed flood mapped from radar ---------- */
+function buildFloodSeg() {
+  const fls = (S.data && S.data.floods) || [], w = $("#floodWrap");
+  w.hidden = fls.length < 2;
+  if (w.hidden) return;
+  const seg = $("#floods");
+  seg.style.setProperty("--n", fls.length);
+  seg.style.setProperty("--i", Math.max(0, fls.indexOf(S.flood)));
+  seg.innerHTML = '<span class="thumb" aria-hidden="true"></span>' + fls.map((f) => `<label><input type="radio" name="flood" value="${esc(f)}"${f === S.flood ? " checked" : ""}><span>${esc(floodLabel(f))}</span></label>`).join("");
+  $("#floodDesc").textContent = fl() ? fl().desc : NOAH_DESC;
+}
+// Swap the parts that depend on the flood (barangay numbers, dose points, summary) and redraw.
+async function setFlood(f) {
+  if (!S.data || f === S.flood || !S.data.floods.includes(f)) return;
+  const city = S.city;
+  const part = f === S.data.floods[0] ? S.base : await getFlood(city, f);
+  if (S.dead || !map || S.city !== city) return;
+  if (!part) { buildFloodSeg(); $("#floodDesc").textContent = "This flood map could not be loaded."; return; }
+  S.flood = f; S.data = { ...S.data, ...part }; S.active = null; S.hover = null; S.rollKey = null; clearSel();
+  map.getSource("brgy").setData(S.data.barangays);
+  syncUnreached();
+  const avail = availPlans();
+  if (!avail.includes(S.plan)) S.plan = avail.includes("3") ? "3" : avail[0] || "3";
+  paintMetric(); buildPlanSeg(); buildFloodSeg(); paintReports(); drawDose(); renderStrip(); syncUrl(); islRender();
+}
+
+/* ---------- news flood reports: a dashed outline on each barangay the news named ---------- */
+// On an observed flood, only that flood's reports, so the radar map can be checked against them.
+function reportCodes() {
+  const r = S.data && S.data.reports;
+  if (!r) return [];
+  const ev = fl() && fl().event;
+  return Object.keys(r.barangays).filter((c) => !ev || r.barangays[c].some((x) => x.event === ev));
+}
+function paintReports() {
+  const has = !!(S.city && S.data && S.data.reports);
+  $("#lyRepWrap").hidden = !has;
+  if (!map || !map.getSource("brgy")) return;
+  if (!map.getLayer("b-rep")) {
+    const none = ["==", ["get", "adm4_pcode"], ""];
+    map.addLayer({ id: "b-rep-c", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, filter: none, paint: { "line-color": "#FFFFFF", "line-width": 5.5 } }, "b-hov");
+    map.addLayer({ id: "b-rep", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, filter: none, paint: { "line-color": REPORT, "line-width": 3, "line-dasharray": [2, 1.2] } }, "b-hov");
+  }
+  const on = has && $("#lyRep").checked;
+  const f = ["in", ["get", "adm4_pcode"], ["literal", on ? reportCodes() : []]];
+  ["b-rep-c", "b-rep"].forEach((id) => { map.setFilter(id, f); map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); });
+  renderLegend();
+}
+function reportsHtml(code) {
+  const r = S.data.reports;
+  if (!r) return "";
+  const list = r.barangays[code] || [];
+  if (!list.length) return `<p class="muted xs rep-line">Not named in the news reports we collected for ${r.events.length} floods.</p>`;
+  const n = new Set(list.map((x) => x.event)).size, last = list[list.length - 1];
+  const ev = fl() && fl().event, inEv = ev && list.some((x) => x.event === ev);
+  const link = /^https?:\/\//.test(last.url || "") ? ` <a href="${esc(last.url)}" target="_blank" rel="noopener">Source</a>` : "";
+  return `<p class="muted xs rep-line">In the news: named in ${n} of ${r.events.length} reported floods${ev ? `, ${inEv ? "including" : "but not"} ${esc(fl().seg)}` : ""}. Latest: ${esc(last.event)} (${esc(last.date)}).${link}</p>`;
 }
 
 function loadS1() {
@@ -590,8 +683,8 @@ function selectBrgy(code, fly) {
   const info = $("#info");
   info.hidden = false;
   const said = [];
-  if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents in ${esc(r.name)} live where a ${years()}-year flood reaches.`);
-  else said.push(`${fmt(r.exposed)} residents in ${esc(r.name)} live where a ${years()}-year flood reaches.`);
+  if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents in ${esc(r.name)} live ${whereFlood()}.`);
+  else said.push(`${fmt(r.exposed)} residents in ${esc(r.name)} live ${whereFlood()}.`);
   if (r.unreached != null && r.exposed) said.push(`${fmt(r.unreached)} of them are cut off from care: more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`);
   if (r.share != null) said.push(`${pct(r.share, 0)} of the barangay's area is flooded.`);
   info.innerHTML = `<button class="close" type="button" aria-label="Close details">&times;</button>
@@ -602,6 +695,7 @@ function selectBrgy(code, fly) {
     ${r.unreached != null ? `<dt>Cut off from care</dt><dd>${fmt(r.unreached)}</dd>` : ""}
     <dt>Area flooded</dt><dd>${pct(r.share, 0)}</dd>
     <dt>Capsules per flood week</dt><dd>${fmt(r.capsules)}</dd></dl>
+    ${reportsHtml(code)}
     <a href="${cityHref(S.city, "barangays")}">Open city dashboard</a>`;
   info.querySelector(".close").addEventListener("click", clearSel);
   const feat = S.data.barangays.features.find((x) => x.properties.adm4_pcode === code);
@@ -804,14 +898,15 @@ function unbusy() {
 }
 const nb = (t) => `<span class="nb">${t}</span>`;
 // Two short lines: where, then the flood the numbers are for (with its definition one tap away).
-const eyebrowHtml = (name, canChange) => `<span class="eb-l">${esc(name)}${canChange ? ` · <button class="eb-change" id="changeCity" type="button">change</button>` : ""}</span><span class="eb-l">After a ${nb(tipBtn("flood25", `${years()}-year flood`, `What is a ${years()}-year flood?`))}</span>`;
+const eyebrowHtml = (name, canChange) => `<span class="eb-l">${esc(name)}${canChange ? ` · <button class="eb-change" id="changeCity" type="button">change</button>` : ""}</span><span class="eb-l">After ${fl() ? nb(tipBtn(S.flood, fl().seg, `What is the ${fl().tipT} map?`)) : `a ${nb(tipBtn("flood25", `${years()}-year flood`, `What is a ${years()}-year flood?`))}`}</span>`;
 const WALK = nb(`${WALK_MIN}-minute walk`);
 // A small "?" next to a term opens a one-line definition.
 // The term itself is the button: dotted blue underline plus a small solid "?" glyph.
 const tipBtn = (k, term, label) => `<button class="tip-q" type="button" data-tip="${k}" aria-label="${label}" aria-expanded="false" aria-controls="tipPop"><span class="tip-t">${term}</span><span class="tip-g" aria-hidden="true">?</span></button>`;
 const TIPS = () => ({
   flood25: { t: `${years()}-year flood`, b: `A flood big enough that it has about a ${Math.round(100 / years())}% chance of happening in any year (UP NOAH hazard map).` },
-  exposed: { t: "Exposed residents", b: `People who live where a ${years()}-year flood reaches.` },
+  exposed: { t: "Exposed residents", b: `People who live ${whereFlood()}.` },
+  ...Object.fromEntries(Object.entries(FLOODS).map(([k, f]) => [k, { t: f.tipT, b: f.tip }])),
   dose: { t: "Dose point", b: "A temporary spot, like a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood." },
 });
 // A number that counts up once. The final value is already in the text, so reduced motion and screen readers get it at once.
@@ -843,6 +938,8 @@ function renderStrip() {
     return;
   }
   eb.innerHTML = eyebrowHtml(cityName(), S.cities.length > 1);
+  const src = fl() ? fl().src : `Modelled from the UP NOAH ${years()}-year flood map, WorldPop and OpenStreetMap. Not checked on the ground.`;
+  $("#srcNote").textContent = src; $("#srcNoteM").textContent = src;
   q.textContent = "Where should the city hand out free leptospirosis medicine?";
   renderSentence();
 }
@@ -858,7 +955,7 @@ function renderSentence() {
   const a = $("#answer");
   a.removeAttribute("aria-busy");
   trackPlan(share);
-  const lead = exposed != null ? `<p class="a-lead">${rollNum(exposed, "n")} residents are ${nb(tipBtn("exposed", "exposed", "What does exposed mean?"))} to a ${years()}-year flood.</p>` : "";
+  const lead = exposed != null ? `<p class="a-lead">${rollNum(exposed, "n")} residents are ${nb(tipBtn("exposed", "exposed", "What does exposed mean?"))} to ${floodNoun()}.</p>` : "";
   let html;
   if (share != null) {
     html = `${lead}<p class="a-main">Opening <b>${S.plan}</b> temporary ${nb(tipBtn("dose", "dose points", "What is a dose point?"))} brings ${rollNum(share * 100, "p")} of them within a ${WALK} of free doxycycline${now != null ? `<span class="now">, up from ${pct(now, 0)} now</span>` : ""}.</p>`;
@@ -870,7 +967,7 @@ function renderSentence() {
   const next = html.trim();
   if (a.innerHTML !== next) {
     hideTip(); a.innerHTML = next;
-    const key = `${S.city}|${S.plan}`;
+    const key = `${S.city}|${S.flood}|${S.plan}`;
     if (S.rollKey !== key) { S.rollKey = key; roll(a); }
   }
   const pc = $("#planCov");
@@ -910,7 +1007,14 @@ function renderLegend() {
     <div class="ticks" aria-hidden="true">${ticks}</div>
     <div class="lg-words" aria-hidden="true"><span>${m.lo}</span><span>${m.hi}</span></div>
     <p class="sr-only">${m.legend}, from ${m.f(S.hasZero ? S.minPos : S.min)} to ${m.f(S.max)} ${m.unit}. Darker means more.${S.hasZero ? " Barangays with 0 are hatched." : ""}</p>
-    <div class="key"><span class="dot-gold"></span>Gold number: a dose point. 1 opens first.${S.view === "3d" ? " Column height follows the colour." : ""}</div>`;
+    <div class="key"><span class="dot-gold"></span>Gold number: a dose point. 1 opens first.${S.view === "3d" ? " Column height follows the colour." : ""}</div>${repKey()}`;
+}
+function repKey() {
+  const r = S.data && S.data.reports;
+  if (!r || !$("#lyRep").checked) return "";
+  const n = reportCodes().length, yrs = [r.events[0].date, r.events[r.events.length - 1].date].map((d) => d.slice(0, 4));
+  const what = fl() ? `in news reports of ${esc(fl().seg)}` : `in news reports of ${r.events.length} floods, ${yrs[0]} to ${yrs[1]}`;
+  return `<div class="key"><span class="rep-sw" aria-hidden="true"></span>Dashed outline: named ${what} (${n} of ${S.data.rows.length} barangays). Reports follow where people live, so treat them as a rough check.</div>`;
 }
 function highlightList(code) {
   host.querySelectorAll("#cityList button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.c === code)));
@@ -932,7 +1036,7 @@ function tourSteps() {
   steps.push({
     title: "Who was in the water",
     metric: "exposed", plan: null, hi: topE, val: fmt(topE.exposed), spot: null, pref: ["right", "left", "top", "bottom"],
-    body: `Darker barangays have more exposed residents: people who live where a ${years()}-year flood reaches. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
+    body: `Darker barangays have more exposed residents: people who live ${whereFlood()}. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
   });
   const p3 = sum.dose_point_plans && sum.dose_point_plans["3"];
   const share = S.data.coverage && S.data.coverage.plans && S.data.coverage.plans["3"];
@@ -1473,6 +1577,8 @@ function wire() {
   });
   $("#lyDose").addEventListener("change", (e) => S.markers.forEach((m) => (e.target.checked ? m.addTo(map) : m.remove())));
   $("#lyRelief").addEventListener("change", (e) => { S.reliefOn = e.target.checked; applyRelief(); });
+  $("#floods").addEventListener("change", (e) => { if (e.target.name === "flood") setFlood(e.target.value); });
+  $("#lyRep").addEventListener("change", paintReports);
   $("#lyS1").addEventListener("change", (e) => map.setLayoutProperty("s1-fill", "visibility", e.target.checked ? "visible" : "none"));
   wireSheet();
   $("#sitesTog").addEventListener("click", () => sitesOpen($("#sites").classList.contains("shut")));

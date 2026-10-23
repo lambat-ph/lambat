@@ -23,6 +23,7 @@ def exposed_by_barangay(
     year: int | None = None,
     city: str = data.DAGUPAN,
     excluded_share: float | None = None,
+    hazard: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Exposed residents per barangay for one flood scenario.
 
@@ -42,8 +43,12 @@ def exposed_by_barangay(
     We have no local data for it, so the default None leaves it out. When set,
     those women are removed from exposed and weekly_capsules and reported in
     refer_pregnant_lactating for referral.
+
+    hazard defaults to the NOAH table for the city. Pass another table in the
+    same shape (e.g. flood.radar_hazard) to use an observed flood instead.
     """
-    hazard = data.flood_hazard(city)
+    if hazard is None:
+        hazard = data.flood_hazard(city)
     brgy = data.barangays(city).set_index("adm4_pcode")
     pop = data.population(city, year)
 

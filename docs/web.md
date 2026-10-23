@@ -30,8 +30,9 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 
 ## Data contract (`web/data/`, written by `scripts/build_web.py`)
 
-- `cities.json`: one entry per city: `code, name, region, province, lon, lat, bbox, barangays, population, exposed, exposed_share, weekly_capsules, lepto_cases_2008_2022, access_gap, coverage_after {"3","5","8"}, alert {status, correlation, caught, false_alerts, baseline_correlation}, steps`.
+- `cities.json`: one entry per city: `code, name, region, province, lon, lat, bbox, barangays, population, exposed, exposed_share, weekly_capsules, lepto_cases_2008_2022, access_gap, coverage_after {"3","5","8"}, alert {status, correlation, caught, false_alerts, baseline_correlation}, steps, scenarios`.
 - `<code>/barangays.geojson`, `<code>/dose_points.geojson` (every site of every plan, with `plans` and `rank_in_plan`), `<code>/summary.json`, `<code>/alert_scores.json`, `<code>/alert_predictions.csv`, optional `PH015518000/s1_flood.geojson`.
+- Optional, fetched only when `manifest.json` lists them: `PH015518000/flood_reports.json` (news flood reports by barangay: the map's "News flood reports" switch and the details card), and `<code>/<scenario>/barangays.geojson, dose_points.geojson, summary.json` for an extra flood source (`egay`: Typhoon Egay mapped from radar). When a city has one, More options shows a Flood picker that redraws the numbers and dose points for it; the address keeps it as `?flood=egay`.
 - `national.json`: totals and the pooled alert.
 
 ## Known issues to fix next

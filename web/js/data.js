@@ -18,6 +18,12 @@ async function listed(url) {
   if (!f || f.includes("cities.json") || f.some((x) => x.includes("/"))) return true;
   return f.includes(url.slice(DATA.length + 1));
 }
+// Optional files (radar layers, extra flood sources, news reports) are fetched only
+// when manifest.json lists them, so a city without them makes no 404 requests.
+async function has(path) {
+  await listed(`${DATA}/${path}`);
+  return !!(manifest && Array.isArray(manifest.files) && manifest.files.includes(path));
+}
 async function tryJSON(url) {
   if (!(await listed(url))) return null;
   try { return await getJSON(url); } catch { return null; }
@@ -182,28 +188,37 @@ export function rowsOf(gj) {
   return rows;
 }
 
+// Flood sources besides the default NOAH 25-year map, in the order the switch shows them.
+export const EXTRA_FLOODS = ["egay"];
+
+function coverageOf(sum, meta) {
+  if (sum && sum.exposed_on_road_network) {
+    return { dry: sum.exposed_within_reach_dry / sum.exposed_on_road_network, flood: sum.exposed_within_reach_flood / sum.exposed_on_road_network, plans: planCoverage(sum) };
+  }
+  return meta && meta.coverage_after ? { dry: null, flood: null, plans: meta.coverage_after } : null;
+}
+
 function loadCityFull(code) {
   return once("city:" + code, async () => {
     const cities = await getCities();
     const meta = cities.find((c) => c.code === code);
     if (!meta) return null;
     const base = `${DATA}/${code}`;
-    let [bar, dose, sum, sc, csvText, s1] = await Promise.all([
+    const opt = async (f) => ((await has(`${code}/${f}`)) ? tryJSON(`${base}/${f}`) : null);
+    let [bar, dose, sum, sc, csvText, s1, reports, extra] = await Promise.all([
       tryJSON(`${base}/barangays.geojson`), tryJSON(`${base}/dose_points.geojson`),
       tryJSON(`${base}/summary.json`), tryJSON(`${base}/alert_scores.json`),
-      tryText(`${base}/alert_predictions.csv`), tryJSON(`${base}/s1_flood.geojson`),
+      tryText(`${base}/alert_predictions.csv`), opt("s1_flood.geojson"), opt("flood_reports.json"),
+      Promise.all(EXTRA_FLOODS.map(async (f) => ((await has(`${code}/${f}/summary.json`)) ? f : null))),
     ]);
     if (!bar) {
       const flat = code === FLAT_CITY.code ? await loadFlat() : null;
-      if (!flat) return { meta, barangays: null, dosePoints: null, summary: null, alertScores: null, alertSeries: null, s1Flood: s1, rows: [], bbox: meta.bbox || null, coverage: null, alert: null, error: "No barangay data for " + meta.name };
+      if (!flat) return { meta, barangays: null, dosePoints: null, summary: null, alertScores: null, alertSeries: null, s1Flood: s1, reports, floods: [], rows: [], bbox: meta.bbox || null, coverage: null, alert: null, error: "No barangay data for " + meta.name };
       bar = flat.bar; dose = dose || flat.dose; sum = sum || flat.sum; sc = sc || flat.sc; csvText = csvText || flat.csv;
     }
     const rows = rowsOf(bar);
     const bbox = meta.bbox && meta.bbox.length === 4 ? meta.bbox : bboxOf(bar);
-    let coverage = null;
-    if (sum && sum.exposed_on_road_network) {
-      coverage = { dry: sum.exposed_within_reach_dry / sum.exposed_on_road_network, flood: sum.exposed_within_reach_flood / sum.exposed_on_road_network, plans: planCoverage(sum) };
-    } else if (meta.coverage_after) coverage = { dry: null, flood: null, plans: meta.coverage_after };
+    const coverage = coverageOf(sum, meta);
     const series = csvText ? parseCsv(csvText).map((r) => ({ week: r.week, actual: +r.actual, rain_model: +r.rain_model, seasonal: +r.seasonal })) : null;
     let alert = normAlertFromScores(sc);
     if (!alert && meta.alert && meta.alert.status) {
@@ -211,12 +226,23 @@ function loadCityFull(code) {
     }
     if (alert && meta.alert && meta.alert.status && meta.alert.status !== "evaluated") alert.status = meta.alert.status;
     return { meta, barangays: bar, dosePoints: dose || { type: "FeatureCollection", features: [] }, summary: sum || null, alertScores: sc || null, alertSeries: series, s1Flood: s1 || null,
+      reports: reports || null, floods: [(sum && sum.scenario) || "25yr", ...extra.filter(Boolean)],
       // extras: normalised helpers
       rows, bbox, coverage, alert };
   });
 }
-/** City bundle: {meta, barangays, dosePoints, summary, alertScores, alertSeries, s1Flood, + rows, bbox, coverage, alert}. Optional parts are null. */
+/** City bundle: {meta, barangays, dosePoints, summary, alertScores, alertSeries, s1Flood, reports, floods, + rows, bbox, coverage, alert}. Optional parts are null; floods lists the flood sources, default first. */
 export async function getCity(code) { return loadCityFull(code); }
+
+/** The parts of a city bundle that change with the flood source: {barangays, dosePoints, summary, rows, coverage}, or null. */
+export function getFlood(code, flood) {
+  return once(`flood:${code}:${flood}`, async () => {
+    const base = `${DATA}/${code}/${flood}`;
+    const [bar, dose, sum] = await Promise.all([tryJSON(`${base}/barangays.geojson`), tryJSON(`${base}/dose_points.geojson`), tryJSON(`${base}/summary.json`)]);
+    if (!bar || !sum) return null;
+    return { barangays: bar, dosePoints: dose || { type: "FeatureCollection", features: [] }, summary: sum, rows: rowsOf(bar), coverage: coverageOf(sum, null) };
+  });
+}
 
 
 // Route helpers
