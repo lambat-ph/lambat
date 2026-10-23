@@ -43,7 +43,28 @@ def pooled_iou(preds, truths):
     return inter / union if union else float("nan")
 
 
-def main():
+def predict(model, chips, flood, threshold=0.5):
+    """Thresholded water masks for a list of (x, y) chips."""
+    import torch
+
+    model.eval()
+    preds = []
+    with torch.no_grad():
+        for x, _ in chips:
+            xn = torch.from_numpy(flood.normalise_db(x)[None])
+            p = torch.sigmoid(model(xn))[0, 0].numpy() > threshold
+            p[~np.isfinite(x).all(axis=0)] = False
+            preds.append(p)
+    return preds
+
+
+def main(argv=None, on_epoch=None):
+    """Train and evaluate. on_epoch(epoch, model, loss, valid_iou, ctx) is optional.
+
+    It is called with epoch 0 (untrained model, loss None) and after every epoch.
+    ctx holds the loaded chips: ctx["valid"], ctx["test"], ctx["test_pairs"].
+    With on_epoch=None the behaviour and outputs are unchanged.
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument("--epochs", type=int, default=5)
     ap.add_argument("--limit", type=int, default=None, help="train chips (default all 252)")
@@ -56,7 +77,7 @@ def main():
     ap.add_argument("--pretrained", action="store_true", help="imagenet encoder weights (downloads)")
     ap.add_argument("--out", default=str(ROOT / "checkpoints" / "unet_sen1floods11.pt"))
     ap.add_argument("--seed", type=int, default=0)
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     import torch
     from torch.utils.data import DataLoader
@@ -83,16 +104,10 @@ def main():
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    def predict(chips):
-        model.eval()
-        preds = []
-        with torch.no_grad():
-            for x, _ in chips:
-                xn = torch.from_numpy(flood.normalise_db(x)[None])
-                p = torch.sigmoid(model(xn))[0, 0].numpy() > 0.5
-                p[~np.isfinite(x).all(axis=0)] = False
-                preds.append(p)
-        return preds
+    ctx = {"valid": valid, "test": test, "test_pairs": test_pairs}
+    valid_truths = [y for _, y in valid]
+    if on_epoch is not None:
+        on_epoch(0, model, None, pooled_iou(predict(model, valid, flood), valid_truths), ctx)
 
     best, best_epoch = -1.0, 0
     for epoch in range(1, args.epochs + 1):
@@ -104,20 +119,22 @@ def main():
             loss.backward()
             opt.step()
             total += loss.item() * len(x)
-        v = pooled_iou(predict(valid), [y for _, y in valid])
+        v = pooled_iou(predict(model, valid, flood), valid_truths)
         mark = ""
         if v > best:
             best, best_epoch = v, epoch
             torch.save(model.state_dict(), out)
             mark = "  *best*"
         print(f"epoch {epoch}/{args.epochs}  loss {total / len(ds):.4f}  valid IoU {v:.3f}{mark}  ({time.time() - t0:.0f}s)", flush=True)
+        if on_epoch is not None:
+            on_epoch(epoch, model, total / len(ds), v, ctx)
 
     print(f"best epoch {best_epoch} (valid IoU {best:.3f}), saved {out}")
     model.load_state_dict(torch.load(out, map_location="cpu"))
 
     print("evaluating on test chips ...")
     truths = [y for _, y in test]
-    u_preds = predict(test)
+    u_preds = predict(model, test, flood)
     o_preds = []
     for x, _ in test:
         if not np.isfinite(x[0]).any():  # all no-data chip: nothing to threshold

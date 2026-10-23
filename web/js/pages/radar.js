@@ -33,13 +33,22 @@ function picsHTML(key) {
     <p class="caption">${ex.note}</p>`;
 }
 
+const TRAIN = `
+<figure class="rd-flow">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="assets/radar/unet_training.png">
+    <img src="assets/radar/unet_training.gif" width="960" height="700" alt="Animation of the U-Net learning over 15 rounds of training. Three radar images are shown, each beside its hand-drawn water label and the model's guess. Before training the guesses are blotchy and mostly wrong. After each round the guess gets closer to the hand-drawn water, while a line chart of the score on unseen images climbs and a second chart of the training loss falls.">
+  </picture>
+  <figcaption><b>How it learned</b>Before training the model guesses almost at random. After each round of training on 252 hand-labelled images it gets closer to the hand-drawn water. This is a re-run with the same settings, so the numbers differ slightly from the reported run.</figcaption>
+</figure>`;
+
 const FLOW = `
 <figure class="rd-flow">
   <picture>
     <source media="(prefers-reduced-motion: reduce)" srcset="assets/radar/unet_flow.png">
     <img src="assets/radar/unet_flow.gif" width="960" height="720" alt="Animation of the trained U-Net reading one radar image of a landscape with lakes. A radar picture enters at the top left. Four steps shrink it going down the left side: fine detail, shapes, regions, scene. At the bottom is a compact summary. Four steps grow it back going up the right side, with gold dashed lines passing detail across. At the top right is the water mask, which closely matches the hand-drawn label, with an overlap score (IoU) of 0.94.">
   </picture>
-  <figcaption>The trained model reading one real radar image, step by step. Each square is what the model pays attention to at that step; it gets smaller and more abstract going down, then the decoder rebuilds a sharp water map going up. This chip is one of the easier ones (overlap 0.94); the typical chip scores 0.33, see the results below.</figcaption>
+  <figcaption><b>How it works</b>The trained model reading one real radar image, step by step. Each square is what the model pays attention to at that step; it gets smaller and more abstract going down, then the decoder rebuilds a sharp water map going up. This chip is one of the easier ones (overlap 0.94); the typical chip scores 0.33, see the results below.</figcaption>
 </figure>`;
 
 const DIAGRAM = `
@@ -182,10 +191,10 @@ export async function render(root) {
     </div>
     <div class="card rd-ex">
       <h3 class="card-title">Real examples</h3>
-      <p class="caption">From the Sen1Floods11 test set (Bonafilia et al., 2020): Sentinel-1 radar chips, not used to train the model. Blue marks water.</p>
+      <p class="caption">From the Sen1Floods11 test set (Bonafilia et al., 2020): Sentinel-1 radar chips, not used to train the model. Blue marks water. <b>These are floods in the USA and Spain, not the Philippines:</b> the public training set has no Philippine images. A Dagupan example comes from Typhoon Egay below.</p>
       <div class="seg rd-seg" role="group" aria-label="Choose an example">
-        <button type="button" data-ex="usa" aria-pressed="true">Example A</button>
-        <button type="button" data-ex="spain" aria-pressed="false">Example B</button>
+        <button type="button" data-ex="usa" aria-pressed="true">USA</button>
+        <button type="button" data-ex="spain" aria-pressed="false">Spain</button>
       </div>
       <div id="rd-pics" aria-live="polite">${picsHTML("usa")}</div>
       <p class="caption" style="margin:0">Both chips were picked because they hold a lot of water. They are not an average sample. See the scores below.</p>
@@ -195,7 +204,7 @@ export async function render(root) {
   <section class="rd-sec" aria-labelledby="rd-h2">
     <h2 id="rd-h2">2. The model</h2>
     <p class="lead">A threshold only looks at how dark each pixel is. A U-Net also looks at the shapes around it, so a dark farm field and a dark lake can be told apart. It reads two radar bands, VV and VH, which respond differently to water and land.</p>
-    <div class="card">${FLOW}
+    <div class="card">${TRAIN}${FLOW}
       <details class="rd-details"><summary>Show as diagram</summary>${DIAGRAM}</details></div>
   </section>
 
