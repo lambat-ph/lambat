@@ -1225,7 +1225,11 @@ function islRender() {
 
 /* ---------- dose point list: folds under its heading so the legend card stays in view ---------- */
 function sitesOpen(on) {
-  $("#sites").classList.toggle("shut", !on);
+  // Fold animates the row height, then the inner list is hidden so it stops adding scroll height to the column.
+  const inner = $("#sitesBody").firstElementChild;
+  clearTimeout(S.foldT);
+  if (on) { inner.hidden = false; requestAnimationFrame(() => $("#sites").classList.remove("shut")); }
+  else { $("#sites").classList.add("shut"); S.foldT = setTimeout(() => { inner.hidden = true; $("#col").dispatchEvent(new Event("scroll")); }, reducedMotion() ? 0 : 320); }
   const t = $("#sitesTog");
   t.setAttribute("aria-expanded", String(on));
   t.setAttribute("aria-label", on ? "Hide the dose point list" : "Show the dose point list");
@@ -1284,7 +1288,7 @@ function downloadPlan() {
 function openOpts(open) {
   const o = $("#opts"), b = $("#optBtn"), sc = $("#optScrim");
   if (!o || open === o.classList.contains("open")) return;
-  o.classList.toggle("open", open); sc.classList.remove("on"); o.inert = !open;
+  o.classList.toggle("open", open); sc.classList.remove("on"); o.inert = !open; $("#mapwrap").classList.toggle("opts-on", open); setTimeout(islRefit, 380);
   b.setAttribute("aria-expanded", String(open));
   b.classList.toggle("on", open);
   if (open) { document.addEventListener("keydown", onOptKey); $("#optClose").focus({ preventScroll: true }); }

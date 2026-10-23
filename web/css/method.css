@@ -20,6 +20,7 @@
 .method .pipe p{margin:0;font-size:var(--t-sm);line-height:1.45}
 .method .pipe .pipe-m{margin-top:auto;color:var(--muted);font-style:italic}
 /* contents list */
+.method .toc .card-title{margin:0 0 var(--s2);font:600 var(--t-xs)/1 var(--f-text);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .method .toc ol{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1)}
 .method .toc a{display:inline-flex;align-items:center;min-height:40px;padding:0 var(--s2);border-radius:999px;background:var(--blue-tint);color:var(--blue-dark);font:600 var(--t-sm) var(--f-text);text-decoration:none}
 .method .toc a:hover{background:var(--blue);color:#fff}

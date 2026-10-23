@@ -142,7 +142,6 @@ body.route-map #view{position:relative;padding-bottom:0}
 
 /* ---------- on the map ---------- */
 .rank{width:32px;height:32px;border-radius:50%;background:var(--gold);border:2px solid #fff;color:var(--ink);font:700 var(--t-sm) var(--f-display);box-shadow:0 1px 6px rgba(20,26,46,.55);display:grid;place-items:center;cursor:pointer;padding:0}
-.rank{position:relative}
 .rank::after{content:"";position:absolute;inset:-6px;border-radius:50%}
 .rank:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .rank.hl,.rank.on{box-shadow:0 0 0 4px var(--ink),0 1px 6px rgba(20,26,46,.55);width:36px;height:36px}
@@ -364,3 +363,8 @@ body.route-map #view{position:relative;padding-bottom:0}
 .sec-sites.shut .plan-h{margin-bottom:0}
 @media (max-width:599px){.sec-tog{display:none}.sec-sites.shut .sites-body{grid-template-rows:1fr}}
 @media (prefers-reduced-motion:reduce){.sites-body,.sec-tog .chev{transition:none}}
+
+/* while More options is open, the island moves left so the panel never covers it */
+.island{transition:left .35s cubic-bezier(.3,.9,.3,1),right .35s cubic-bezier(.3,.9,.3,1)}
+.mapwrap.opts-on .island{right:calc(340px + var(--s2))}
+.mapwrap.opts-on .island.full{left:var(--colw)}
