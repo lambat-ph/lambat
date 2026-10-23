@@ -40,14 +40,16 @@ const TEMPLATE = `
       <section class="sec sec-sites" id="sites" aria-labelledby="sitesH" hidden>
         <div class="plan-h">
           <h2 id="sitesH">Where to open first</h2>
+          <button class="sec-tog" id="sitesTog" type="button" aria-expanded="true" aria-controls="sitesBody" aria-label="Hide the dose point list">${CHEV}</button>
           <div class="plan-pick" id="planPick"><div class="pseg" id="planSeg" role="radiogroup" aria-label="Plan size: how many dose points to open"></div><span class="plan-u" aria-hidden="true">dose points</span></div>
         </div>
+        <div class="sites-body" id="sitesBody"><div>
         <p class="cov" id="planCov"></p>
         <ol class="sitelist" id="siteList"></ol>
         <p class="map-note" id="siteNote" hidden></p>
         <p class="map-note order" id="orderNote" title="Dose point order covers the most cut-off residents first. Barangay priority ranks barangays by cut-off residents alone, so the two orders can differ.">1 opens first. Not yet checked against flood reports. <a href="#/method">See Method</a></p>
         <div class="acts" id="acts"><button class="act" id="copyLink" type="button">Copy link</button><button class="act" id="dlPlan" type="button">Download plan (CSV)</button><span class="sr-only" id="actLive" role="status" aria-live="polite"></span></div>
-        
+        </div></div>
       </section>
       <section class="sec sec-cities" id="cities" aria-labelledby="citiesH" hidden>
         <h2 id="citiesH">Pick a city</h2>
@@ -121,6 +123,7 @@ const loaderStep = (n, t) => stage(n, t);
 function hideLoader() {
   if (!loaderOn) return;
   loaderOn = false; clearTimeout(loaderT);
+  sitesAutoFit();
   const l = host && host.querySelector("#loader");
   if (!l) return;
   l.classList.add("loader-out");
@@ -1161,6 +1164,11 @@ function islWant() {
 function islFit(pill, c) {
   const wrap = $("#island");
   if (!wrap || wrap.hidden || !pill || !c) return;
+  // Centre on the whole map when the pill clears the cards; otherwise centre in the free area beside them.
+  const side = wrap.parentNode, colR = S.colHidden || mobile.matches ? 0 : ($("#col").getBoundingClientRect().right - side.getBoundingClientRect().left);
+  wrap.classList.remove("full");
+  const want = Math.ceil(c.scrollWidth);
+  if ((side.clientWidth - want) / 2 >= colR + 16) wrap.classList.add("full");
   const cs = getComputedStyle(wrap);
   const avail = Math.max(140, wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
   pill.style.setProperty("--avail", avail + "px");
@@ -1215,6 +1223,22 @@ function islRender() {
   if (w.kind !== "brgy" && w.live && w.live !== I.live) { I.live = w.live; const l = $("#islLive"); if (l) l.textContent = w.live; }
 }
 
+/* ---------- dose point list: folds under its heading so the legend card stays in view ---------- */
+function sitesOpen(on) {
+  $("#sites").classList.toggle("shut", !on);
+  const t = $("#sitesTog");
+  t.setAttribute("aria-expanded", String(on));
+  t.setAttribute("aria-label", on ? "Hide the dose point list" : "Show the dose point list");
+  $("#sitesBody").inert = !on;
+}
+// On first show, fold the list if the card stack would otherwise need scrolling.
+function sitesAutoFit() {
+  const c = $("#col");
+  if (!c || mobile.matches || S.sitesFitted) return;
+  S.sitesFitted = true;
+  if (c.scrollHeight > c.clientHeight + 4) sitesOpen(false);
+}
+
 /* ---------- collapsible panel ---------- */
 function setCollapsed(on, focus) {
   S.colHidden = on;
@@ -1223,7 +1247,7 @@ function setCollapsed(on, focus) {
   $("#colCollapse").setAttribute("aria-expanded", String(!on));
   $("#showPanel").hidden = !on;
   if (focus) (on ? $("#showPanel") : $("#colCollapse")).focus({ preventScroll: true });
-  if (map && !S.tour) map.easeTo({ padding: pad(), duration: dur(500) });
+  // the map stays where it is: panels slide over it, the camera does not follow
   if (S.sel && S.data) { const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === S.sel); if (f) setTimeout(() => placeInfo(f), dur(520)); }
 }
 
@@ -1297,7 +1321,6 @@ function openSheet(open) {
   h.setAttribute("aria-expanded", String(open));
   $("#handleT").textContent = open ? "Hide the plan" : "Show the plan";
   $("#colMore").inert = mobile.matches && !open;
-  if (mobile.matches) refit();
 }
 // After the sheet changes height, fit the city (or the selected barangay) into the map that is left above it.
 function refit(ms) {
@@ -1316,16 +1339,12 @@ function setPeek() {
   const was = S.peek;
   S.peek = t.offsetTop + t.offsetHeight;
   $("#mapwrap").style.setProperty("--peek", S.peek + "px");
-  if (Math.abs(S.peek - was) > 8 && S.data) refit(250);
 }
 function syncSheet() {
   // On phones the plan picker joins the question and answer, so it shows in the peek state.
   const pp = $("#planPick"), ph = $(".plan-h");
   if (mobile.matches) { if (pp.parentNode !== $("#colTop")) $("#colTop").insertBefore(pp, $("#tourBtn")); }
   else if (pp.parentNode !== ph) ph.appendChild(pp);
-  // The legend floats on the map on wider screens so the cards fit without scrolling; on phones it sits in the sheet.
-  const lg = $("#legend"), lgHome = mobile.matches ? $("#colMore") : $(".mapside");
-  if (lg && lg.parentNode !== lgHome) lgHome.appendChild(lg);
   setPeek(); attachMore();
   if (!mobile.matches) { $("#colMore").inert = false; $("#col").style.transform = ""; }
   else openSheet(!$("#col").classList.contains("closed"));
@@ -1461,5 +1480,6 @@ function wire() {
   $("#lyRelief").addEventListener("change", (e) => { S.reliefOn = e.target.checked; applyRelief(); });
   $("#lyS1").addEventListener("change", (e) => map.setLayoutProperty("s1-fill", "visibility", e.target.checked ? "visible" : "none"));
   wireSheet();
+  $("#sitesTog").addEventListener("click", () => sitesOpen($("#sites").classList.contains("shut")));
   wireTips();
 }

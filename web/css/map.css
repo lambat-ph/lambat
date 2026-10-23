@@ -284,7 +284,7 @@ body.route-map #view{position:relative;padding-bottom:0}
   .col::-webkit-scrollbar{display:none}
   .col-more{flex:none;gap:var(--s2)}
   .col-top,.col .sec{pointer-events:auto;background:var(--glass,rgba(255,255,255,.88));-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);border:.5px solid var(--glass-edge,rgba(255,255,255,.6));border-radius:var(--radius);box-shadow:var(--shadow)}
-  .mapside .sec-legend{position:absolute;z-index:5;right:calc(var(--s2) + 44px + var(--s2));bottom:var(--s4);width:280px;margin:0;padding:12px var(--s2);border-radius:var(--radius);box-shadow:var(--shadow);background:var(--glass,rgba(255,255,255,.88));-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);border:.5px solid var(--glass-edge,rgba(255,255,255,.6))}
+  .sec-legend{margin-top:0}
   .col .spot{border-radius:var(--radius)}
 }
 @media (min-width:600px) and (max-width:899px){
@@ -304,7 +304,7 @@ body.route-map #view{position:relative;padding-bottom:0}
 /* ---------- status island ---------- */
 .island{position:absolute;z-index:5;top:var(--s2);left:var(--colw);right:0;display:flex;justify-content:center;padding:0 var(--isl-pad,72px);pointer-events:none;transition:left .35s cubic-bezier(.3,.9,.3,1)}
 .isl{position:relative;overflow:hidden;max-width:100%;min-height:44px;border-radius:22px;background:#0B1640;color:#fff;box-shadow:0 4px 18px rgba(11,22,64,.3);transition:width .5s cubic-bezier(.34,1.45,.5,1),height .5s cubic-bezier(.34,1.45,.5,1),border-radius .5s cubic-bezier(.34,1.45,.5,1)}
-.isl-c{position:absolute;left:0;top:0;display:flex;align-items:center;gap:var(--s1);width:max-content;max-width:var(--avail,100%);padding:var(--s1) var(--s2);min-height:44px;font:600 var(--t-sm)/1.3 var(--f-text);white-space:nowrap}
+.isl-c{position:absolute;left:0;top:0;display:flex;align-items:center;gap:10px;width:max-content;max-width:var(--avail,100%);padding:8px 22px;min-height:44px;font:600 var(--t-sm)/1.3 var(--f-text);white-space:nowrap}
 .isl-c.in{animation:isl-in .32s cubic-bezier(.3,.9,.3,1) .06s both}
 .isl-c.out{animation:isl-out .22s ease forwards;pointer-events:none}
 @keyframes isl-in{from{opacity:0;filter:blur(6px);transform:scale(.95)}}
@@ -347,3 +347,20 @@ body.route-map #view{position:relative;padding-bottom:0}
 @media (max-width:899px){.isl-xtra{display:none}}
 @media (max-width:599px){.island{left:var(--s1);right:var(--s1);top:var(--s1);padding:0}}
 @media (max-width:599px){.info .said{display:none}.col-right .w{padding:var(--s1) var(--s2)}.info dl{margin:var(--s0) 0}.info .xs{margin-bottom:0}}
+
+/* island: a leading badge or ring sits concentric with the pill end (8px all round on a 44px pill); text keeps clear of the round ends */
+.isl-c:has(>.isl-badge:first-child),.isl-c:has(>.isl-ring:first-child){padding-left:8px}
+.island.full{left:0}
+/* "Where to open first" folds to its heading and plan picker */
+.sec-sites{position:relative}
+.sec-tog{position:absolute;top:var(--s1);right:var(--s1);display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:12px;background:none;color:var(--muted);cursor:pointer}
+.sec-tog:hover{background:var(--blue-tint);color:var(--blue-dark)}
+.sec-tog .chev{transition:transform .25s cubic-bezier(.3,.9,.3,1)}
+.sec-sites.shut .sec-tog .chev{transform:rotate(-90deg)}
+.sec-sites .plan-h{padding-right:44px}
+.sites-body{display:grid;grid-template-rows:1fr;transition:grid-template-rows .3s cubic-bezier(.3,.9,.3,1)}
+.sites-body>div{min-height:0;overflow:hidden}
+.sec-sites.shut .sites-body{grid-template-rows:0fr}
+.sec-sites.shut .plan-h{margin-bottom:0}
+@media (max-width:599px){.sec-tog{display:none}.sec-sites.shut .sites-body{grid-template-rows:1fr}}
+@media (prefers-reduced-motion:reduce){.sites-body,.sec-tog .chev{transition:none}}
