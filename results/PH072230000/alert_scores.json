@@ -1,0 +1,6 @@
+{
+  "status": "too_few_cases",
+  "total_cases": 39,
+  "min_cases": 100,
+  "message": "too few cases to evaluate"
+}

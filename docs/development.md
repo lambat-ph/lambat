@@ -7,13 +7,16 @@ How the code fits together, how to run it, and what is still open. Keep this cur
 ```bash
 uv sync                                   # core deps; Python 3.13 via uv
 uv run pytest -q                          # 62 pass with the cv extra; U-Net tests skip without torch
-uv run python scripts/run_alert.py        # outbreak alert evaluation -> results/alert_*
-uv run python scripts/run_pipeline.py --scenario 25yr   # exposure, access, siting -> results/
+uv run python scripts/run_alert.py        # Dagupan alert evaluation -> results/PH015518000/alert_*
+uv run python scripts/run_alert.py --city all --pooled   # all 12 cities plus the pooled model
+uv run python scripts/run_pipeline.py --scenario 25yr   # Dagupan: exposure, access, siting -> results/PH015518000/ (and flat results/)
+uv run python scripts/run_pipeline.py --city all          # the 12 CCHAIN cities in sequence (hours: Overpass is slow)
+uv run python scripts/run_pipeline.py --city PH112402000 --scope flooded   # one city, walk graph limited to flooded barangays + 2 km
 uv sync --extra cv                        # torch + segmentation-models-pytorch
 uv run --extra cv python scripts/train_unet.py --epochs 15 --pretrained
 uv run python scripts/run_validation.py   # ranking vs news reports -> results/validation_*
 uv run python scripts/run_s1_flood.py     # Sentinel-1 Egay flood map (scenes in data/raw/s1/)
-uv run python scripts/build_web.py        # copy results into web/data/ for the dashboard
+uv run python scripts/build_web.py        # publish results into web/data/ (cities.json, national.json, <code>/...)
 ```
 
 Raw data is not committed. `data/raw/cchain/` needs these six Project CCHAIN tables (download commands in `data/README.md`): `disease_pidsr_totals`, `climate_atmosphere`, `location`, `brgy_geography`, `project_noah_hazards`, `worldpop_population`. OSM and elevation tiles cache themselves in `data/raw/osm_cache` and `data/raw/dem_cache` on first run (Overpass can take ~65 s per query and sometimes returns 502; the code retries and falls back to mirrors).

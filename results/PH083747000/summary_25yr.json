@@ -1,0 +1,58 @@
+{
+  "city": "PH083747000",
+  "city_name": "Tacloban City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 200382.1958732605,
+  "barangays": 138,
+  "barangays_flooded": 26,
+  "exposed": 6132.690741221649,
+  "weekly_capsules": 12265.381482443298,
+  "health_facilities": 35,
+  "facilities_closed_by_flood": 0,
+  "candidate_sites_usable": 129,
+  "exposed_on_road_network": 6116.351014440523,
+  "exposed_within_reach_dry": 5697.500812644089,
+  "exposed_within_reach_flood": 5665.208546723161,
+  "exposed_access_gap": 32.29226592092803,
+  "exposed_unreached_in_flood": 451.1424677173616,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n12947014905",
+        "r14197104"
+      ],
+      "exposed_newly_covered": 188.65449961610432,
+      "exposed_within_reach_after": 5853.863046339266,
+      "share_of_exposed_within_reach_after": 0.9570842210524656
+    },
+    "5": {
+      "sites": [
+        "n12947014905",
+        "r14197104"
+      ],
+      "exposed_newly_covered": 188.65449961610432,
+      "exposed_within_reach_after": 5853.863046339266,
+      "share_of_exposed_within_reach_after": 0.9570842210524656
+    },
+    "8": {
+      "sites": [
+        "n12947014905",
+        "r14197104"
+      ],
+      "exposed_newly_covered": 188.65449961610432,
+      "exposed_within_reach_after": 5853.863046339266,
+      "share_of_exposed_within_reach_after": 0.9570842210524656
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 264.6
+}

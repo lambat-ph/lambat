@@ -1,0 +1,68 @@
+{
+  "city": "PH034919000",
+  "city_name": "Palayan City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 55563.117126464844,
+  "barangays": 19,
+  "barangays_flooded": 19,
+  "exposed": 17575.74461914947,
+  "weekly_capsules": 35151.48923829894,
+  "health_facilities": 2,
+  "facilities_closed_by_flood": 0,
+  "candidate_sites_usable": 26,
+  "exposed_on_road_network": 17417.225991010662,
+  "exposed_within_reach_dry": 5981.180886731894,
+  "exposed_within_reach_flood": 4104.909060693948,
+  "exposed_access_gap": 1876.2718260379463,
+  "exposed_unreached_in_flood": 13312.31693031672,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n4356805299",
+        "w437528036",
+        "w652814133"
+      ],
+      "exposed_newly_covered": 4290.896460494192,
+      "exposed_within_reach_after": 8395.80552118814,
+      "share_of_exposed_within_reach_after": 0.482040339002397
+    },
+    "5": {
+      "sites": [
+        "n4356805299",
+        "w368118273",
+        "w437528036",
+        "w652814133",
+        "w935370336"
+      ],
+      "exposed_newly_covered": 5484.032707608894,
+      "exposed_within_reach_after": 9588.941768302842,
+      "share_of_exposed_within_reach_after": 0.550543569524324
+    },
+    "8": {
+      "sites": [
+        "n4356805299",
+        "n4445981589",
+        "w215185593",
+        "w368118273",
+        "w437528036",
+        "w652814133",
+        "w935370336",
+        "w936595849"
+      ],
+      "exposed_newly_covered": 6167.90748108296,
+      "exposed_within_reach_after": 10272.816541776909,
+      "share_of_exposed_within_reach_after": 0.5898078458118928
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 1.6
+}

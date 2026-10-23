@@ -86,3 +86,26 @@ def weekly_rainfall(city: str = DAGUPAN, raw: Path = RAW, cache: Path = PROCESSE
     cache.mkdir(parents=True, exist_ok=True)
     wide.to_csv(out)
     return wide
+
+
+def prewarm_rainfall(cities: list[str], raw: Path = RAW, cache: Path = PROCESSED) -> None:
+    """Fill the weekly rainfall cache for several cities in ONE pass over the 570 MB
+    climate table (weekly_rainfall alone re-reads it per city). Cities already cached are skipped."""
+    todo = [c for c in cities if not (cache / f"rain_weekly_{c}.csv").exists()]
+    if not todo:
+        return
+    prefixes = tuple(_city_prefix(c) for c in todo)
+    parts: dict[str, list] = {c: [] for c in todo}
+    for chunk in pd.read_csv(raw / "climate_atmosphere.csv", usecols=["adm4_pcode", "date", "pr"], chunksize=2_000_000):
+        chunk = chunk[chunk.adm4_pcode.str.startswith(prefixes)]
+        for c in todo:
+            sub = chunk[chunk.adm4_pcode.str.startswith(_city_prefix(c))]
+            if len(sub):
+                parts[c].append(sub)
+    cache.mkdir(parents=True, exist_ok=True)
+    for c in todo:
+        daily = pd.concat(parts[c])
+        daily["week"] = pd.to_datetime(daily.date).dt.to_period("W-SUN").dt.start_time
+        wide = daily.pivot_table(index="week", columns="adm4_pcode", values="pr", aggfunc="sum")
+        wide["city"] = wide.mean(axis=1)
+        wide.to_csv(cache / f"rain_weekly_{c}.csv")

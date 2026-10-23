@@ -1,0 +1,64 @@
+{
+  "horizon_weeks": 2,
+  "train_years": [
+    2008,
+    2016
+  ],
+  "test_years": [
+    2017,
+    2019
+  ],
+  "cities": [
+    "PH015518000",
+    "PH034919000",
+    "PH050506000",
+    "PH063022000",
+    "PH072230000",
+    "PH083747000",
+    "PH097332000",
+    "PH104305000",
+    "PH112402000",
+    "PH137401000",
+    "PH137503000",
+    "PH137603000"
+  ],
+  "scores": [
+    {
+      "method": "seasonal",
+      "correlation": 0.46277438199321186,
+      "correlation_within_city": 0.3411643015610437,
+      "mae": 0.9763048478414721,
+      "sensitivity": 0.17757009345794392,
+      "false_alert_rate": 0.05149700598802395,
+      "alerts": 124,
+      "outbreak_weeks": 214
+    },
+    {
+      "method": "last_week",
+      "correlation": 0.5439206286294812,
+      "correlation_within_city": 0.46830670970184435,
+      "mae": 0.821656050955414,
+      "sensitivity": 0.2102803738317757,
+      "false_alert_rate": 0.04730538922155689,
+      "alerts": 124,
+      "outbreak_weeks": 214
+    },
+    {
+      "method": "rain_model",
+      "correlation": 0.5298766151976444,
+      "correlation_within_city": 0.4311437089180281,
+      "mae": 0.9437287998472134,
+      "sensitivity": 0.2383177570093458,
+      "false_alert_rate": 0.043712574850299404,
+      "alerts": 124,
+      "outbreak_weeks": 214
+    }
+  ],
+  "rain_coefficients": {
+    "rain_l2": 0.1476512802469843,
+    "rain_l3": 0.3983565018974421,
+    "rain_l4": 0.2831946204339403,
+    "rain_l5": 0.15426829906388062
+  },
+  "status": "evaluated"
+}

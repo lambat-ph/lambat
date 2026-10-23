@@ -124,3 +124,88 @@ def evaluate(
         "rain_coefficients": {c: float(model.params[c]) for c in cols if c.startswith("rain_")},
         "predictions": pd.DataFrame({"actual": test.cases, **preds}),
     }
+
+
+def evaluate_pooled(
+    cases_by_city: dict[str, pd.Series],
+    rain_by_city: dict[str, pd.Series],
+    horizon: int = 2,
+    train_years: tuple[int, int] = (2008, 2016),
+    test_years: tuple[int, int] = (2017, 2019),
+) -> dict:
+    """One Poisson model for all cities: same season and rain features as `evaluate`
+    plus a city fixed effect (one dummy per city). Trained on train_years, tested on
+    test_years.
+
+    Outbreak threshold and alert budget are per city (90th percentile of that city's
+    training weeks), as in `evaluate`; hits and false alerts are summed over cities.
+    Correlation is reported two ways: raw over all city-weeks (inflated by differences
+    in city size) and within city (each city's actual and predicted series minus its own
+    test mean, then pooled).
+    """
+    frames, cities = [], sorted(cases_by_city)
+    for c in cities:
+        d = design(cases_by_city[c], rain_by_city[c], horizon)
+        d["city"] = c
+        frames.append(d)
+    df = pd.concat(frames)
+    yr = df.index.year
+    train = df[(yr >= train_years[0]) & (yr <= train_years[1])]
+    test = df[(yr >= test_years[0]) & (yr <= test_years[1])]
+
+    feat = [c for c in train.columns if c.startswith(("sin", "cos", "rain_"))]
+
+    def X(d):
+        dummies = pd.get_dummies(d.city).reindex(columns=cities, fill_value=0).astype(float)
+        return pd.concat([d[feat], dummies], axis=1)
+
+    model = sm.GLM(train.cases, X(train), family=sm.families.Poisson()).fit()
+    test = test.copy()
+    test["rain_model"] = model.predict(X(test)).to_numpy()
+    test["last_week"] = test.last_week.astype(float)
+    parts = []
+    for c in cities:
+        tr, te = train[train.city == c], test[test.city == c]
+        if te.empty or tr.empty:
+            continue
+        te = te.copy()
+        te["seasonal"] = seasonal_baseline(tr, te).to_numpy()
+        parts.append((c, tr, te))
+    test = pd.concat([p[2] for p in parts])
+
+    scores = []
+    for method in ("seasonal", "last_week", "rain_model"):
+        tp = fp = pos = neg = n_alerts = 0
+        for _, tr, te in parts:
+            thr = float(np.quantile(tr.cases, 0.9))
+            rate = float((tr.cases > thr).mean())
+            s = score(method, te[method], te.cases, thr, rate)
+            out = te.cases > thr
+            k = s.alerts
+            top = te[method].rank(method="first", ascending=False) <= k
+            tp += int((top & out).sum())
+            fp += int((top & ~out).sum())
+            pos += int(out.sum())
+            neg += int((~out).sum())
+            n_alerts += k
+        within_p = test[method] - test.groupby("city")[method].transform("mean")
+        within_a = test.cases - test.groupby("city").cases.transform("mean")
+        scores.append({
+            "method": method,
+            "correlation": float(np.corrcoef(test[method], test.cases)[0, 1]),
+            "correlation_within_city": float(np.corrcoef(within_p, within_a)[0, 1]),
+            "mae": float(np.abs(test[method] - test.cases).mean()),
+            "sensitivity": tp / pos if pos else float("nan"),
+            "false_alert_rate": fp / neg if neg else float("nan"),
+            "alerts": n_alerts,
+            "outbreak_weeks": pos,
+        })
+    return {
+        "horizon_weeks": horizon,
+        "train_years": list(train_years),
+        "test_years": list(test_years),
+        "cities": [p[0] for p in parts],
+        "scores": scores,
+        "rain_coefficients": {c: float(model.params[c]) for c in feat if c.startswith("rain_")},
+        "predictions": test[["city", "cases", "seasonal", "last_week", "rain_model"]].rename(columns={"cases": "actual"}),
+    }

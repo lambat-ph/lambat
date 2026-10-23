@@ -1,0 +1,63 @@
+{
+  "city": "PH050506000",
+  "city_name": "Legazpi City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 198161.98402404785,
+  "barangays": 70,
+  "barangays_flooded": 53,
+  "exposed": 34153.549703436336,
+  "weekly_capsules": 68307.09940687267,
+  "health_facilities": 40,
+  "facilities_closed_by_flood": 2,
+  "candidate_sites_usable": 82,
+  "exposed_on_road_network": 33773.82459147419,
+  "exposed_within_reach_dry": 32395.034679535376,
+  "exposed_within_reach_flood": 30936.23436522342,
+  "exposed_access_gap": 1458.8003143119595,
+  "exposed_unreached_in_flood": 2837.5902262507716,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n3942712988",
+        "r12992481",
+        "w963798445"
+      ],
+      "exposed_newly_covered": 2245.590349914907,
+      "exposed_within_reach_after": 33181.824715138326,
+      "share_of_exposed_within_reach_after": 0.982471636437488
+    },
+    "5": {
+      "sites": [
+        "n3942712988",
+        "r12992481",
+        "r12996953",
+        "w963798445"
+      ],
+      "exposed_newly_covered": 2354.500193164106,
+      "exposed_within_reach_after": 33290.73455838753,
+      "share_of_exposed_within_reach_after": 0.9856963184084099
+    },
+    "8": {
+      "sites": [
+        "n3942712988",
+        "r12992481",
+        "r12996953",
+        "w963798445"
+      ],
+      "exposed_newly_covered": 2354.500193164106,
+      "exposed_within_reach_after": 33290.73455838753,
+      "share_of_exposed_within_reach_after": 0.9856963184084099
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 3.8
+}

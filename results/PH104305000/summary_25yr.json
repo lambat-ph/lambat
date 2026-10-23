@@ -1,0 +1,70 @@
+{
+  "city": "PH104305000",
+  "city_name": "Cagayan de Oro City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {
+    "access_scope": "walk graph limited to 72 of 80 barangays: those with NOAH 25yr flood hazard plus any touching a 2 km buffer around them"
+  },
+  "access_scope": "flooded",
+  "population": 752064.5757789612,
+  "barangays": 80,
+  "barangays_flooded": 65,
+  "exposed": 285532.64829953294,
+  "weekly_capsules": 571065.2965990659,
+  "health_facilities": 40,
+  "facilities_closed_by_flood": 3,
+  "candidate_sites_usable": 144,
+  "exposed_on_road_network": 285685.61540867976,
+  "exposed_within_reach_dry": 253590.1430879841,
+  "exposed_within_reach_flood": 153828.9857346974,
+  "exposed_access_gap": 99761.15735328666,
+  "exposed_unreached_in_flood": 131856.62967398236,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w460843217",
+        "w591700697",
+        "w771552956"
+      ],
+      "exposed_newly_covered": 19267.989089940238,
+      "exposed_within_reach_after": 173096.97482463764,
+      "share_of_exposed_within_reach_after": 0.6059002115910473
+    },
+    "5": {
+      "sites": [
+        "n8427443417",
+        "r13353231",
+        "w460843217",
+        "w591700697",
+        "w771552956"
+      ],
+      "exposed_newly_covered": 25752.890168125905,
+      "exposed_within_reach_after": 179581.87590282332,
+      "share_of_exposed_within_reach_after": 0.6285996431634381
+    },
+    "8": {
+      "sites": [
+        "n8427443417",
+        "r13353231",
+        "w460843217",
+        "w591700697",
+        "w771552956",
+        "w848716623",
+        "w1038997649",
+        "w1569807091"
+      ],
+      "exposed_newly_covered": 31544.450671131817,
+      "exposed_within_reach_after": 185373.4364058292,
+      "share_of_exposed_within_reach_after": 0.6488721391892563
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 2164.6
+}

@@ -1,0 +1,70 @@
+{
+  "city": "PH112402000",
+  "city_name": "Davao City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {
+    "access_scope": "walk graph limited to 165 of 183 barangays: those with NOAH 25yr flood hazard plus any touching a 2 km buffer around them"
+  },
+  "access_scope": "flooded",
+  "population": 1706761.9378204346,
+  "barangays": 183,
+  "barangays_flooded": 114,
+  "exposed": 346421.10500794905,
+  "weekly_capsules": 692842.2100158981,
+  "health_facilities": 225,
+  "facilities_closed_by_flood": 13,
+  "candidate_sites_usable": 598,
+  "exposed_on_road_network": 346594.96690674353,
+  "exposed_within_reach_dry": 305100.3397946206,
+  "exposed_within_reach_flood": 220057.8591492554,
+  "exposed_access_gap": 85042.48064536517,
+  "exposed_unreached_in_flood": 126537.10775748808,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n4405396992",
+        "n12770137186",
+        "w961527027"
+      ],
+      "exposed_newly_covered": 10504.080189580249,
+      "exposed_within_reach_after": 230561.93933883565,
+      "share_of_exposed_within_reach_after": 0.6652201022898054
+    },
+    "5": {
+      "sites": [
+        "n4405396992",
+        "n12770137186",
+        "w756143043",
+        "w961527027",
+        "w974605653"
+      ],
+      "exposed_newly_covered": 11951.239426929993,
+      "exposed_within_reach_after": 232009.0985761854,
+      "share_of_exposed_within_reach_after": 0.669395463664107
+    },
+    "8": {
+      "sites": [
+        "n4405396992",
+        "n12770137186",
+        "w83889674",
+        "w148823428",
+        "w756143043",
+        "w961527027",
+        "w974605653",
+        "w976920335"
+      ],
+      "exposed_newly_covered": 13688.320498400404,
+      "exposed_within_reach_after": 233746.1796476558,
+      "share_of_exposed_within_reach_after": 0.6744073110286932
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 4894.2
+}

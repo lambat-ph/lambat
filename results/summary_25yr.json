@@ -1,7 +1,18 @@
 {
+  "city": "PH015518000",
+  "city_name": "Dagupan City",
   "scenario": "25yr",
   "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
   "population": 208321.77996826172,
+  "barangays": 31,
+  "barangays_flooded": 31,
   "exposed": 71868.39333097778,
   "weekly_capsules": 143736.78666195556,
   "health_facilities": 36,
@@ -64,5 +75,6 @@
     "see": "scripts/run_validation.py and docs/validation.md for all candidates, CIs and the population control",
     "note": "News coverage is biased toward downtown and river barangays; treat as a rough check."
   },
-  "runtime_s": 2.7
+  "validation_note": null,
+  "runtime_s": 2.9
 }
