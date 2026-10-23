@@ -21,16 +21,18 @@
   "cities_100yr": {
     "scenario": "100yr",
     "note": "No 25-year flood map for this city. Showing the 100-year flood, which is larger.",
-    "cities": 0,
-    "city_codes": [],
-    "barangays": 0,
-    "population": 0,
-    "exposed": 0,
-    "weekly_capsules": 0,
-    "lepto_cases_2008_2022": 0,
-    "cities_with_access": 0,
-    "access_gap": 0,
-    "alert_cities_evaluated": 0
+    "cities": 1,
+    "city_codes": [
+      "PH083747000"
+    ],
+    "barangays": 138,
+    "population": 200382,
+    "exposed": 54888,
+    "weekly_capsules": 109775,
+    "lepto_cases_2008_2022": 122,
+    "cities_with_access": 1,
+    "access_gap": 570,
+    "alert_cities_evaluated": 1
   },
   "pooled_alert": {
     "horizon_weeks": 2,

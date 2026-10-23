@@ -69,17 +69,45 @@ def _ox():
     return ox
 
 
+_LAST_MIRROR: list = [None]
+
+
 def _with_retries(fn, attempts_per_mirror: int = 3):
     """Call fn(), retrying with backoff, then falling through Overpass mirrors."""
+    import requests
+
     ox = _ox()
     default_url = ox.settings.overpass_url
     last = None
+    # Pass 1: cache only. osmnx's cache key includes the mirror URL, so a result fetched
+    # earlier from a mirror is found only by trying that mirror. Network calls are blocked, so
+    # misses fail at once (no network call) while hits return from disk.
+    post, get = requests.post, requests.get
+    def _offline(*a, **k):
+        raise requests.exceptions.ConnectionError("cache-only pass")
+
+    requests.post = _offline
+    requests.get = _offline
+    order = sorted(OVERPASS_MIRRORS, key=lambda m: m != _LAST_MIRROR[0])  # last mirror that worked first
     try:
-        for mirror in OVERPASS_MIRRORS:
+        for mirror in order:
+            ox.settings.overpass_url = mirror or default_url
+            try:
+                out = fn()
+                _LAST_MIRROR[0] = mirror
+                return out
+            except Exception as e:  # noqa: BLE001
+                last = e
+    finally:
+        requests.post, requests.get = post, get
+    try:
+        for mirror in order:
             ox.settings.overpass_url = mirror or default_url
             for i in range(attempts_per_mirror):
                 try:
-                    return fn()
+                    out = fn()
+                    _LAST_MIRROR[0] = mirror
+                    return out
                 except Exception as e:  # noqa: BLE001  network and HTTP errors vary
                     last = e
                     time.sleep(2 * (i + 1))

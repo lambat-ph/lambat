@@ -120,6 +120,46 @@
     }
   },
   {
+    "code": "PH083747000",
+    "name": "Tacloban City",
+    "region": "Region VIII",
+    "province": "Leyte",
+    "lon": 124.95249,
+    "lat": 11.2729,
+    "bbox": [
+      124.88757,
+      11.1862,
+      125.04831,
+      11.35377
+    ],
+    "barangays": 138,
+    "population": 200382,
+    "exposed": 54888,
+    "exposed_share": 0.2739,
+    "weekly_capsules": 109775,
+    "lepto_cases_2008_2022": 122,
+    "access_gap": 570,
+    "coverage_after": {
+      "3": 0.7899355067976409,
+      "5": 0.7916816395163638,
+      "8": 0.7916816395163638
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.27877913520052705,
+      "caught": 0.2857142857142857,
+      "false_alerts": 0.05426356589147287,
+      "baseline_correlation": 0.15716379120657564
+    },
+    "scenario": "100yr",
+    "scenario_note": "No 25-year flood map for this city. Showing the 100-year flood, which is larger.",
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
     "code": "PH097332000",
     "name": "Zamboanga City",
     "region": "Region IX",
