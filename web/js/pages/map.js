@@ -1,13 +1,13 @@
 import { getCities, getCity, cityHref } from "../data.js";
 import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
-import { fmt, pct, esc, reducedMotion, useCss, skel } from "../format.js";
+import { fmt, pct, esc, reducedMotion, useCss, skel, moreBelow } from "../format.js";
 
 const METRICS = [
-  { key: "exposed", prop: "exposed", short: "Residents in the floodwater", desc: "People who live where the flood reaches.",
+  { key: "exposed", seg: "Exposed", prop: "exposed", short: "Residents in the floodwater", desc: "People who live where the flood reaches.",
     legend: "Residents in the floodwater, per barangay", unit: "residents", lo: "fewer", hi: "more", f: fmt },
-  { key: "unreached", prop: "exposed_unreached_flood", short: "Residents who cannot reach a clinic", desc: `Exposed people more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`,
+  { key: "unreached", seg: "No clinic", prop: "exposed_unreached_flood", short: "Residents who cannot reach a clinic", desc: `Exposed people more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`,
     legend: `Residents who cannot walk to a clinic in ${WALK_MIN} minutes, per barangay`, unit: "residents", lo: "fewer", hi: "more", f: fmt },
-  { key: "share", prop: "flooded_share", short: "Area flooded", desc: "How much of each barangay's land is under water.",
+  { key: "share", seg: "Area flooded", prop: "flooded_share", short: "Area flooded", desc: "How much of each barangay's land is under water.",
     legend: "Share of each barangay's area under water", unit: "of the area", lo: "less", hi: "more", f: (v) => pct(v, 0) },
 ];
 const KINDS = {
@@ -68,11 +68,13 @@ const TEMPLATE = `
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
       <span>More options</span>
     </button>
-    <div class="col-right" id="colRight">
-      <section class="w opts" id="opts" aria-label="More options" hidden>
-        <div class="opts-head"><h2>More options</h2><button class="x" id="optClose" type="button" aria-label="Close more options">&times;</button></div>
+    <div class="scrim" id="optScrim"></div>
+    <aside class="drawer" id="opts" role="dialog" aria-modal="true" aria-labelledby="optsT" inert>
+      <div class="drawer-head"><h2 id="optsT">More options</h2><button class="x" id="optClose" type="button" aria-label="Close more options">&times;</button></div>
+      <div class="drawer-body" id="optsBody">
         <h3 class="opts-h" id="measureH">Colour the map by</h3>
-        <div class="measures" id="measures" role="group" aria-labelledby="measureH"></div>
+        <div class="mseg" id="measures" role="radiogroup" aria-labelledby="measureH"></div>
+        <p class="map-note mdesc" id="measureDesc"></p>
         <h3 class="opts-h">View</h3>
         <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
         <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
@@ -84,7 +86,9 @@ const TEMPLATE = `
         <select class="field" id="brgyPick"><option value="">Choose a barangay</option></select>
         <p class="opts-links"><button class="linkbtn" id="pickBack" type="button">All cities</button>
           <a id="dashLink" href="#/city">Open city dashboard</a></p>
-      </section>
+      </div>
+    </aside>
+    <div class="col-right" id="colRight">
       <section class="w info" id="info" aria-label="Barangay details" hidden aria-live="polite"></section>
     </div>
   </div>
@@ -93,7 +97,8 @@ const TEMPLATE = `
 const POP = typeof HTMLElement !== "undefined" && typeof HTMLElement.prototype.showPopover === "function";
 const SHEET_Q = "(max-width:599px)";
 
-let map, tip, host, S, mobile, ro, ro2, onKey, tipEl, onDown, onTipKey;
+let map, tip, host, S, mobile, ro, ro2, onKey, tipEl, onDown, onTipKey, onOptKey, onTourResize, onColScroll;
+let moreOff = [], moreDrawer = null;
 let loaderOn = false, loaderT, loaderFade;
 
 /* ---------- loading screen ---------- */
@@ -147,7 +152,9 @@ export function destroy() {
   if (ro) { ro.disconnect(); ro = null; }
   if (ro2) { ro2.disconnect(); ro2 = null; }
   if (mobile) mobile.removeEventListener("change", syncSheet);
-  document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onTipKey);
+  document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onTipKey); document.removeEventListener("keydown", onOptKey);
+  moreOff.forEach((f) => f()); moreOff = [];
+  if (moreDrawer) { moreDrawer(); moreDrawer = null; }
   if (tipEl) { hideTip(); tipEl = null; }
   try { if (map) map.remove(); } catch {}
   map = null;
@@ -284,6 +291,7 @@ function showNational(first) {
   endTour(false);
   S.city = null; S.data = null; S.active = null; S.hover = null; clearSel();
   setCityLayers(false);
+  if (map.getLayer("b-hov")) { map.setLayoutProperty("b-hov", "visibility", "none"); S.hovB = null; }
   map.setTerrain(null);
   map.setLayoutProperty("hill", "visibility", "none");
   map.setLayoutProperty("nat-dot", "visibility", "visible");
@@ -321,12 +329,18 @@ function breaksFor(m, feats) {
 function colorExpr(withSel) {
   const base = ["step", ["coalesce", ["get", S.metric.prop], 0], RAMP[0]];
   S.breaks.forEach((b, i) => base.push(b, RAMP[i + 1]));
-  return withSel ? ["case", ["boolean", ["feature-state", "sel"], false], COLORS.ink, base] : base;
+  if (!withSel) return base;
+  // 3D: neighbours in the palest band alternate between two near-identical tints so their edges still show without lines
+  const first = S.breaks.length ? S.breaks[0] : Infinity;
+  return ["case", ["boolean", ["feature-state", "sel"], false], COLORS.ink, ["all", ["<", valExpr(), first], ["==", ["%", codeNum, 2], 1]], TOP_ALT, base];
 }
-// a low plinth under every barangay, stepped by code (3 levels), so neighbours with the same value still show an edge in 3D
-const heightExpr = () => ["+", ["*", S.scaleH * 0.015, ["+", 2, ["%", ["to-number", ["slice", ["get", "adm4_pcode"], 8], 0], 3]]], ["*", ["coalesce", ["get", S.metric.prop], 0], S.scaleH / S.max]];
+const codeNum = ["to-number", ["slice", ["get", "adm4_pcode"], 8], 0];
+const LOW = 0.15, TOP_ALT = "#DAE1EE";
+const valExpr = () => ["coalesce", ["get", S.metric.prop], 0];
+// a very low plinth under every barangay, stepped by code (3 levels), so neighbours with the same value still show an edge in 3D
+const heightExpr = () => ["+", ["*", S.scaleH * 0.003, ["+", 1, ["%", codeNum, 3]]], ["*", ["coalesce", ["get", S.metric.prop], 0], S.scaleH / S.max]];
 function setCityLayers(on) {
-  ["b-ext", "b-flat", "b-case", "b-line", "b-sel"].forEach((id) => { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); });
+  ["b-ext", "b-flat", "b-case", "b-line", "b-sel", "b-case3", "b-line3"].forEach((id) => { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); });
   if (on) applyView();
 }
 function applyView() {
@@ -336,6 +350,9 @@ function applyView() {
   map.setLayoutProperty("b-case", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-line", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-sel", "visibility", d3 ? "none" : "visible");
+  map.setLayoutProperty("b-case3", "visibility", d3 ? "visible" : "none");
+  map.setLayoutProperty("b-line3", "visibility", d3 ? "visible" : "none");
+  map.setLayoutProperty("b-hov", "visibility", "visible");
   $("#ly3d").checked = d3;
 }
 function paintMetric() {
@@ -344,12 +361,22 @@ function paintMetric() {
   map.setPaintProperty("b-ext", "fill-extrusion-color", colorExpr(true));
   map.setPaintProperty("b-ext", "fill-extrusion-height", heightExpr());
   map.setPaintProperty("b-flat", "fill-color", colorExpr(false));
+  // 3D line overlays sit above the columns, but only for the low barangays; tall ones keep their walls
+  const low = ["<", valExpr(), S.max * LOW];
+  map.setFilter("b-case3", low); map.setFilter("b-line3", low);
   renderLegend();
 }
 function setMetric(m) {
   S.metric = m;
-  [...$("#measures").children].forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.k === m.key)));
+  syncMeasure();
   paintMetric(); syncUrl();
+}
+// "Colour the map by": a sliding thumb under the chosen measure, and its one-line description.
+function syncMeasure() {
+  const ms = $("#measures"), i = METRICS.indexOf(S.metric), inp = ms.querySelectorAll("input");
+  if (inp[i]) inp[i].checked = true;
+  ms.style.setProperty("--i", Math.max(0, i));
+  $("#measureDesc").textContent = S.metric.desc;
 }
 function ensureCityLayers() {
   if (map.getSource("brgy")) { map.getSource("brgy").setData(S.data.barangays); return; }
@@ -357,13 +384,18 @@ function ensureCityLayers() {
   map.addLayer({ id: "b-ext", type: "fill-extrusion", source: "brgy", layout: { visibility: "none" }, paint: { "fill-extrusion-color": RAMP[0], "fill-extrusion-height": 0, "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.94 } });
   map.addLayer({ id: "b-flat", type: "fill", source: "brgy", layout: { visibility: "none" }, paint: { "fill-color": RAMP[0], "fill-opacity": 0.88 } }, S.before);
   // dark casing under a white line: the border reads on both the palest and the darkest fills
-  map.addLayer({ id: "b-case", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": COLORS.ink, "line-opacity": 0.45, "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 3.5] } }, S.before);
-  map.addLayer({ id: "b-line", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 1.5] } }, S.before);
+  map.addLayer({ id: "b-case", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": COLORS.ink, "line-opacity": 0.6, "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 4] } }, S.before);
+  map.addLayer({ id: "b-line", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 1.75] } }, S.before);
+  // 3D: the same casing and white line drawn above the columns for low barangays (filter set in paintMetric)
+  map.addLayer({ id: "b-case3", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": COLORS.ink, "line-opacity": 0.6, "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 4] } });
+  map.addLayer({ id: "b-line3", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 1.75] } });
   map.addLayer({ id: "b-sel", type: "line", source: "brgy", layout: { visibility: "none" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "line-color": COLORS.ink, "line-width": 3 } }, S.before);
   // Intro highlight: a dark casing under a gold line, visible in both 2D and 3D.
   const none = ["==", ["get", "adm4_pcode"], ""];
   map.addLayer({ id: "b-tour-c", type: "line", source: "brgy", filter: none, paint: { "line-color": COLORS.ink, "line-width": 7 } }, S.before);
   map.addLayer({ id: "b-tour", type: "line", source: "brgy", filter: none, paint: { "line-color": COLORS.gold, "line-width": 3.5 } }, S.before);
+  // Hover outline, on top of everything so it works in 2D and 3D.
+  map.addLayer({ id: "b-hov", type: "line", source: "brgy", layout: { "line-join": "round" }, filter: none, paint: { "line-color": COLORS.ink, "line-width": 2 } });
   const pick = (e) => { const f = map.queryRenderedFeatures(e.point, { layers: [S.view === "3d" ? "b-ext" : "b-flat"] })[0]; return f ? f.properties.adm4_pcode : null; };
   map.on("click", (e) => {
     if (!S.city) return;
@@ -375,12 +407,13 @@ function ensureCityLayers() {
     if (!S.city) return;
     const code = pick(e);
     map.getCanvas().style.cursor = code ? "pointer" : "";
+    if (S.hovB !== code) { S.hovB = code; map.setFilter("b-hov", ["==", ["get", "adm4_pcode"], code || ""]); }
     if (!code) { tip.remove(); return; }
     const r = S.data.rows.find((x) => x.id === code);
     const v = S.metric.key === "share" ? r.share : S.metric.key === "unreached" ? r.unreached : r.exposed;
     tip.setLngLat(e.lngLat).setHTML(`${esc(r.name)}<span>${esc(S.metric.short)}: ${S.metric.f(v)}</span>`).addTo(map);
   });
-  map.getCanvas().addEventListener("mouseleave", () => tip.remove());
+  map.getCanvas().addEventListener("mouseleave", () => { tip.remove(); S.hovB = null; map.setFilter("b-hov", ["==", ["get", "adm4_pcode"], ""]); });
 }
 
 async function probeTerrain(c) {
@@ -419,10 +452,10 @@ async function selectCity(code, first) {
   loaderStep("Barangays ready. Placing dose sites.");
   S.data = data; S.city = code; S.active = null; S.hover = null; clearSel();
   const hasUnreached = data.rows.some((r) => r.unreached != null);
-  const ub = $("#measures").children[1];
-  ub.disabled = !hasUnreached; ub.title = hasUnreached ? "" : "Not computed for this city yet";
+  const ui = $('#measures input[value="unreached"]');
+  ui.disabled = !hasUnreached; ui.parentNode.title = hasUnreached ? "" : "Not computed for this city yet";
   if (!hasUnreached && S.metric.key === "unreached") S.metric = METRICS[0];
-  [...$("#measures").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.k === S.metric.key)));
+  syncMeasure();
   const bb = data.bbox;
   const diag = Math.hypot((bb[2] - bb[0]) * 111.32 * Math.cos((c.lat * Math.PI) / 180), (bb[3] - bb[1]) * 110.57) * 1000;
   S.scaleH = Math.max(300, diag * 0.06);
@@ -673,10 +706,11 @@ function unbusy() {
 const nb = (t) => `<span class="nb">${t}</span>`;
 const WALK = nb(`${WALK_MIN}-minute walk`);
 // A small "?" next to a term opens a one-line definition.
-const tipBtn = (k, label) => `<button class="tip-q" type="button" data-tip="${k}" aria-label="${label}" aria-expanded="false" aria-controls="tipPop">?</button>`;
+// The term itself is the button: dotted blue underline plus a small solid "?" glyph.
+const tipBtn = (k, term, label) => `<button class="tip-q" type="button" data-tip="${k}" aria-label="${label}" aria-expanded="false" aria-controls="tipPop"><span class="tip-t">${term}</span><span class="tip-g" aria-hidden="true">?</span></button>`;
 const TIPS = () => ({
-  exposed: `Exposed means the person lives where a ${years()}-year flood reaches.`,
-  dose: "A dose point is a temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline capsules for a few weeks after the flood.",
+  exposed: { t: "Exposed", b: `Lives where a ${years()}-year flood reaches.` },
+  dose: { t: "Dose point", b: "A temporary spot, like a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood." },
 });
 // A number that counts up once. The final value is already in the text, so reduced motion and screen readers get it at once.
 const rollNum = (v, f) => `<b class="n" aria-hidden="true" data-to="${v}" data-f="${f}">${f === "p" ? v.toFixed(0) + "%" : fmt(v)}</b><span class="sr-only">${f === "p" ? v.toFixed(0) + "%" : fmt(v)}</span>`;
@@ -702,7 +736,7 @@ function renderStrip() {
     eb.textContent = `Philippines · after a ${YEARS_DEFAULT}-year flood`;
     q.textContent = "Where does a flood put the most people at risk of leptospirosis?";
     const tot = S.cities.reduce((t, c) => t + (c.exposed || 0), 0);
-    $("#answer").innerHTML = `<p class="a-lead">${rollNum(tot, "n")} residents in ${S.cities.length} ${S.cities.length === 1 ? "city are" : "cities are"} ${nb("exposed" + tipBtn("exposed", "What does exposed mean?"))} to a ${YEARS_DEFAULT}-year flood.</p><p class="a-main">Pick a city to see where to hand out free medicine first.</p>`;
+    $("#answer").innerHTML = `<p class="a-lead">${rollNum(tot, "n")} residents in ${S.cities.length} ${S.cities.length === 1 ? "city are" : "cities are"} ${nb(tipBtn("exposed", "exposed", "What does exposed mean?"))} to a ${YEARS_DEFAULT}-year flood.</p><p class="a-main">Pick a city to see where to hand out free medicine first.</p>`;
     roll($("#answer"));
     return;
   }
@@ -721,10 +755,10 @@ function renderSentence() {
   const now = cov.flood != null ? cov.flood : null;
   const a = $("#answer");
   a.removeAttribute("aria-busy");
-  const lead = exposed != null ? `<p class="a-lead">${rollNum(exposed, "n")} residents are ${nb("exposed" + tipBtn("exposed", "What does exposed mean?"))} to a ${years()}-year flood.</p>` : "";
+  const lead = exposed != null ? `<p class="a-lead">${rollNum(exposed, "n")} residents are ${nb(tipBtn("exposed", "exposed", "What does exposed mean?"))} to a ${years()}-year flood.</p>` : "";
   let html;
   if (share != null) {
-    html = `${lead}<p class="a-main">Opening <b>${S.plan}</b> temporary ${nb("dose points" + tipBtn("dose", "What is a dose point?"))} brings ${rollNum(share * 100, "p")} of them within a ${WALK} of free doxycycline${now != null ? `<span class="now">, up from ${pct(now, 0)} now</span>` : ""}.</p>`;
+    html = `${lead}<p class="a-main">Opening <b>${S.plan}</b> temporary ${nb(tipBtn("dose", "dose points", "What is a dose point?"))} brings ${rollNum(share * 100, "p")} of them within a ${WALK} of free doxycycline${now != null ? `<span class="now">, up from ${pct(now, 0)} now</span>` : ""}.</p>`;
   } else if (exposed != null) {
     html = `${lead}<p class="a-main">Dose point plans are not computed for this city yet, so the map shows where the water reached.</p>`;
   } else {
@@ -775,13 +809,13 @@ function tourSteps() {
   const steps = [];
   steps.push({
     title: "The question and the answer",
-    metric: "exposed", plan: null, hi: null, spot: "#colTop",
+    metric: "exposed", plan: null, hi: null, spot: "#colTop", pref: ["right", "bottom", "top"],
     body: `This page answers one question: where should ${esc(name)} hand out free leptospirosis medicine after a flood? The sentence under the question gives the answer for the plan you pick.`,
   });
   const topE = topRow("exposed");
   steps.push({
     title: "Who was in the water",
-    metric: "exposed", plan: null, hi: topE, val: fmt(topE.exposed), spot: null,
+    metric: "exposed", plan: null, hi: topE, val: fmt(topE.exposed), spot: null, pref: ["right", "left", "top", "bottom"],
     body: `Darker barangays have more residents who waded through floodwater. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
   });
   const p3 = sum.dose_point_plans && sum.dose_point_plans["3"];
@@ -790,12 +824,12 @@ function tourSteps() {
   const n = has3 ? 3 : Math.min(3, S.data.dosePoints.features.length) || 3;
   steps.push({
     title: "Where to set up first",
-    metric: "exposed", plan: has3 ? "3" : null, top: n, hi: null, spot: "#sites",
+    metric: "exposed", plan: has3 ? "3" : null, top: n, hi: null, spot: "#sites", pref: ["right", "top"],
     body: `The panel ranks the sites. The gold numbers 1 to ${n} on the map match it. ${p3 && share != null ? `Opening these ${n} brings ${pct(share, 0)} of exposed residents within a ${WALK_MIN}-minute walk of free medicine. ` : ""}Tap a site to see more and find it on the map.`,
   });
   steps.push({
     title: "More options",
-    metric: "exposed", plan: null, hi: null, spot: "#optBtn",
+    metric: "exposed", plan: null, hi: null, spot: "#optBtn", pref: ["bottom", "left"],
     body: "Colour the map by another measure, turn on 3D or terrain, or jump to a barangay. Everything else on this page keeps working while you explore.",
     last: true,
   });
@@ -810,18 +844,86 @@ function startTour(user) {
   if (!S.city || !S.data) return;
   endTour(false, true);
   closeOpts();
-  S.tour = { i: 0, steps: tourSteps(), restore: { metric: S.metric, plan: S.plan }, tag: null, user, from: user ? document.activeElement : null };
+  S.tour = { i: 0, steps: tourSteps(), restore: { metric: S.metric, plan: S.plan }, tag: null, user, from: user ? document.activeElement : null, timer: 0, tick: 0 };
+  const side = $(".mapside");
+  // The cut-out: a box over the described element whose huge shadow dims everything else.
+  const hole = document.createElement("div");
+  hole.className = "tour-hole off"; hole.id = "tourHole"; hole.setAttribute("aria-hidden", "true");
   const card = document.createElement("div");
   card.className = "tour"; card.id = "tour";
   card.setAttribute("role", "dialog"); card.setAttribute("aria-labelledby", "tourT");
-  $(".mapside").appendChild(card);
-  onKey = (e) => { if (e.key === "Escape" && S.tour) { e.preventDefault(); endTour(true); } };
+  side.appendChild(hole); side.appendChild(card);
+  onKey = (e) => {
+    const t = S.tour; if (!t) return;
+    if (e.key === "Escape") { e.preventDefault(); endTour(true); return; }
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.target && e.target.closest && e.target.closest("input,select,textarea")) return;
+    if (e.key === "ArrowRight" && t.i < t.steps.length - 1) { e.preventDefault(); tourStep(t.i + 1); }
+    else if (e.key === "ArrowLeft" && t.i > 0) { e.preventDefault(); tourStep(t.i - 1); }
+  };
+  onTourResize = () => tourPlace();
+  onColScroll = () => tourPlace(true);
   document.addEventListener("keydown", onKey);
+  window.addEventListener("resize", onTourResize);
+  $("#col").addEventListener("scroll", onColScroll, { passive: true });
+  $("#colMore").addEventListener("scroll", onColScroll, { passive: true });
   tourStep(0);
 }
-function tourSpot(sel) {
-  host.querySelectorAll(".spot").forEach((e) => e.classList.remove("spot"));
-  if (sel) { const e = $(sel); if (e) { e.classList.add("spot"); if (e.closest("#col")) e.scrollIntoView({ block: "nearest", behavior: reducedMotion() ? "auto" : "smooth" }); } }
+// Rect of what the current step describes, in .mapside coordinates.
+function tourAnchor(st, m) {
+  const t = S.tour;
+  if (st.spot) {
+    const el = $(st.spot);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      if (r.width) return { x: r.left - m.left, y: r.top - m.top, w: r.width, h: r.height, rad: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 12, spot: true };
+    }
+  }
+  if (t.tag) {
+    const e = t.tag.getElement(), p = map.project(t.tag.getLngLat()), w = e.offsetWidth || 90, h = e.offsetHeight || 40;
+    return { x: p.x - w / 2, y: p.y - h - 4, w, h, rad: 8, spot: false };
+  }
+  return null;
+}
+// Put the card next to what it describes, with an arrow pointing at it; cut the dimmed scrim out around the element.
+function tourPlace(track) {
+  const t = S && S.tour; if (!t || !map) return;
+  const card = $("#tour"), hole = $("#tourHole"), ms = $(".mapside");
+  if (!card || !hole || !ms) return;
+  const st = t.steps[t.i], m = ms.getBoundingClientRect(), a = tourAnchor(st, m);
+  const ready = card.classList.contains("ready");
+  card.classList.toggle("track", !!track); hole.classList.toggle("track", !!track);
+  const W = card.offsetWidth, H = card.offsetHeight, G = 14, E = 8;
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
+  let side = "none", left = (m.width - W) / 2, top = 56, ax = 0, ay = 0;
+  if (a) {
+    const fits = {
+      right: a.x + a.w + G + W <= m.width - E, left: a.x - G - W >= E,
+      bottom: a.y + a.h + G + H <= m.height - E, top: a.y - G - H >= E,
+    };
+    const pick = [...(st.pref || []), "right", "left", "bottom", "top"].find((s) => fits[s]);
+    const cx = a.x + a.w / 2, cy = a.h > 160 ? a.y + 40 : a.y + a.h / 2;
+    if (pick === "right" || pick === "left") {
+      side = pick; left = pick === "right" ? a.x + a.w + G : a.x - G - W;
+      top = clamp(cy - 36, E, m.height - H - E); ay = clamp(cy - top, 22, H - 22);
+    } else if (pick) {
+      side = pick; top = pick === "bottom" ? a.y + a.h + G : a.y - G - H;
+      left = clamp(cx - W / 2, E, m.width - W - E); ax = clamp(cx - left, 22, W - 22);
+    } else {
+      top = a.y > m.height / 2 ? 56 : m.height - H - 16;
+    }
+    hole.style.left = a.x - 6 + "px"; hole.style.top = a.y - 6 + "px";
+    hole.style.width = a.w + 12 + "px"; hole.style.height = a.h + 12 + "px"; hole.style.borderRadius = a.rad + 6 + "px";
+  }
+  hole.classList.toggle("off", !(a && a.spot));
+  card.dataset.side = side;
+  card.style.setProperty("--ax", ax + "px"); card.style.setProperty("--ay", ay + "px");
+  card.style.left = left + "px"; card.style.top = top + "px";
+  if (!ready) { void card.offsetWidth; card.classList.add("ready"); hole.classList.add("ready"); }
+  if (track) {
+    clearTimeout(t.tick);
+    t.tick = setTimeout(() => { card.classList.remove("track"); hole.classList.remove("track"); }, 140);
+  }
 }
 function tourStep(i) {
   const t = S.tour; if (!t) return;
@@ -833,7 +935,7 @@ function tourStep(i) {
   if (!$("#lyDose").checked) { $("#lyDose").checked = true; drawDose(); }
   if (mobile.matches) openSheet(st.spot === "#sites");
   S.markers.forEach((m) => { const e = m.getElement(), r = +e.textContent; e.classList.toggle("hl", !!st.top && r <= st.top); e.classList.toggle("dim", !!st.top && !(r <= st.top)); });
-  tourSpot(st.spot);
+  if (st.spot) { const e = $(st.spot); if (e && e.closest("#col")) e.scrollIntoView({ block: "nearest", behavior: "auto" }); }
   tourClearHi();
   if (st.hi) {
     const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === st.hi.id);
@@ -845,13 +947,12 @@ function tourStep(i) {
   }
   const dots = t.steps.map((_, j) => `<i${j === i ? ' class="on"' : ""}></i>`).join("");
   const card = $("#tour");
-  card.innerHTML = `<div class="tour-top"><span class="tour-step">Step ${i + 1} of ${n}</span><button class="linkbtn" type="button" data-a="skip">Skip tour</button></div>
-    <h2 id="tourT" tabindex="-1">${st.title}</h2>
-    <p id="tourB">${st.body}</p>
+  card.innerHTML = `<i class="tour-arrow" aria-hidden="true"></i>
+    <div class="tour-top"><span class="tour-step">Step ${i + 1} of ${n}</span><button class="linkbtn" type="button" data-a="skip">Skip tour</button></div>
+    <div class="tour-body"><h2 id="tourT" tabindex="-1">${st.title}</h2>
+    <p id="tourB">${st.body}</p>${st.last ? `<p class="tour-dash"><a href="${cityHref(S.city)}" data-a="dash">Open the city dashboard</a></p>` : ""}</div>
     <div class="tour-foot"><span class="dots" aria-hidden="true">${dots}</span>
-    <span class="tour-btns">${st.last
-      ? `<button class="btn sm" type="button" data-a="done">Explore the map</button><a class="btn sm ghost" href="${cityHref(S.city)}" data-a="dash">Open the city dashboard</a>`
-      : `${i > 0 ? '<button class="btn sm ghost" type="button" data-a="back">Back</button>' : ""}<button class="btn sm" type="button" data-a="next">Next</button>`}</span></div>`;
+    <span class="tour-btns">${i > 0 ? '<button class="linkbtn" type="button" data-a="back">Back</button>' : ""}<button class="tbtn" type="button" data-a="${st.last ? "done" : "next"}">${st.last ? "Explore the map" : "Next"}</button></span></div>`;
   card.setAttribute("aria-describedby", "tourB");
   card.onclick = (e) => {
     const a = e.target.closest("[data-a]"); if (!a) return;
@@ -862,6 +963,9 @@ function tourStep(i) {
     else if (act === "done") endTour(true, false, true);
     else if (act === "dash") endTour(false, false, true);
   };
+  tourPlace();
+  // The sheet and the map settle after a moment; measure again.
+  clearTimeout(t.timer); t.timer = setTimeout(() => tourPlace(), 380);
   card.querySelector("#tourT").focus({ preventScroll: true });
 }
 function tourClearHi(tt) {
@@ -877,10 +981,16 @@ function endTour(refocus, quiet, keepView) {
   const t = S && S.tour;
   if (!t) return;
   S.tour = null;
+  clearTimeout(t.timer); clearTimeout(t.tick);
   tourClearHi(t);
   document.removeEventListener("keydown", onKey);
-  const card = host && host.querySelector("#tour"); if (card) card.remove();
-  if (host) tourSpot(null);
+  window.removeEventListener("resize", onTourResize);
+  if (host) {
+    const c = host.querySelector("#col"), cm = host.querySelector("#colMore");
+    if (c) c.removeEventListener("scroll", onColScroll);
+    if (cm) cm.removeEventListener("scroll", onColScroll);
+    ["#tour", "#tourHole"].forEach((s) => { const e = host.querySelector(s); if (e) e.remove(); });
+  }
   if (quiet) return;
   markSeen();
   S.markers.forEach((m) => m.getElement().classList.remove("hl", "dim"));
@@ -892,13 +1002,40 @@ function endTour(refocus, quiet, keepView) {
 }
 
 /* ---------- widgets ---------- */
+// More options is a side panel over the right edge of the map. While open: scrim behind, focus trapped, Esc and scrim close.
 function openOpts(open) {
-  const o = $("#opts"), b = $("#optBtn");
-  o.hidden = !open;
+  const o = $("#opts"), b = $("#optBtn"), sc = $("#optScrim");
+  if (!o || open === o.classList.contains("open")) return;
+  o.classList.toggle("open", open); sc.classList.toggle("on", open); o.inert = !open;
   b.setAttribute("aria-expanded", String(open));
   b.classList.toggle("on", open);
+  if (open) { document.addEventListener("keydown", onOptKey); $("#optClose").focus({ preventScroll: true }); }
+  else document.removeEventListener("keydown", onOptKey);
 }
-function closeOpts() { if (host && $("#opts")) openOpts(false); }
+// refocus: give focus back to the More options button (user closed it)
+function closeOpts(refocus) {
+  if (!host || !$("#opts")) return;
+  const was = $("#opts").classList.contains("open");
+  openOpts(false);
+  if (refocus && was) { const b = $("#optBtn"); if (!b.hidden) b.focus({ preventScroll: true }); }
+}
+function trapOpts(e) {
+  const o = $("#opts");
+  if (e.key === "Escape") { e.preventDefault(); closeOpts(true); return; }
+  if (e.key !== "Tab") return;
+  const fs = [...o.querySelectorAll("button,input,select,a[href]")].filter((x) => !x.disabled && !x.closest("[hidden]"));
+  if (!fs.length) return;
+  const first = fs[0], last = fs[fs.length - 1], cur = document.activeElement;
+  if (!o.contains(cur)) { e.preventDefault(); first.focus(); }
+  else if (e.shiftKey && cur === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && cur === last) { e.preventDefault(); first.focus(); }
+}
+// The "more below" badge goes on whatever scrolls: the whole column on desktop, the sheet body on phones.
+function attachMore() {
+  moreOff.forEach((x) => x()); moreOff = [];
+  const box = mobile.matches ? $("#colMore") : $("#col");
+  if (box) moreOff.push(moreBelow(box));
+}
 // Phone sheet: two snap heights. closed = peek (question and answer), open = everything.
 function openSheet(open) {
   const col = $("#col"), h = $("#handle");
@@ -914,7 +1051,7 @@ function setPeek() {
   $("#mapwrap").style.setProperty("--peek", S.peek + "px");
 }
 function syncSheet() {
-  setPeek();
+  setPeek(); attachMore();
   if (!mobile.matches) { $("#colMore").inert = false; $("#col").style.transform = ""; }
   else openSheet(!$("#col").classList.contains("closed"));
   if (map) map.resize();
@@ -963,12 +1100,16 @@ function hideTip() {
 function showTip(btn) {
   if (S.tipBtn === btn) { hideTip(); return; }
   hideTip();
-  tipEl.textContent = TIPS()[btn.dataset.tip] || "";
+  const tp = TIPS()[btn.dataset.tip] || { t: "", b: "" };
+  tipEl.innerHTML = `<b class="tip-h">${esc(tp.t)}</b><span class="tip-b">${esc(tp.b)}</span><i class="tip-arrow" aria-hidden="true"></i>`;
   if (POP) tipEl.showPopover(); else tipEl.hidden = false;
   const r = btn.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
   const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
-  const top = r.bottom + 8 + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 8) : r.bottom + 8;
+  const below = !(r.bottom + 12 + h > window.innerHeight - 8);
+  const top = below ? r.bottom + 12 : Math.max(8, r.top - h - 12);
   tipEl.style.left = left + "px"; tipEl.style.top = top + "px";
+  tipEl.dataset.side = below ? "bottom" : "top";
+  tipEl.style.setProperty("--ax", Math.min(Math.max(16, r.left + r.width / 2 - left), w - 16) + "px");
   S.tipBtn = btn; btn.setAttribute("aria-expanded", "true"); btn.setAttribute("aria-describedby", "tipPop");
 }
 function wireTips() {
@@ -990,7 +1131,7 @@ function wire() {
   $("#cityPick").addEventListener("input", (e) => draw(e.target.value));
   list.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) selectCity(b.dataset.c); });
   $("#pickBack").addEventListener("click", () => showNational(false));
-  $("#brgyPick").addEventListener("change", (e) => { if (e.target.value) { selectBrgy(e.target.value, true); openOpts(false); } else clearSel(); });
+  $("#brgyPick").addEventListener("change", (e) => { if (e.target.value) { selectBrgy(e.target.value, true); closeOpts(true); } else clearSel(); });
   $("#tourBtn").addEventListener("click", () => startTour(true));
 
   // site list: hover and focus light up the marker, click pans to it
@@ -1004,17 +1145,16 @@ function wire() {
   sl.addEventListener("focusout", (e) => { if (idOf(e)) setHover(null); });
 
   // More options drawer
-  $("#optBtn").addEventListener("click", () => openOpts($("#opts").hidden));
-  $("#optClose").addEventListener("click", () => { openOpts(false); $("#optBtn").focus(); });
-  host.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#opts").hidden && !S.tour) { openOpts(false); $("#optBtn").focus(); } });
+  onOptKey = trapOpts;
+  $("#optBtn").addEventListener("click", () => openOpts(true));
+  $("#optClose").addEventListener("click", () => closeOpts(true));
+  $("#optScrim").addEventListener("click", () => closeOpts(true));
+  moreDrawer = moreBelow($("#optsBody"));
   const ms = $("#measures");
-  METRICS.forEach((m) => {
-    const b = document.createElement("button");
-    b.type = "button"; b.dataset.k = m.key; b.setAttribute("aria-pressed", String(m === S.metric));
-    b.innerHTML = `<b>${esc(m.short)}</b><span>${esc(m.desc)}</span>`;
-    b.addEventListener("click", () => { if (!b.disabled) setMetric(m); });
-    ms.appendChild(b);
-  });
+  ms.style.setProperty("--n", METRICS.length);
+  ms.innerHTML = '<span class="thumb" aria-hidden="true"></span>' + METRICS.map((m) => `<label><input type="radio" name="metric" value="${m.key}" aria-label="${esc(m.short)}"><span>${esc(m.seg)}</span></label>`).join("");
+  ms.addEventListener("change", (e) => { const m = METRICS.find((x) => x.key === e.target.value); if (m) setMetric(m); });
+  syncMeasure();
   $("#ly3d").addEventListener("change", (e) => {
     S.view = e.target.checked ? "3d" : "2d"; applyView(); renderLegend();
     map.easeTo({ pitch: S.view === "3d" ? 50 : 0, bearing: S.view === "3d" ? -12 : 0, duration: dur(900) });

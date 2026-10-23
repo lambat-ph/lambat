@@ -40,6 +40,21 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 2. Design fork `design-apple` was not chosen (23 Oct); only its frosted glass panels were ported. Branch kept for reference.
 3. Ideas not yet built (Cult UI survey): direction-aware city tabs, progress bars and tier badges in tables, edge-fade on scroll lists, copy-citation buttons.
 
+## Words (one term per concept, everywhere: pages, tables, legends, popovers, URL labels shown to users)
+
+| Concept | Say | Definition to show on first use |
+|---|---|---|
+| 25-year flood | 25-year flood | A flood big enough that it has about a 4% chance of happening in any year (UP NOAH hazard map) |
+| exposed | exposed residents | People who live where a 25-year flood reaches |
+| cannot reach care | cut off from care | Exposed residents more than a 30-minute walk from a clinic while the flood is on |
+| access gap | lose access in the flood | Residents who can walk to a clinic on a dry day but not during the flood (estimated) |
+| site, k | dose point; plan size (3, 5 or 8 dose points) | A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood |
+| barangay rank | barangay priority | Barangays ordered by exposed residents cut off from care |
+| site rank | dose point order (1 opens first) | Order that covers the most cut-off residents first |
+| alert | rain warning (tested 2017 to 2019) | A two-week-ahead warning from rainfall, tested on past data, not live |
+
+Facility types are shown in plain words (Barangay hall, School, Health centre), never raw OSM values like `townhall`.
+
 ## Conventions
 
 Colours only from `base.css` tokens; gold only for dose points and highlights, never small text on light backgrounds; text contrast at least 4.5:1; plain language, no em dashes; no team, school or person names. Test at 1440x900 and 375 or 390 px wide, with no horizontal scroll and no console errors other than the optional `s1_flood.geojson` 404.
