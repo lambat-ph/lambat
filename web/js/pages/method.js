@@ -91,6 +91,20 @@ const REFS = [
   `WorldPop. (n.d.). <i>WorldPop gridded population estimates</i> [Data set]. <a href="https://www.worldpop.org">https://www.worldpop.org</a>`,
 ];
 
+const ICON_COPY = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg>`;
+const ICON_CHECK = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const copyBtn = (label = "Copy citation") => `<button type="button" class="copy" aria-label="${label}"><span class="copy-ico">${ICON_COPY}</span></button><span class="copy-msg" aria-hidden="true"></span>`;
+
+// Plain-text version of an HTML reference (tags dropped, entities decoded).
+const plain = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.textContent.trim(); };
+const REFS_TEXT = REFS.map(plain);
+
+const RUN_CMDS = `uv sync
+uv run pytest
+uv run python scripts/run_alert.py
+uv run python scripts/run_pipeline.py --scenario 25yr
+uv sync --extra cv   # optional: PyTorch for the U-Net`;
+
 const html = () => `
 <article class="method">
   <header>
@@ -164,17 +178,14 @@ const html = () => `
 
   <section class="card" aria-labelledby="m-refs">
     <h2 class="card-title" id="m-refs">Data and references</h2>
-    <ul class="refs">${REFS.map((r) => `<li>${r}</li>`).join("")}</ul>
+    <div class="refs-bar"><button type="button" class="copy-all">Copy all references</button><span class="copy-msg" aria-hidden="true"></span></div>
+    <ul class="refs">${REFS.map((r, i) => `<li data-i="${i}"><span class="ref-text">${r}</span>${copyBtn()}</li>`).join("")}</ul>
   </section>
 
   <section class="card" aria-labelledby="m-run">
     <h2 class="card-title" id="m-run">Reproduce it</h2>
     <p>You need <a href="https://docs.astral.sh/uv/">uv</a>. Data download steps are in <a href="${REPO_URL}/blob/main/data/README.md">data/README.md</a>.</p>
-<pre><code>uv sync
-uv run pytest
-uv run python scripts/run_alert.py
-uv run python scripts/run_pipeline.py --scenario 25yr
-uv sync --extra cv   # optional: PyTorch for the U-Net</code></pre>
+<div class="codewrap"><pre><code>${esc(RUN_CMDS)}</code></pre>${copyBtn("Copy commands")}</div>
     <p><a class="btn" href="${REPO_URL}">Open the repository</a></p>
   </section>
 </article>`;
@@ -183,6 +194,67 @@ uv sync --extra cv   # optional: PyTorch for the U-Net</code></pre>
 const ghost = () => `<article aria-busy="true" style="max-width:880px;margin:0 auto;padding:var(--s3) var(--s2);display:flex;flex-direction:column;gap:var(--s3)"><span class="sr-only" role="status">Loading the method page.</span>
   <header aria-hidden="true"><span class="skel skel-line" style="--w:20%"></span><span class="skel skel-big" style="--w:70%"></span></header>
   ${[3, 2, 4].map((n) => `<section class="card" aria-hidden="true"><span class="skel skel-big" style="--w:35%"></span>${skel(n)}</section>`).join("")}</article>`;
+
+async function writeClip(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
+  } catch { /* fall through */ }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.setAttribute("aria-hidden", "true");
+  ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+  document.body.appendChild(ta);
+  const prev = document.activeElement;
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch { ok = false; }
+  ta.remove();
+  if (prev && prev.focus) prev.focus({ preventScroll: true });
+  return ok;
+}
+
+const timers = new WeakMap();
+function flash(msgEl, live, btn, ok, text) {
+  clearTimeout(timers.get(msgEl));
+  msgEl.textContent = text;
+  msgEl.classList.toggle("fail", !ok);
+  msgEl.classList.add("show");
+  live.textContent = "";
+  setTimeout(() => { live.textContent = text; }, 30);
+  const ico = btn.querySelector(".copy-ico");
+  if (ico && ok) ico.innerHTML = ICON_CHECK;
+  btn.classList.toggle("done", ok);
+  timers.set(msgEl, setTimeout(() => {
+    msgEl.classList.remove("show");
+    if (ico) ico.innerHTML = ICON_COPY;
+    btn.classList.remove("done");
+  }, ok ? 1500 : 3500));
+}
+
+function selectNode(node) {
+  const r = document.createRange();
+  r.selectNodeContents(node);
+  const sel = getSelection();
+  sel.removeAllRanges();
+  sel.addRange(r);
+}
+
+function wire(el) {
+  const live = el.querySelector(".copy-live");
+  el.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button.copy, button.copy-all");
+    if (!btn || !el.contains(btn)) return;
+    let text, target;
+    if (btn.classList.contains("copy-all")) { text = REFS_TEXT.join("\n\n"); target = el.querySelector(".refs"); }
+    else if (btn.closest("li[data-i]")) { const li = btn.closest("li[data-i]"); text = REFS_TEXT[+li.dataset.i]; target = li.querySelector(".ref-text"); }
+    else { target = btn.closest(".codewrap").querySelector("code"); text = RUN_CMDS; }
+    const msg = btn.nextElementSibling;
+    const ok = await writeClip(text);
+    if (!ok) selectNode(target);
+    flash(msg, live, btn, ok, ok ? "Copied" : "Press Ctrl+C");
+  });
+}
 
 export async function render(el, params) {
   let ready = Promise.resolve();
@@ -196,7 +268,8 @@ export async function render(el, params) {
     el.innerHTML = ghost();
     await ready;
   }
-  el.innerHTML = html();
+  el.innerHTML = html() + `<div class="sr-only copy-live" role="status" aria-live="polite"></div>`;
+  wire(el);
 }
 
 export function destroy() {}

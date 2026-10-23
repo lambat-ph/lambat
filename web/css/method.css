@@ -40,6 +40,8 @@
 .method ul.limits{margin:0;padding-left:var(--s3);display:grid;gap:var(--s1);line-height:1.5}
 .method .refs{margin:0;padding:0;list-style:none;display:grid;gap:var(--s2);font-size:var(--t-sm)}
 .method .refs li{padding-left:2em;text-indent:-2em;line-height:1.5;overflow-wrap:anywhere}
+.method .refs li>*{text-indent:0}
+.method .ref-text{text-indent:-2em;display:inline}
 .method .refs a{overflow-wrap:anywhere}
 .method pre{margin:0;background:var(--ink);color:#fff;border-radius:var(--radius-sm);padding:var(--s2);overflow-x:auto;font:var(--t-sm)/1.6 ui-monospace,Consolas,monospace}
 .method code{font-family:ui-monospace,Consolas,monospace;font-size:.92em}
@@ -50,3 +52,23 @@
   .method .pipe-tall{display:block}
   .method .scroll svg{min-width:0}
 }
+
+/* ---------- copy buttons ---------- */
+.method .copy{position:relative;display:inline-grid;place-items:center;width:44px;height:44px;margin:-10px -4px -10px 0;padding:0;border:0;background:transparent;color:var(--blue);cursor:pointer;vertical-align:middle;text-indent:0}
+.method .copy-ico{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;transition:background-color .15s}
+.method .copy:hover .copy-ico{background:var(--blue-tint)}
+.method .copy.done{color:var(--blue-dark)}
+.method .copy-msg{display:inline-block;font:600 var(--t-xs) var(--f-text);color:var(--blue-dark);opacity:0;transition:opacity .2s;vertical-align:middle;text-indent:0;pointer-events:none}
+.method .copy-msg.show{opacity:1}
+.method .copy-msg.fail{color:var(--warn-ink)}
+.method .refs-bar{display:flex;align-items:center;gap:var(--s1);margin:calc(var(--s1) * -1) 0 0}
+.method .copy-all{min-height:44px;padding:0 var(--s1);margin-left:calc(var(--s1) * -1);border:0;border-radius:var(--radius-sm);background:transparent;color:var(--blue);font:600 var(--t-sm) var(--f-text);cursor:pointer}
+.method .copy-all:hover{background:var(--blue-tint);color:var(--blue-dark)}
+.method .codewrap{position:relative}
+.method .codewrap pre{padding-right:56px}
+.method .codewrap .copy{position:absolute;top:2px;right:2px;margin:0;color:#fff}
+.method .codewrap .copy:hover .copy-ico{background:rgba(255,255,255,.16)}
+.method .codewrap .copy:focus-visible{outline-color:#fff}
+.method .codewrap .copy-msg{position:absolute;top:12px;right:50px;color:#fff;background:var(--ink);padding:0 var(--s0)}
+.method .codewrap .copy-msg.fail{color:#fff}
+@media (prefers-reduced-motion:reduce){.method .copy-msg,.method .copy-ico{transition:none}}

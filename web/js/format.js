@@ -40,3 +40,16 @@ export function skel(a = 1, o = {}) {
   if (a === "rows") return Array.from({ length: o.n || 6 }, () => `<tr class="skel-row" aria-hidden="true">${Array.from({ length: o.cols || 4 }, (_, i) => `<td>${line(i ? 60 : 80)}</td>`).join("")}</tr>`).join("");
   return "";
 }
+// "More below" badge for a scroll container: a small round down arrow pinned to its bottom edge,
+// shown only while there is more to scroll. Click scrolls most of a screen. Returns a cleanup function.
+export function moreBelow(box) {
+  const b = el("button", { class: "more-below", type: "button", "aria-label": "Scroll down for more", hidden: "" },
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');
+  box.appendChild(b);
+  const upd = () => { b.hidden = box.scrollHeight - box.clientHeight - box.scrollTop < 8; };
+  b.addEventListener("click", () => box.scrollBy({ top: box.clientHeight * 0.8, behavior: reducedMotion() ? "auto" : "smooth" }));
+  box.addEventListener("scroll", upd, { passive: true });
+  const ro = new ResizeObserver(upd); ro.observe(box); [...box.children].forEach((c) => ro.observe(c));
+  upd();
+  return () => { ro.disconnect(); box.removeEventListener("scroll", upd); b.remove(); };
+}
