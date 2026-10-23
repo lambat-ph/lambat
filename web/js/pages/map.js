@@ -45,9 +45,9 @@ const TEMPLATE = `
         <p class="cov" id="planCov"></p>
         <ol class="sitelist" id="siteList"></ol>
         <p class="map-note" id="siteNote" hidden></p>
-        <p class="map-note order" id="orderNote">Dose point order (1 opens first) covers the most cut-off residents first. Barangay priority ranks barangays by cut-off residents alone, so the two orders can differ. This ranking has not yet been confirmed against flood reports. <a href="#/method">See Method.</a></p>
+        <p class="map-note order" id="orderNote" title="Dose point order covers the most cut-off residents first. Barangay priority ranks barangays by cut-off residents alone, so the two orders can differ.">1 opens first. Not yet checked against flood reports. <a href="#/method">See Method</a></p>
         <div class="acts" id="acts"><button class="act" id="copyLink" type="button">Copy link</button><button class="act" id="dlPlan" type="button">Download plan (CSV)</button><span class="sr-only" id="actLive" role="status" aria-live="polite"></span></div>
-        <p class="what" id="what"><b>What is a dose point?</b> A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood.</p>
+        
       </section>
       <section class="sec sec-cities" id="cities" aria-labelledby="citiesH" hidden>
         <h2 id="citiesH">Pick a city</h2>
@@ -796,7 +796,7 @@ function preStrip(params) {
   $("#sites").hidden = false; $("#sites").setAttribute("aria-busy", "true"); busyParts(true);
   $("#siteList").innerHTML = `<li>${skel("list", { n: 3 })}</li>`;
 }
-function busyParts(on) { ["#planPick", "#planCov", "#what", "#siteNote"].forEach((s) => { const e = $(s); if (e && (on || s !== "#siteNote")) e.hidden = on; }); }
+function busyParts(on) { ["#planPick", "#planCov", "#siteNote"].forEach((s) => { const e = $(s); if (e && (on || s !== "#siteNote")) e.hidden = on; }); }
 // Placeholders in the answer and the site list give way to real content.
 function unbusy() {
   $("#sites").removeAttribute("aria-busy"); busyParts(false);
@@ -1323,6 +1323,9 @@ function syncSheet() {
   const pp = $("#planPick"), ph = $(".plan-h");
   if (mobile.matches) { if (pp.parentNode !== $("#colTop")) $("#colTop").insertBefore(pp, $("#tourBtn")); }
   else if (pp.parentNode !== ph) ph.appendChild(pp);
+  // The legend floats on the map on wider screens so the cards fit without scrolling; on phones it sits in the sheet.
+  const lg = $("#legend"), lgHome = mobile.matches ? $("#colMore") : $(".mapside");
+  if (lg && lg.parentNode !== lgHome) lgHome.appendChild(lg);
   setPeek(); attachMore();
   if (!mobile.matches) { $("#colMore").inert = false; $("#col").style.transform = ""; }
   else openSheet(!$("#col").classList.contains("closed"));
