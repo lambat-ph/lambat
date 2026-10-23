@@ -1,86 +1,115 @@
 import { getCities, getCity, cityHref } from "../data.js";
 import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
-import { fmt, pct, compact, esc, reducedMotion, useCss } from "../format.js";
+import { fmt, pct, esc, reducedMotion, useCss } from "../format.js";
 
 const METRICS = [
-  { key: "exposed", prop: "exposed", short: "Exposed", label: "Exposed residents", unit: "residents", f: fmt },
-  { key: "unreached", prop: "exposed_unreached_flood", short: "Cut off", label: "Out of reach in a flood", unit: "residents", f: fmt },
-  { key: "share", prop: "flooded_share", short: "Flooded", label: "Share of area flooded", unit: "of area", f: (v) => pct(v, 0) },
+  { key: "exposed", prop: "exposed", short: "Residents in the floodwater", desc: "People who live where the flood reaches.",
+    legend: "Residents in the floodwater, per barangay", unit: "residents", lo: "fewer", hi: "more", f: fmt },
+  { key: "unreached", prop: "exposed_unreached_flood", short: "Residents who cannot reach a clinic", desc: `Exposed people more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`,
+    legend: `Residents who cannot walk to a clinic in ${WALK_MIN} minutes, per barangay`, unit: "residents", lo: "fewer", hi: "more", f: fmt },
+  { key: "share", prop: "flooded_share", short: "Area flooded", desc: "How much of each barangay's land is under water.",
+    legend: "Share of each barangay's area under water", unit: "of the area", lo: "less", hi: "more", f: (v) => pct(v, 0) },
 ];
+const KINDS = {
+  school: "School", townhall: "Barangay hall", town_hall: "Barangay hall", community_centre: "Community centre", community_center: "Community centre",
+  hospital: "Hospital", clinic: "Clinic", doctors: "Clinic", pharmacy: "Pharmacy", place_of_worship: "Place of worship", church: "Church",
+  fire_station: "Fire station", police: "Police station", library: "Library", marketplace: "Market", sports_centre: "Sports centre",
+  social_facility: "Social facility", kindergarten: "Kindergarten", college: "College", university: "University", government: "Government office",
+};
+const kindLabel = (k) => { if (!k) return "Site"; if (KINDS[k]) return KINDS[k]; const t = String(k).replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
 const SEEN_KEY = "lambat.tourSeen";
+const PLANS = ["3", "5", "8"];
+const YEARS_DEFAULT = 25;
 
 const TEMPLATE = `
-<div class="mapwrap">
-  <div id="map" role="region" aria-label="Map of flood exposure by barangay. The city dashboard shows the same data as tables."></div>
+<div class="mapwrap" id="mapwrap">
+  <div id="map" role="region" aria-label="Map of flood exposure by barangay, with numbered dose points. The list on the left and the city dashboard give the same information as text."></div>
   <div class="loading" id="loading" role="status">Loading the map</div>
-  <div class="dock closed" id="dock">
-    <button class="sheet-handle" id="handle" type="button" aria-expanded="false" aria-label="Show map controls"></button>
-    <section class="w w-legend" id="legend" aria-label="Legend"></section>
-    <div class="col-left">
-      <section class="w w-caption" id="caption" aria-label="What this map shows" aria-live="polite">
-        <p class="cap-text" id="capText"></p>
-        <button class="linkbtn" id="tourBtn" type="button" hidden>How to read this map</button>
-      </section>
-      <section class="w w-picker" id="picker" aria-label="City">
-        <div class="head"><strong id="pickTitle">Choose a city</strong><button class="linkbtn" id="pickBack" type="button" hidden>All cities</button></div>
-        <div id="pickList">
-          <label class="sr-only" for="cityPick">Search cities</label>
-          <input class="field" id="cityPick" type="search" placeholder="Search a city" autocomplete="off">
-          <ul class="citylist" id="cityList" style="margin-top:8px"></ul>
-        </div>
-        <div id="pickCity" hidden>
-          <label class="wt" for="brgyPick" style="display:block">Find a barangay</label>
-          <select class="field" id="brgyPick"><option value="">Choose a barangay</option></select>
-          <p style="margin:8px 0 0"><a id="dashLink" href="#/city">Open city dashboard</a> <span class="muted xs">(the same data as a table)</span></p>
-        </div>
-      </section>
+
+  <header class="strip" id="strip" hidden>
+    <div class="strip-main">
+      <p class="eyebrow" id="eyebrow"></p>
+      <h1 class="strip-q" id="stripQ"></h1>
+      <p class="strip-a" id="answer" role="status" aria-live="polite"></p>
     </div>
-    <div class="col-right">
-      <section class="w w-metric opt" id="wMetric" aria-label="Measure" hidden>
-        <h2 id="metricH">Show</h2>
-        <div class="seg" id="metricSeg" role="group" aria-labelledby="metricH"></div>
-      </section>
-      <section class="w w-view opt" id="wView" aria-label="View" hidden>
-        <div class="w-row">
-          <div><h2 id="planH">Dose points</h2>
-            <div class="seg" id="planSeg" role="group" aria-labelledby="planH"></div>
-            <p class="map-note" id="planNote" style="margin-top:8px" aria-live="polite"></p></div>
-          <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
+    <div class="strip-act">
+      <button class="chip-btn" id="tourBtn" type="button" hidden>New here? Take a 30-second tour</button>
+      <button class="opt-btn" id="optBtn" type="button" aria-expanded="false" aria-controls="opts" hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+        <span>More options</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="col-right" id="colRight">
+    <section class="w opts" id="opts" aria-label="More options" hidden>
+      <div class="opts-head"><h2>More options</h2><button class="x" id="optClose" type="button" aria-label="Close more options">&times;</button></div>
+      <h3 class="opts-h" id="measureH">Colour the map by</h3>
+      <div class="measures" id="measures" role="group" aria-labelledby="measureH"></div>
+      <h3 class="opts-h">View</h3>
+      <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
+      <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
+      <label class="switch"><span>Show dose points on the map</span><input type="checkbox" role="switch" id="lyDose" checked></label>
+      <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
+      <p class="map-note" id="reliefNote" hidden></p>
+      <h3 class="opts-h">Go to</h3>
+      <label class="wt" for="brgyPick">Find a barangay</label>
+      <select class="field" id="brgyPick"><option value="">Choose a barangay</option></select>
+      <p class="opts-links"><button class="linkbtn" id="pickBack" type="button">All cities</button>
+        <a id="dashLink" href="#/city">Open city dashboard</a></p>
+    </section>
+    <section class="w info desk" id="info" aria-label="Barangay details" hidden aria-live="polite"></section>
+  </div>
+
+  <div class="dock closed" id="dock">
+    <button class="sheet-handle" id="handle" type="button" aria-expanded="false" aria-label="Show more of the panel"></button>
+    <div class="col-left">
+      <section class="w info mob" id="infoM" aria-label="Barangay details" hidden aria-live="polite"></section>
+      <section class="w w-sites" id="sites" aria-labelledby="sitesH" hidden>
+        <h2 class="panel-title" id="sitesH">Where to set up first</h2>
+        <ol class="sitelist" id="siteList"></ol>
+        <p class="map-note" id="siteNote" hidden></p>
+        <div class="plan" id="planBox">
+          <div class="plan-row"><span id="planL">Show</span><div class="seg" id="planSeg" role="group" aria-labelledby="planL"></div><span>sites</span></div>
+          <p class="plan-cov" id="planCov"></p>
         </div>
+        <p class="what"><b>What is a dose point?</b> A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline capsules for a few weeks after the flood.</p>
       </section>
-      <section class="w w-layers opt" id="wLayers" aria-label="Layers" hidden>
-        <h2>Layers</h2>
-        <label class="switch"><span>Dose points</span><input type="checkbox" role="switch" id="lyDose" checked></label>
-        <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
-        <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
-        <p class="map-note" id="reliefNote" hidden></p>
+      <section class="w w-cities" id="cities" aria-labelledby="citiesH" hidden>
+        <h2 class="panel-title" id="citiesH">Pick a city</h2>
+        <label class="sr-only" for="cityPick">Search cities</label>
+        <input class="field" id="cityPick" type="search" placeholder="Search a city" autocomplete="off">
+        <ul class="citylist" id="cityList"></ul>
       </section>
-      <section class="w info" id="info" aria-label="Barangay details" hidden aria-live="polite"></section>
+      <section class="w w-legend" id="legend" aria-label="Legend"></section>
     </div>
   </div>
 </div>`;
 
-let map, tip, host, S, mobile, ro, onKey;
+let map, tip, host, S, mobile, ro, ro2, onKey;
 const $ = (s) => host.querySelector(s);
 const dur = (n) => (reducedMotion() ? 0 : n);
 const cityName = () => { const c = S.cities.find((x) => x.code === S.city); return c ? c.name : ""; };
-const years = () => { const m = S.data && S.data.summary && /(\d+)/.exec(S.data.summary.scenario || ""); return m ? +m[1] : 25; };
+const years = () => { const m = S.data && S.data.summary && /(\d+)/.exec(S.data.summary.scenario || ""); return m ? +m[1] : YEARS_DEFAULT; };
+const sig2 = (v) => { if (v == null) return 0; if (Math.abs(v) < 100) return Math.round(v); const p = 10 ** (Math.floor(Math.log10(Math.abs(v))) - 1); return Math.round(v / p) * p; };
 
 export async function render(el, params) {
   useCss("map");
   host = el;
   mobile = window.matchMedia("(max-width:767px)");
-  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "8", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], cityMarkers: [], tour: null, params, dead: false };
+  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "3", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], sites: [], active: null, hover: null, cityMarkers: [], tour: null, params, dead: false };
   el.innerHTML = TEMPLATE;
   try { S.cities = await getCities(); } catch { S.cities = []; }
   if (!S.cities.length) { $("#loading").textContent = "No city data found."; return; }
   wire();
+  preStrip(params);
   boot();
 }
 
 export function destroy() {
   if (S) { S.dead = true; endTour(false, true); }
   if (ro) { ro.disconnect(); ro = null; }
+  if (ro2) { ro2.disconnect(); ro2 = null; }
   try { if (map) map.remove(); } catch {}
   map = null;
 }
@@ -127,13 +156,43 @@ async function boot() {
   // The container can still be settling when the map starts; keep the canvas in step with it.
   ro = new ResizeObserver(() => { if (map) map.resize(); });
   ro.observe($("#map"));
+  // The headline strip changes height with its text; the panels below it follow.
+  const strip = $("#strip"), wrap = $("#mapwrap");
+  const setH = () => wrap.style.setProperty("--strip-h", strip.offsetHeight + "px");
+  setH();
+  ro2 = new ResizeObserver(setH);
+  ro2.observe(strip);
   map.on("error", (e) => console.warn("map error:", e.error && e.error.message));
   map.on("load", onLoad);
   map.once("idle", () => { const l = $("#loading"); if (l) l.hidden = true; });
 }
 
+// Turn the basemap down so the choropleth and the gold markers carry the page.
+function quietBasemap() {
+  const st = map.getStyle();
+  if (!st || !st.layers) return;
+  const seen = new Set();
+  st.layers.forEach((l) => {
+    try {
+      if (l.type === "symbol") {
+        // Neighbourhood names repeat the barangay names the choropleth already carries.
+        if (l.id === "label_other") { map.setLayoutProperty(l.id, "visibility", "none"); return; }
+        // Label layers that repeat the same source layer and filter draw every name twice.
+        const key = JSON.stringify([l.source, l["source-layer"], l.filter, l.layout && l.layout["text-field"]]);
+        if (seen.has(key)) { map.setLayoutProperty(l.id, "visibility", "none"); return; }
+        seen.add(key);
+        map.setPaintProperty(l.id, "text-opacity", 0.55);
+        if (l.layout && l.layout["icon-image"]) map.setPaintProperty(l.id, "icon-opacity", 0.45);
+      } else if (l.type === "line" && (l["source-layer"] === "transportation" || /road|highway|bridge|tunnel|rail|transit/i.test(l.id))) {
+        map.setPaintProperty(l.id, "line-opacity", 0.5);
+      }
+    } catch {}
+  });
+}
+
 async function onLoad() {
-  const sym = map.getStyle().layers.find((l) => l.type === "symbol");
+  quietBasemap();
+  const sym = map.getStyle().layers.find((l) => l.type === "symbol" && (!l.layout || l.layout.visibility !== "none"));
   S.before = sym ? sym.id : undefined;
   map.addSource("dem", { type: "raster-dem", tiles: [TERRARIUM], encoding: "terrarium", tileSize: 256, maxzoom: 15, attribution: "Terrain: Mapzen, AWS Open Data" });
   map.addLayer({ id: "hill", type: "hillshade", source: "dem", layout: { visibility: "none" }, paint: { "hillshade-exaggeration": 0.5, "hillshade-shadow-color": "#3B4A78", "hillshade-highlight-color": "#FFFFFF", "hillshade-accent-color": "#6F7FB0" } }, S.before);
@@ -142,7 +201,7 @@ async function onLoad() {
   const q = S.params.query;
   const m = METRICS.find((x) => x.key === q.get("metric"));
   if (m) S.metric = m;
-  if (["3", "5", "8"].includes(q.get("plan"))) S.plan = q.get("plan");
+  if (PLANS.includes(q.get("plan"))) S.plan = q.get("plan");
   if (q.get("view") === "3d") S.view = "3d";
   if (code === "all") {
     showNational(true);
@@ -177,15 +236,20 @@ function buildNational() {
   });
 }
 function pad() {
-  if (mobile.matches) return { top: 40, left: 24, right: 24, bottom: 330 };
-  // Leave room for the floating widgets, but never more than about half the map width.
+  const strip = $("#strip");
+  const sh = strip ? strip.offsetHeight : 120;
+  if (mobile.matches) {
+    const d = $("#dock");
+    return { top: sh + 24, left: 24, right: 24, bottom: (d ? d.offsetHeight : 260) + 24 };
+  }
+  // Leave room for the headline strip and the left panel, but never more than about 40% of the map width.
   const w = map ? map.getContainer().clientWidth : window.innerWidth;
-  const side = Math.min(320, Math.round(w * 0.22));
-  return { top: 72, bottom: 72, left: side, right: side };
+  const side = Math.min(368, Math.round(w * 0.4));
+  return { top: sh + 48, bottom: 48, left: side, right: 40 };
 }
 function showNational(first) {
   endTour(false);
-  S.city = null; S.data = null; clearSel();
+  S.city = null; S.data = null; S.active = null; S.hover = null; clearSel();
   setCityLayers(false);
   map.setTerrain(null);
   map.setLayoutProperty("hill", "visibility", "none");
@@ -193,13 +257,11 @@ function showNational(first) {
   if (map.getLayer("s1-fill")) map.setLayoutProperty("s1-fill", "visibility", "none");
   S.cityMarkers.forEach((m) => { m.getElement().style.display = ""; });
   clearDose();
-  $("#pickTitle").textContent = "Choose a city";
-  $("#pickBack").hidden = true; $("#pickList").hidden = false; $("#pickCity").hidden = true;
-  ["#wMetric", "#wView", "#wLayers"].forEach((s) => { $(s).hidden = true; });
-  $("#info").hidden = true;
-  $("#tourBtn").hidden = true;
+  $("#sites").hidden = true; $("#cities").hidden = false;
+  closeOpts();
+  $("#optBtn").hidden = true; $("#tourBtn").hidden = true;
+  renderStrip();
   renderLegend();
-  updateCaption();
   if (S.cities.length === 1) {
     const c = S.cities[0];
     const o = { center: [c.lon, c.lat], zoom: 7.2, pitch: 0, bearing: 0 };
@@ -248,11 +310,10 @@ function paintMetric() {
   map.setPaintProperty("b-ext", "fill-extrusion-height", heightExpr());
   map.setPaintProperty("b-flat", "fill-color", colorExpr(false));
   renderLegend();
-  updateCaption();
 }
 function setMetric(m) {
   S.metric = m;
-  [...$("#metricSeg").children].forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.k === m.key)));
+  [...$("#measures").children].forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.k === m.key)));
   paintMetric(); syncUrl();
 }
 function ensureCityLayers() {
@@ -280,7 +341,7 @@ function ensureCityLayers() {
     if (!code) { tip.remove(); return; }
     const r = S.data.rows.find((x) => x.id === code);
     const v = S.metric.key === "share" ? r.share : S.metric.key === "unreached" ? r.unreached : r.exposed;
-    tip.setLngLat(e.lngLat).setHTML(`${esc(r.name)}<span>${S.metric.label}: ${S.metric.f(v)}</span>`).addTo(map);
+    tip.setLngLat(e.lngLat).setHTML(`${esc(r.name)}<span>${esc(S.metric.short)}: ${S.metric.f(v)}</span>`).addTo(map);
   });
   map.getCanvas().addEventListener("mouseleave", () => tip.remove());
 }
@@ -313,31 +374,33 @@ async function selectCity(code, first) {
   if (S.dead || !map) return;
   ld.hidden = true;
   if (!data || data.error || !data.barangays) {
-    const n = $("#info"); n.hidden = false; n.innerHTML = `<p class="notice">Could not load ${esc(c.name)}: ${esc((data && data.error) || "no data")}</p>`;
+    const n = infoEl(); n.hidden = false; n.innerHTML = `<p class="notice">Could not load ${esc(c.name)}: ${esc((data && data.error) || "no data")}</p>`;
     return;
   }
-  S.data = data; S.city = code; clearSel();
+  S.data = data; S.city = code; S.active = null; S.hover = null; clearSel();
   const hasUnreached = data.rows.some((r) => r.unreached != null);
-  const ub = $("#metricSeg").children[1];
+  const ub = $("#measures").children[1];
   ub.disabled = !hasUnreached; ub.title = hasUnreached ? "" : "Not computed for this city yet";
   if (!hasUnreached && S.metric.key === "unreached") S.metric = METRICS[0];
-  [...$("#metricSeg").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.k === S.metric.key)));
+  [...$("#measures").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.k === S.metric.key)));
   const bb = data.bbox;
   const diag = Math.hypot((bb[2] - bb[0]) * 111.32 * Math.cos((c.lat * Math.PI) / 180), (bb[3] - bb[1]) * 110.57) * 1000;
   S.scaleH = Math.max(300, diag * 0.06);
   ensureCityLayers();
   S.cityMarkers.forEach((m) => { m.getElement().style.display = "none"; });
   map.setLayoutProperty("nat-dot", "visibility", "none");
+  // Pick a plan this city actually has.
+  const avail = availPlans();
+  if (!avail.includes(S.plan)) S.plan = avail.includes("3") ? "3" : avail[0] || "3";
   paintMetric();
   setCityLayers(true);
-  $("#pickTitle").textContent = c.name;
-  $("#pickBack").hidden = false; $("#pickList").hidden = true; $("#pickCity").hidden = false;
-  $("#tourBtn").hidden = false;
+  $("#sites").hidden = true; $("#cities").hidden = true;
+  $("#optBtn").hidden = false; $("#tourBtn").hidden = false;
   $("#dashLink").href = cityHref(code);
   $("#brgyPick").innerHTML = '<option value="">Choose a barangay</option>' + [...data.rows].sort((a, b) => a.name.localeCompare(b.name)).map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
-  ["#wMetric", "#wView", "#wLayers"].forEach((s) => { $(s).hidden = false; });
   buildPlanSeg();
   drawDose();
+  renderStrip();
   const d3 = S.view === "3d";
   map.resize();
   map.fitBounds(bb, { padding: pad(), maxZoom: 14.5, pitch: d3 ? 50 : 0, bearing: d3 ? -12 : 0, duration: first ? 0 : dur(2200) });
@@ -368,11 +431,12 @@ function loadS1() {
 }
 
 /* ---------- selection and info card ---------- */
+const infoEl = () => (mobile.matches ? $("#infoM") : $("#info"));
 function clearSel() {
   if (S.sel && map && map.getSource("brgy")) map.setFeatureState({ source: "brgy", id: S.sel }, { sel: false });
   S.sel = null;
   if (map && map.getLayer("b-sel")) map.setFilter("b-sel", ["==", ["get", "adm4_pcode"], ""]);
-  $("#info").hidden = true;
+  $("#info").hidden = true; $("#infoM").hidden = true;
   const bp = $("#brgyPick"); if (bp) bp.value = "";
 }
 function selectBrgy(code, fly) {
@@ -382,7 +446,8 @@ function selectBrgy(code, fly) {
   map.setFilter("b-sel", ["==", ["get", "adm4_pcode"], code]);
   $("#brgyPick").value = code;
   const r = S.data.rows.find((x) => x.id === code);
-  const info = $("#info");
+  $("#info").hidden = true; $("#infoM").hidden = true;
+  const info = infoEl();
   info.hidden = false;
   const said = [];
   if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents in ${esc(r.name)} live where the flood reaches.`);
@@ -394,7 +459,7 @@ function selectBrgy(code, fly) {
     <p class="muted xs" style="margin:0">Dose point priority ${r.priority} of ${S.data.rows.length} (1 is first).</p>
     <dl><dt>Residents</dt><dd>${fmt(r.pop)}</dd>
     <dt>Exposed</dt><dd>${fmt(r.exposed)}${r.pop ? " (" + pct(r.exposed / r.pop, 0) + ")" : ""}</dd>
-    ${r.unreached != null ? `<dt>Cut off from care in a flood</dt><dd>${fmt(r.unreached)}</dd>` : ""}
+    ${r.unreached != null ? `<dt>Cannot reach a clinic in the flood</dt><dd>${fmt(r.unreached)}</dd>` : ""}
     <dt>Area flooded</dt><dd>${pct(r.share, 0)}</dd>
     <dt>Capsules per flood week</dt><dd>${fmt(r.capsules)}</dd></dl>
     <a href="${cityHref(S.city, "barangays")}">Open city dashboard</a>`;
@@ -411,79 +476,195 @@ function boundsOf(f) {
 }
 
 /* ---------- dose points ---------- */
-function planSites() {
-  const plans = S.data.summary && S.data.summary.dose_point_plans;
-  const feats = S.data.dosePoints.features;
-  if (plans && plans[S.plan]) {
-    const ids = new Set(plans[S.plan].sites);
-    return { shown: feats.filter((f) => ids.has(f.properties.id)), total: plans[S.plan].sites.length };
-  }
-  const k = +S.plan;
-  return { shown: feats.filter((f) => f.properties.rank == null || f.properties.rank <= k), total: k };
+function availPlans() {
+  const plans = S.data && S.data.summary && S.data.summary.dose_point_plans;
+  if (plans) { const k = PLANS.filter((p) => plans[p]); if (k.length) return k; }
+  return PLANS;
 }
-function clearDose() { S.markers.forEach((m) => m.remove()); S.markers = []; }
+function inRing(x, y, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function inPoly(x, y, g) {
+  const polys = g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
+  return polys.some((p) => inRing(x, y, p[0]) && !p.slice(1).some((h) => inRing(x, y, h)));
+}
+function barangayAt(pt) {
+  const f = S.data.barangays.features.find((b) => b.geometry && inPoly(pt[0], pt[1], b.geometry));
+  return f ? f.properties.adm4_en : null;
+}
+const planVal = (v, k) => (v != null && typeof v === "object" ? v[k] : v);
+// The sites of the current plan, in rank order, with plain-language names.
+function planSites() {
+  const k = S.plan;
+  const feats = S.data.dosePoints.features;
+  const plan = S.data.summary && S.data.summary.dose_point_plans && S.data.summary.dose_point_plans[k];
+  const total = plan ? plan.sites.length : +k;
+  let sel;
+  if (feats.some((f) => Array.isArray(f.properties.plans))) sel = feats.filter((f) => (f.properties.plans || []).map(String).includes(k));
+  else if (plan) { const ids = new Set(plan.sites); sel = feats.filter((f) => ids.has(f.properties.id)); }
+  else sel = feats.filter((f) => f.properties.rank == null || f.properties.rank <= +k);
+  const rankOf = (p) => { const v = planVal(p.rank_in_plan, k); const r = v != null ? +v : p.rank; return r == null ? null : +r; };
+  const sites = sel.map((f) => {
+    const p = f.properties, kl = kindLabel(p.kind), where = barangayAt(f.geometry.coordinates);
+    const named = p.name && String(p.name).trim();
+    const reach = planVal(p.newly_covered, k) ?? planVal(p.exposed_newly_covered, k);
+    return {
+      id: p.id, rank: rankOf(p), coords: f.geometry.coordinates, kind: kl, where,
+      name: named ? String(p.name).trim() : `Unnamed ${kl.toLowerCase()}${where ? " in " + where : ""}`,
+      sub: named ? kl + (where ? ", " + where : "") : kl,
+      reach: reach != null && !Number.isNaN(+reach) ? +reach : null,
+    };
+  }).sort((a, b) => (a.rank ?? 1e9) - (b.rank ?? 1e9));
+  return { sites, total };
+}
+function clearDose() { S.markers.forEach((m) => m.remove()); S.markers = []; S.sites = []; }
 function drawDose() {
   clearDose();
   if (!S.data) return;
-  const { shown, total } = planSites();
-  shown.forEach((f) => {
-    const p = f.properties;
+  const { sites, total } = planSites();
+  S.sites = sites;
+  const show = $("#lyDose").checked;
+  sites.forEach((s, i) => {
     const b = document.createElement("button");
-    b.type = "button"; b.className = "rank"; b.textContent = p.rank ?? "";
-    const label = `Dose point ${p.rank ?? ""}: ${p.name}`;
-    b.setAttribute("aria-label", label); b.title = label;
-    const mk = new maplibregl.Marker({ element: b }).setLngLat(f.geometry.coordinates)
-      .setPopup(new maplibregl.Popup({ offset: 20, closeButton: false, className: "tip" }).setHTML(`${esc(p.name)}<span>${esc(p.kind || "site")}${p.rank != null ? ", rank " + p.rank : ""}</span>`));
-    if ($("#lyDose").checked) mk.addTo(map);
+    b.type = "button"; b.className = "rank"; b.textContent = s.rank ?? i + 1; b.dataset.id = s.id;
+    const label = `Dose point ${s.rank ?? i + 1}: ${s.name}`;
+    b.setAttribute("aria-label", label);
+    b.addEventListener("click", () => setActive(s.id, { scroll: true }));
+    b.addEventListener("mouseenter", () => setHover(s.id));
+    b.addEventListener("mouseleave", () => setHover(null));
+    const mk = new maplibregl.Marker({ element: b }).setLngLat(s.coords)
+      .setPopup(new maplibregl.Popup({ offset: 20, closeButton: false, className: "tip" }).setHTML(`${esc(s.name)}<span>${esc(s.sub)}</span>`));
+    if (show) mk.addTo(map);
+    s.marker = mk; s.el = b;
     S.markers.push(mk);
   });
-  $("#planNote").textContent = shown.length < total ? `${shown.length} of ${total} sites of this plan are on the map.` : `${total} sites. Numbers show rank.`;
+  renderSites(total);
+  renderSentence();
+  paintMarkers();
+}
+function renderSites(total) {
+  $("#sites").hidden = false;
+  const ol = $("#siteList");
+  ol.innerHTML = S.sites.map((s, i) => `<li><button type="button" class="site" data-id="${esc(s.id)}">
+      <span class="badge-n" aria-hidden="true">${s.rank ?? i + 1}</span>
+      <span class="site-t"><span class="site-name">${esc(s.name)}</span><span class="site-sub">${esc(s.sub)}</span>${s.reach != null ? `<span class="site-reach">reaches ${fmt(s.reach)} more residents</span>` : ""}</span>
+    </button></li>`).join("");
+  ol.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-label", `Number ${S.sites[i].rank ?? i + 1}: ${S.sites[i].name}, ${S.sites[i].sub}${S.sites[i].reach != null ? ", reaches " + fmt(S.sites[i].reach) + " more residents" : ""}`));
+  const n = $("#siteNote");
+  const missing = total - S.sites.length;
+  n.hidden = missing <= 0;
+  n.textContent = missing > 0 ? `${S.sites.length} of the ${total} sites in this plan are on the map so far.` : "";
+  paintList();
+}
+function setHover(id) { S.hover = id; paintMarkers(); }
+function setActive(id, o = {}) {
+  S.active = id; paintMarkers();
+  const s = S.sites.find((x) => x.id === id);
+  if (!s) return;
+  if (o.scroll) { const b = $(`#siteList button[data-id="${CSS.escape(id)}"]`); if (b) b.scrollIntoView({ block: "nearest" }); }
+  if (o.pan && map) map.easeTo({ center: s.coords, padding: pad(), duration: dur(700) });
+}
+function paintMarkers() {
+  S.sites.forEach((s) => { if (s.el) s.el.classList.toggle("on", s.id === S.active || s.id === S.hover); });
+  paintList();
+}
+function paintList() {
+  host.querySelectorAll("#siteList button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.id === S.active || b.dataset.id === S.hover);
+    if (b.dataset.id === S.active) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
+  });
 }
 function setPlan(k) {
-  S.plan = k;
+  S.plan = k; S.active = null;
   [...$("#planSeg").children].forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.k === k)));
   drawDose(); syncUrl();
 }
 function buildPlanSeg() {
   const seg = $("#planSeg");
   seg.innerHTML = "";
-  ["3", "5", "8"].forEach((k) => {
+  availPlans().forEach((k) => {
     const b = document.createElement("button");
     b.type = "button"; b.textContent = k; b.dataset.k = k; b.setAttribute("aria-pressed", String(k === S.plan));
-    b.setAttribute("aria-label", k + " dose points");
+    b.setAttribute("aria-label", k + " sites");
     b.addEventListener("click", () => setPlan(k));
     seg.appendChild(b);
   });
 }
 
-/* ---------- caption and legend ---------- */
-function captionText() {
-  if (!S.city) {
-    return `Each circle is a city. A bigger circle means more residents were exposed to floodwater in a ${years()}-year flood. Click a city to see its barangays.`;
-  }
-  const lead = `${esc(cityName())} after a ${years()}-year flood.`;
-  const k = S.metric.key;
-  if (k === "unreached") return `${lead} Darker barangays have more exposed residents who cannot walk to a clinic within ${WALK_MIN} minutes during the flood.`;
-  if (k === "share") return `${lead} Darker barangays had more of their area under water in the flood map.`;
-  return `${lead} Darker barangays have more residents who waded through floodwater. Gold numbers show where to open temporary dose points first (1 = most people helped).`;
+/* ---------- headline strip, answer sentence, legend ---------- */
+// Show the question while the map and numbers load, so the page is never blank.
+function preStrip(params) {
+  if (params.code === "all") return;
+  const c = S.cities.find((x) => x.code === params.code) || S.cities[0];
+  $("#eyebrow").textContent = `${c.name} · after a ${YEARS_DEFAULT}-year flood`;
+  $("#stripQ").textContent = "Where should the city hand out free leptospirosis medicine?";
+  $("#answer").textContent = "Loading the numbers.";
+  $("#strip").hidden = false;
 }
-function updateCaption() { $("#capText").innerHTML = captionText(); }
+function renderStrip() {
+  $("#strip").hidden = false;
+  const q = $("#stripQ"), eb = $("#eyebrow");
+  if (!S.city) {
+    eb.textContent = `Philippines · after a ${YEARS_DEFAULT}-year flood`;
+    q.textContent = "Where does a flood put the most people at risk of leptospirosis?";
+    const tot = S.cities.reduce((t, c) => t + (c.exposed || 0), 0);
+    $("#answer").innerHTML = `<b>${fmt(tot)}</b> residents in ${S.cities.length} ${S.cities.length === 1 ? "city live" : "cities live"} where a ${YEARS_DEFAULT}-year flood reaches. Pick a city to see where to hand out free medicine first.`;
+    return;
+  }
+  eb.textContent = `${cityName()} · after a ${years()}-year flood`;
+  q.textContent = "Where should the city hand out free leptospirosis medicine?";
+  renderSentence();
+}
+function renderSentence() {
+  if (!S.city || !S.data) return;
+  const sum = S.data.summary || {}, meta = S.data.meta || {};
+  const exposed = sum.exposed != null ? sum.exposed : meta.exposed;
+  const plan = sum.dose_point_plans && sum.dose_point_plans[S.plan];
+  const cov = S.data.coverage || {};
+  let share = cov.plans && cov.plans[S.plan] != null ? cov.plans[S.plan] : null;
+  if (share == null && plan && plan.share_of_exposed_within_reach_after != null) { const v = +plan.share_of_exposed_within_reach_after; share = v > 1 ? v / 100 : v; }
+  const now = cov.flood != null ? cov.flood : null;
+  const a = $("#answer");
+  const lead = exposed != null ? `<b>${fmt(exposed)}</b> residents waded through floodwater.` : "";
+  let html;
+  if (share != null) {
+    html = `${lead} Opening <b>${S.plan}</b> temporary dose points brings <b class="big">${pct(share, 0)}</b> of them within a ${WALK_MIN}-minute walk of free doxycycline${now != null ? `<span class="now">, up from ${pct(now, 0)} now</span>` : ""}.`;
+  } else if (exposed != null) {
+    html = `${lead} Dose point plans are not computed for this city yet, so the map shows where the water reached.`;
+  } else {
+    html = "Flood exposure and dose point plans are not available for this city yet.";
+  }
+  const next = html.trim();
+  if (a.innerHTML !== next) a.innerHTML = next;
+  const pc = $("#planCov");
+  if (pc) {
+    pc.innerHTML = share != null
+      ? `<b>${pct(share, 0)}</b> of exposed residents within a ${WALK_MIN}-minute walk of free medicine${now != null ? ` (${pct(now, 0)} with no dose points)` : ""}.`
+      : "Coverage is not computed for this plan yet.";
+  }
+}
 function renderLegend() {
   const lg = $("#legend");
   if (!S.city) {
-    lg.innerHTML = `<div class="metric-name">Circle size: exposed residents</div><p class="map-note" style="margin:0">Bigger circle = more residents exposed to floodwater in a ${years()}-year flood. Click a city to open its barangay map.</p>`;
+    lg.innerHTML = `<div class="metric-name">Circle size: residents in the floodwater</div><p class="map-note" style="margin:0">A bigger circle means more residents live where a ${YEARS_DEFAULT}-year flood reaches. Pick a city to open its map.</p>`;
     return;
   }
   const m = S.metric, edges = [S.min, ...S.breaks, S.max], n = Math.max(1, S.breaks.length + 1);
-  const ticks = edges.map((v, i) => `<span style="left:${(i / n) * 100}%">${m.key === "share" ? pct(v, 0) : compact(v)}</span>`).join("");
-  const what = m.key === "share" ? "less of the area flooded" : "fewer residents";
-  const more = m.key === "share" ? "more of the area flooded" : "more residents";
-  lg.innerHTML = `<div class="metric-name">${m.label}</div>
+  const label = (v) => (m.key === "share" ? pct(v, 0) : fmt(sig2(v)));
+  const labs = edges.map(label);
+  // Drop the second-to-last label when it would run into the last one.
+  const ticks = labs.map((t, i) => (i === labs.length - 2 && labs.length > 3 && t.length + labs[i + 1].length > 9 ? "" : `<span style="left:${(i / n) * 100}%">${t}</span>`)).join("");
+  lg.innerHTML = `<div class="metric-name" id="lgT">${m.legend}</div>
     <div class="ramp" aria-hidden="true">${RAMP.slice(0, n).map((c) => `<i style="background:${c}"></i>`).join("")}</div>
     <div class="ticks" aria-hidden="true">${ticks}</div>
-    <div class="lg-words"><span>Light: ${what}</span><span>Dark: ${more}</span></div>
-    <p class="sr-only">${m.label}, from ${m.f(S.min)} to ${m.f(S.max)} ${m.unit}, darker is higher.</p>
-    <div class="key"><span class="dot-gold"></span>Gold number: a dose point. 1 helps the most people.${S.view === "3d" ? " Column height follows the colour." : ""}</div>`;
+    <div class="lg-words" aria-hidden="true"><span>${m.lo}</span><span>${m.hi}</span></div>
+    <p class="sr-only">${m.legend}, from ${m.f(S.min)} to ${m.f(S.max)} ${m.unit}. Darker means more.</p>
+    <div class="key"><span class="dot-gold"></span>Gold number: a dose point. 1 is the first to open.${S.view === "3d" ? " Column height follows the colour." : ""}</div>`;
 }
 function highlightList(code) {
   host.querySelectorAll("#cityList button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.c === code)));
@@ -494,44 +675,40 @@ function topRow(key) {
   return S.data.rows.reduce((a, r) => ((r[key] ?? -1) > (a ? a[key] ?? -1 : -2) ? r : a), null);
 }
 function tourSteps() {
-  const rows = S.data.rows, sum = S.data.summary || {}, name = cityName();
+  const sum = S.data.summary || {}, name = cityName();
   const steps = [];
+  steps.push({
+    title: "The question and the answer",
+    metric: "exposed", plan: null, hi: null, spot: "#strip",
+    body: `This page answers one question: where should ${esc(name)} hand out free leptospirosis medicine after a flood? The sentence under the question gives the answer for the plan you pick.`,
+  });
   const topE = topRow("exposed");
   steps.push({
     title: "Who was in the water",
-    metric: "exposed", plan: null, hi: topE, val: fmt(topE.exposed),
-    body: `The map starts with exposure. Darker barangays have more residents who waded through floodwater. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
+    metric: "exposed", plan: null, hi: topE, val: fmt(topE.exposed), spot: null,
+    body: `Darker barangays have more residents who waded through floodwater. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
   });
-  if (rows.some((r) => r.unreached != null)) {
-    const topU = topRow("unreached");
-    const total = sum.exposed_unreached_in_flood != null ? sum.exposed_unreached_in_flood : rows.reduce((t, r) => t + (r.unreached || 0), 0);
-    steps.push({
-      title: "Who cannot reach care",
-      metric: "unreached", plan: null, hi: topU, val: fmt(topU.unreached),
-      body: `In ${esc(name)}, ${fmt(total)} exposed residents cannot walk to a clinic within ${WALK_MIN} minutes while the flood is on. The most are in ${esc(topU.name)}: ${fmt(topU.unreached)}.`,
-    });
-  }
   const p3 = sum.dose_point_plans && sum.dose_point_plans["3"];
   const share = S.data.coverage && S.data.coverage.plans && S.data.coverage.plans["3"];
-  const n3 = Math.min(3, S.data.dosePoints.features.length) || 3;
-  const more = p3 && p3.exposed_newly_covered != null ? `${fmt(p3.exposed_newly_covered)} more exposed residents within a ${WALK_MIN}-minute walk of a dose point` : `more exposed residents within a ${WALK_MIN}-minute walk of a dose point`;
-  // The map only has the markers it has data for. If the 3-point plan's sites are not all there, show the top 3 ranked instead.
-  const onMap = p3 && p3.sites.every((id) => S.data.dosePoints.features.some((f) => f.properties.id === id));
+  const has3 = availPlans().includes("3");
+  const n = has3 ? 3 : Math.min(3, S.data.dosePoints.features.length) || 3;
   steps.push({
-    title: "Where to set up dose points",
-    metric: "exposed", plan: onMap ? "3" : "8", top: n3, hi: null,
-    body: `Gold numbers 1 to ${n3} are the first dose points to open. A plan of 3 dose points brings ${more}${share != null ? `, so ${pct(share, 0)} of exposed residents are within reach` : ""}.`,
+    title: "Where to set up first",
+    metric: "exposed", plan: has3 ? "3" : null, top: n, hi: null, spot: "#sites",
+    body: `The list on the left ranks the sites. The gold numbers 1 to ${n} on the map match it. ${p3 && share != null ? `Opening these ${n} brings ${pct(share, 0)} of exposed residents within a ${WALK_MIN}-minute walk of free medicine. ` : ""}Point at a list item to find it on the map.`,
     last: true,
   });
   return steps;
 }
 function tourSeen() { try { return localStorage.getItem(SEEN_KEY) === "1"; } catch { return false; } }
 function markSeen() { try { localStorage.setItem(SEEN_KEY, "1"); } catch {} }
+// The tour opens by itself once, on the very first visit. After that it is the chip in the strip.
 function maybeTour() { if (!tourSeen() && S.city && !S.dead) startTour(false); }
 
 function startTour(user) {
   if (!S.city || !S.data) return;
   endTour(false, true);
+  closeOpts();
   S.tour = { i: 0, steps: tourSteps(), restore: { metric: S.metric, plan: S.plan }, tag: null, user, from: user ? document.activeElement : null };
   const card = document.createElement("div");
   card.className = "tour"; card.id = "tour";
@@ -541,6 +718,10 @@ function startTour(user) {
   document.addEventListener("keydown", onKey);
   tourStep(0);
 }
+function tourSpot(sel) {
+  host.querySelectorAll(".spot").forEach((e) => e.classList.remove("spot"));
+  if (sel) { const e = $(sel); if (e) e.classList.add("spot"); }
+}
 function tourStep(i) {
   const t = S.tour; if (!t) return;
   t.i = i;
@@ -549,19 +730,21 @@ function tourStep(i) {
   if (S.metric !== k) setMetric(k);
   if (st.plan && S.plan !== st.plan) setPlan(st.plan);
   if (!$("#lyDose").checked) { $("#lyDose").checked = true; drawDose(); }
+  if (st.spot === "#sites" && mobile.matches) openSheet(true);
   S.markers.forEach((m) => { const e = m.getElement(), r = +e.textContent; e.classList.toggle("hl", !!st.top && r <= st.top); e.classList.toggle("dim", !!st.top && !(r <= st.top)); });
+  tourSpot(st.spot);
   tourClearHi();
   if (st.hi) {
     const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === st.hi.id);
     const flt = ["==", ["get", "adm4_pcode"], st.hi.id];
     map.setFilter("b-tour-c", flt); map.setFilter("b-tour", flt);
     const el = document.createElement("div");
-    el.className = "tour-tag"; el.innerHTML = `<b>${esc(st.hi.name)}</b><span>${st.val} ${k.key === "unreached" ? "cut off" : "exposed"}</span>`;
+    el.className = "tour-tag"; el.innerHTML = `<b>${esc(st.hi.name)}</b><span>${st.val} exposed</span>`;
     t.tag = new maplibregl.Marker({ element: el, anchor: "bottom" }).setLngLat(boundsOf(f).getCenter()).addTo(map);
   }
   const dots = t.steps.map((_, j) => `<i${j === i ? ' class="on"' : ""}></i>`).join("");
   const card = $("#tour");
-  card.innerHTML = `<div class="tour-top"><span class="tour-step">Step ${i + 1} of ${n}</span><button class="linkbtn" type="button" data-a="skip">Skip intro</button></div>
+  card.innerHTML = `<div class="tour-top"><span class="tour-step">Step ${i + 1} of ${n}</span><button class="linkbtn" type="button" data-a="skip">Skip tour</button></div>
     <h2 id="tourT" tabindex="-1">${st.title}</h2>
     <p id="tourB">${st.body}</p>
     <div class="tour-foot"><span class="dots" aria-hidden="true">${dots}</span>
@@ -588,7 +771,7 @@ function tourClearHi(tt) {
     map.setFilter("b-tour-c", none); map.setFilter("b-tour", none);
   }
 }
-// restoreView: put metric and plan back as they were. quiet: skip focus handling (page teardown).
+// refocus: return focus to the chip. quiet: skip focus handling (page teardown). keepView: leave metric and plan as the tour set them.
 function endTour(refocus, quiet, keepView) {
   const t = S && S.tour;
   if (!t) return;
@@ -596,6 +779,7 @@ function endTour(refocus, quiet, keepView) {
   tourClearHi(t);
   document.removeEventListener("keydown", onKey);
   const card = host && host.querySelector("#tour"); if (card) card.remove();
+  if (host) tourSpot(null);
   if (quiet) return;
   markSeen();
   S.markers.forEach((m) => m.getElement().classList.remove("hl", "dim"));
@@ -607,26 +791,54 @@ function endTour(refocus, quiet, keepView) {
 }
 
 /* ---------- widgets ---------- */
+function openOpts(open) {
+  const o = $("#opts"), b = $("#optBtn");
+  o.hidden = !open;
+  b.setAttribute("aria-expanded", String(open));
+  b.classList.toggle("on", open);
+}
+function closeOpts() { if (host && $("#opts")) openOpts(false); }
+function openSheet(open) {
+  const dock = $("#dock"), h = $("#handle");
+  dock.classList.toggle("closed", !open);
+  h.setAttribute("aria-expanded", String(open));
+  h.setAttribute("aria-label", open ? "Show less of the panel" : "Show more of the panel");
+}
+
 function wire() {
   const list = $("#cityList");
   const draw = (q = "") => {
     const t = q.trim().toLowerCase();
     const rows = S.cities.filter((c) => !t || `${c.name} ${c.province} ${c.region}`.toLowerCase().includes(t));
-    list.innerHTML = rows.length ? rows.map((c) => `<li><button type="button" data-c="${esc(c.code)}"><span class="n">${esc(c.name)}<span class="p">${esc(c.province || "")}${c.region ? ", " + esc(c.region) : ""}</span></span><span class="v" aria-label="${fmt(c.exposed)} residents exposed">${compact(c.exposed)}</span></button></li>`).join("") : '<li class="muted sm" style="padding:8px">No city matches.</li>';
+    list.innerHTML = rows.length ? rows.map((c) => `<li><button type="button" data-c="${esc(c.code)}"><span class="n">${esc(c.name)}<span class="p">${esc(c.province || "")}${c.region ? ", " + esc(c.region) : ""}</span></span><span class="v" aria-label="${fmt(c.exposed)} residents exposed">${fmt(c.exposed)}</span></button></li>`).join("") : '<li class="muted sm" style="padding:8px">No city matches.</li>';
   };
   draw();
   $("#cityPick").addEventListener("input", (e) => draw(e.target.value));
   list.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) selectCity(b.dataset.c); });
   $("#pickBack").addEventListener("click", () => showNational(false));
-  $("#brgyPick").addEventListener("change", (e) => { if (e.target.value) selectBrgy(e.target.value, true); else clearSel(); });
+  $("#brgyPick").addEventListener("change", (e) => { if (e.target.value) { selectBrgy(e.target.value, true); openOpts(false); } else clearSel(); });
   $("#tourBtn").addEventListener("click", () => startTour(true));
 
-  const seg = $("#metricSeg");
+  // site list: hover and focus light up the marker, click pans to it
+  const sl = $("#siteList");
+  const idOf = (e) => { const b = e.target.closest && e.target.closest("button.site"); return b ? b.dataset.id : null; };
+  sl.addEventListener("click", (e) => { const id = idOf(e); if (id) setActive(id, { pan: true }); });
+  sl.addEventListener("mouseover", (e) => { const id = idOf(e); if (id) setHover(id); });
+  sl.addEventListener("mouseout", (e) => { if (idOf(e)) setHover(null); });
+  sl.addEventListener("focusin", (e) => { const id = idOf(e); if (id) setHover(id); });
+  sl.addEventListener("focusout", (e) => { if (idOf(e)) setHover(null); });
+
+  // More options drawer
+  $("#optBtn").addEventListener("click", () => openOpts($("#opts").hidden));
+  $("#optClose").addEventListener("click", () => { openOpts(false); $("#optBtn").focus(); });
+  host.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#opts").hidden && !S.tour) { openOpts(false); $("#optBtn").focus(); } });
+  const ms = $("#measures");
   METRICS.forEach((m) => {
     const b = document.createElement("button");
-    b.type = "button"; b.textContent = m.short; b.dataset.k = m.key; b.setAttribute("aria-pressed", String(m === S.metric));
+    b.type = "button"; b.dataset.k = m.key; b.setAttribute("aria-pressed", String(m === S.metric));
+    b.innerHTML = `<b>${esc(m.short)}</b><span>${esc(m.desc)}</span>`;
     b.addEventListener("click", () => { if (!b.disabled) setMetric(m); });
-    seg.appendChild(b);
+    ms.appendChild(b);
   });
   $("#ly3d").addEventListener("change", (e) => {
     S.view = e.target.checked ? "3d" : "2d"; applyView(); renderLegend();
@@ -636,10 +848,5 @@ function wire() {
   $("#lyDose").addEventListener("change", (e) => S.markers.forEach((m) => (e.target.checked ? m.addTo(map) : m.remove())));
   $("#lyRelief").addEventListener("change", (e) => { S.reliefOn = e.target.checked; applyRelief(); });
   $("#lyS1").addEventListener("change", (e) => map.setLayoutProperty("s1-fill", "visibility", e.target.checked ? "visible" : "none"));
-  const dock = $("#dock"), h = $("#handle");
-  h.addEventListener("click", () => {
-    const closed = dock.classList.toggle("closed");
-    h.setAttribute("aria-expanded", String(!closed));
-    h.setAttribute("aria-label", closed ? "Show map controls" : "Hide map controls");
-  });
+  $("#handle").addEventListener("click", () => openSheet($("#dock").classList.contains("closed")));
 }
