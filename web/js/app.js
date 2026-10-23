@@ -18,14 +18,14 @@ const ROUTES = {
   home: { page: "home", nav: "home", title: "LAMBAT: get the capsule across the water" },
   map: { page: "map", nav: "map", title: "Map: LAMBAT" },
   city: { page: "city", nav: "city", title: "City dashboard: LAMBAT" },
-  radar: { page: "radar", nav: "radar", title: "Flood from space: LAMBAT" },
+  radar: { page: "radar", nav: "radar", title: "Satellite flood maps: LAMBAT" },
   method: { page: "method", nav: "method", title: "Method and limits: LAMBAT" },
 };
 const NAV = [
   { id: "home", href: "#/", label: "Home", tab: "Home", icon: "home" },
   { id: "map", href: "#/map", label: "Map", tab: "Map", icon: "map" },
   { id: "city", href: "#/city", label: "City dashboard", tab: "Dashboard", icon: "dash" },
-  { id: "radar", href: "#/radar", label: "Flood from space", tab: "Flood", icon: "sat" },
+  { id: "radar", href: "#/radar", label: "Satellite flood maps", tab: "Satellite", icon: "sat" },
   { id: "method", href: "#/method", label: "Method and limits", tab: "Method", icon: "book" },
 ];
 

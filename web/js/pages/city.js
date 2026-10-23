@@ -34,7 +34,8 @@ const KINDS = {
 };
 const kindLabel = (k) => { if (!k) return "Site"; if (KINDS[k]) return KINDS[k]; const t = String(k).replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
 const planVal = (v, k) => (v != null && typeof v === "object" ? v[k] : v);
-const GLOSS = "Dose point order and barangay priority are different lists. Dose point order (1 opens first) picks the places that reach the most cut-off residents first. Barangay priority ranks whole barangays by exposed residents cut off from care.";
+const GLOSS = "Order 1 opens first. It picks the places that bring the most cut-off residents within reach first.";
+const RANK_NOTE = "Barangays are ranked by how many residents who live where the flood reaches would be cut off from care. Rank 1 is the barangay with the most people cut off.";
 
 // Placeholder page shown while the city data loads, shaped like the tab being opened.
 function ghost(tab) {
@@ -133,6 +134,11 @@ function model(raw) {
     bCorr: isNum(a.baseline_correlation) ? +a.baseline_correlation : seas ? seas.correlation : null,
     bCaught: seas && isNum(seas.sensitivity) ? seas.sensitivity : null,
     bFalse: seas && isNum(seas.false_alert_rate) ? seas.false_alert_rate : null,
+    alerts: rain && isNum(rain.alerts) ? +rain.alerts : null,
+    outbreakWeeks: rain && isNum(rain.outbreak_weeks) ? +rain.outbreak_weeks : null,
+    mae: rain && isNum(rain.mae) ? +rain.mae : null,
+    bMae: seas && isNum(seas.mae) ? +seas.mae : null,
+    all: scores && Array.isArray(scores.scores) ? scores.scores : null,
     years: (scores && scores.test_years) || ra.testYears || [2017, 2019],
     trainYears: (scores && scores.train_years) || ra.trainYears || [2008, 2016],
   };
@@ -215,8 +221,9 @@ function answerCard(m) {
 function overview(m) {
   const c = m.meta;
   const exposedShare = isNum(c.exposed_share) ? +c.exposed_share : isNum(c.population) && c.population > 0 ? c.exposed / c.population : null;
-  const cards = [statCard("Exposed residents", fmt(c.exposed), `${pct(exposedShare)} of ${fmt(c.population)} residents live where a ${scn(c).label} flood reaches.`),
-    statCard("Capsules per flood week", fmt(c.weekly_capsules), "Doxycycline capsules needed each week the flood lasts.")];
+  // Three cards by default; the rest sits under "More numbers".
+  const cards = [statCard("Exposed residents", fmt(c.exposed), `${pct(exposedShare)} of ${fmt(c.population)} residents live where a ${scn(c).label} flood reaches.`)];
+  const more = [statCard("Capsules per flood week", fmt(c.weekly_capsules), "Doxycycline capsules needed each week the flood lasts.")];
   const notes = [];
   if (m.accessOk) {
     cards.push(statCard("", fmt(m.gap), "Residents who can walk to a clinic on a dry day but not during the flood. Estimated from road maps.", "",
@@ -224,15 +231,20 @@ function overview(m) {
   } else notes.push("Access in the flood was not computed for this city: road data unavailable.");
   if (m.sitingOk) {
     const rows = ["3", "5", "8"].filter((k) => m.plans[k] && isNum(m.plans[k].share)).map((k) => `<div class="reach-row"><span class="lab">${k} dose points</span><span class="bar big" aria-hidden="true"><span class="bar-fill" style="width:${(m.plans[k].share * 100).toFixed(1)}%"></span></span><span class="num">${pct(m.plans[k].share)}</span></div>`).join("");
-    cards.push(`<div class="card stat"><span class="stat-label">Within a 30-minute walk of care after</span><div class="reach" style="margin-top:var(--s1)">${rows}</div></div>`);
+    cards.push(`<div class="card stat"><span class="stat-label">Exposed residents within a 30-minute walk of care after opening</span><div class="reach" style="margin-top:var(--s1)">${rows}</div></div>`);
   } else notes.push("Dose point plans were not computed for this city.");
-  if (isNum(c.lepto_cases_2008_2022)) cards.push(statCard("Leptospirosis cases", fmt(c.lepto_cases_2008_2022), "Reported cases, 2008 to 2022."));
+  if (isNum(c.lepto_cases_2008_2022)) more.push(statCard("Leptospirosis cases", fmt(c.lepto_cases_2008_2022), "Reported cases, 2008 to 2022."));
   else notes.push("Case counts are not available for this city.");
-  return `${answerCard(m)}<div class="city-split">
-    <div><div class="city-grid two">${cards.join("")}</div>${notes.length ? `<p class="quiet">${notes.map(esc).join(" ")}</p>` : ""}</div>
-    <div class="card"><h2 class="card-title">Where the exposure is</h2>
-      <p class="caption">Each shape is a barangay, shaded by its number of exposed residents. The Map page opens with the same shading.</p>${locator(m)}</div>
-  </div>`;
+  return `${answerCard(m)}
+    <div class="city-grid">${cards.join("")}</div>
+    ${notes.length ? `<p class="quiet">${notes.map(esc).join(" ")}</p>` : ""}
+    <details class="rd-details city-tech more-nums"><summary>More numbers</summary>
+      <div class="city-split">
+        <div class="city-grid two">${more.join("")}</div>
+        <div class="card"><h2 class="card-title">Where the exposure is</h2>
+          <p class="caption">Each shape is a barangay, shaded by its number of exposed residents. The Map page opens with the same shading.</p>${locator(m)}</div>
+      </div>
+    </details>`;
 }
 
 // Thin share bar. v is 0..1.
@@ -285,7 +297,7 @@ function dosePanel(m) {
       if (perPlan) return `<tr><td class="l">${nm}</td><td class="l">${ty}</td>${ks.map((k) => { const v = planVal(p.rank_in_plan, k); return `<td>${v != null && isNum(v) ? esc(v) : "-"}</td>`; }).join("")}</tr>`;
       return `<tr><td>${esc(p.rank ?? "")}</td><td class="l">${nm}</td><td class="l">${ty}</td><td class="l">${esc(inPlans(p).join(", ") || "-")}</td></tr>`;
     }).join("");
-    list = `<h3 class="card-title" style="margin-top:var(--s3)">Candidate dose points, in order</h3><p class="caption">${esc(GLOSS)}</p><div class="table-wrap wrapcols"><table class="table"><caption class="sr-only">Dose points in order</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+    list = `<h3 class="card-title" style="margin-top:var(--s3)">Dose points, in order (1 opens first)</h3><p class="caption">${esc(GLOSS)}</p><div class="table-wrap wrapcols"><table class="table"><caption class="sr-only">Dose points in order</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
   }
   return `<div class="city-grid two">
     <div class="card"><h2 class="card-title">Plans</h2>
@@ -301,7 +313,7 @@ function dosePanel(m) {
 }
 
 const COLS = [
-  { key: "priority", label: "Priority", desc: "Barangay priority: barangays ordered by exposed residents cut off from care. 1 comes first. The top 10 are marked.", num: true },
+  { key: "priority", label: "Rank (most people cut off from care first)", desc: "Barangays ordered by how many exposed residents are cut off from care. 1 has the most people cut off. The top 10 are marked.", num: true },
   { key: "name", label: "Barangay", desc: "Smallest administrative area.", text: true },
   { key: "pop", label: "Population", desc: "Residents living there.", num: true, cls: "c-pop" },
   { key: "exposed", label: "Exposed residents", desc: "Residents living where a 25-year flood reaches. The bar compares each barangay with the largest one in the city.", num: true },
@@ -318,12 +330,12 @@ function cell(c, r, ctx) {
   return `<td${k}>${v == null ? '<span title="Not computed">n/a</span>' : fmt(v)}</td>`;
 }
 function barangayPanel(m, panel, code) {
-  panel.innerHTML = `<div class="card"><h2 class="card-title">Barangays by priority</h2>
-    <p class="caption">Sort any column. Search by barangay name. ${esc(GLOSS)}</p>
+  panel.innerHTML = `<div class="card"><h2 class="card-title">Barangays, most people cut off from care first</h2>
+    <p class="caption">${esc(RANK_NOTE)} Sort any column. Search by barangay name.</p>
     <div class="table-tools"><div style="flex:1;min-width:200px"><label class="sr-only" for="brgy-q">Search barangays</label><input id="brgy-q" class="field" type="search" placeholder="Search barangays" autocomplete="off"></div>
     <button type="button" class="btn ghost sm" id="brgy-more" aria-expanded="false">More columns</button>
     <button type="button" class="btn btn-primary sm" id="brgy-csv">Download CSV</button></div>
-    <div class="table-wrap flat" id="brgy-wrap"><table class="table brgy" id="brgy-t"><caption class="sr-only">Barangays by priority</caption>
+    <div class="table-wrap flat" id="brgy-wrap"><table class="table brgy" id="brgy-t"><caption class="sr-only">Barangays ranked by residents cut off from care</caption>
     <thead><tr>${COLS.map((c) => ({ ...c, desc: c.desc.replace("25-year", scn(m.meta).label) })).map((c) => `<th scope="col" data-k="${c.key}" class="${[c.text ? "l" : "", c.cls || ""].join(" ").trim()}" aria-sort="none" title="${esc(c.desc)}"><button type="button">${esc(c.label)}</button></th>`).join("")}</tr></thead><tbody></tbody></table></div>
     <div class="empty-state" id="brgy-empty" hidden><p></p><button type="button" class="btn ghost sm" id="brgy-clear">Clear search</button></div>
     <p class="note" id="brgy-count" role="status"></p>
@@ -373,7 +385,7 @@ function barangayPanel(m, panel, code) {
   q.addEventListener("input", draw);
   panel.querySelector("#brgy-clear").addEventListener("click", () => { q.value = ""; draw(); q.focus(); });
   panel.querySelector("#brgy-csv").addEventListener("click", () => {
-    const head = ["priority", "barangay", "population", "exposed", "out_of_reach_in_flood", "flooded_share", "capsules_per_week"];
+    const head = ["rank_most_cut_off_first", "barangay", "population", "exposed", "out_of_reach_in_flood", "flooded_share", "capsules_per_week"];
     const cs = (v) => (v == null ? "" : /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v));
     const lines = [head.join(",")].concat(view().map((r) => [r.priority, r.name, r.pop == null ? "" : Math.round(r.pop), Math.round(r.exposed), r.unreached == null ? "" : Math.round(r.unreached), r.fshare == null ? "" : r.fshare.toFixed(3), r.capsules == null ? "" : Math.round(r.capsules)].map(cs).join(",")));
     const url = URL.createObjectURL(new Blob([lines.join("\n") + "\n"], { type: "text/csv" }));
@@ -409,13 +421,41 @@ function lineDesc(series) {
   const peak = series.reduce((b, d) => (d.actual > b.actual ? d : b), series[0]);
   return `Weekly leptospirosis cases from ${series[0].week} to ${series[n - 1].week}. Actual cases total ${tot}, peaking at ${peak.actual} in the week of ${peak.week}.`;
 }
+const oneIn = (v) => (isNum(v) && v > 0 ? Math.max(1, Math.round(1 / +v)) : null);
 function verdict(a) {
-  if (!isNum(a.caught) || !isNum(a.falseA)) return "";
-  const test = `In the test years it caught ${pct(a.caught)} of outbreak weeks, and ${pct(a.falseA)} of quiet weeks raised a false alarm`;
-  const base = isNum(a.bCaught) ? `, against ${pct(a.bCaught)} caught by a simple seasonal average` : "";
-  const word = a.caught >= 0.6 && a.falseA <= 0.15 ? "strong enough to plan around" : a.caught >= 0.3 && a.falseA <= 0.2 ? "good enough to prepare, not to rely on alone" : "too weak to rely on";
-  return `${test}${base}. Verdict: ${word}.`;
+  const n = oneIn(a.caught);
+  if (!n || !isNum(a.falseA)) return "";
+  const yrs = `${a.years[0]} to ${a.years[1]}`;
+  const fa = a.falseA <= 0.1 ? "and rarely raised a false alarm" : `but ${pct(a.falseA)} of quiet weeks raised a false alarm`;
+  const b = oneIn(a.bCaught);
+  const base = b ? ` A simple seasonal guess caught about 1 in ${b}.` : "";
+  return `In ${yrs} it caught about 1 in ${n} outbreak weeks ${fa}.${base}`;
 }
+// Gold-marked weeks: the weeks the rain model scored highest. The test reports how many alerts it raised, so that many.
+function firedWeeks(series, a) {
+  if (!a.alerts || !series) return new Set();
+  const idx = series.map((d, i) => [d.rain, i]).sort((x, y) => y[0] - x[0]).slice(0, a.alerts).map((x) => x[1]);
+  return new Set(idx);
+}
+function barChart(series, fired, years, W) {
+  W = Math.max(280, Math.round(W));
+  const H = 280, L = 36, R = 8, T = 18, B = 34, n = series.length;
+  const mx = Math.max(2, Math.ceil(Math.max(...series.map((d) => d.actual))));
+  const slot = (W - L - R) / n, bw = Math.max(1.5, slot * 0.7);
+  const Y = (v) => T + (H - T - B) * (1 - v / mx);
+  let s = "";
+  const stepY = mx > 10 ? 2 : 1;
+  for (let g = 0; g <= mx; g += stepY) s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(g)}" y2="${Y(g)}"/><text x="${L - 6}" y="${Y(g) + 4}" text-anchor="end">${g}</text>`;
+  fired.forEach((i) => { s += `<rect class="band" x="${(L + slot * i - slot * 0.15).toFixed(1)}" y="${T}" width="${Math.max(3, slot).toFixed(1)}" height="${H - T - B}"/>`; });
+  series.forEach((d, i) => { if (d.actual > 0) s += `<rect class="cbar" x="${(L + slot * i + (slot - bw) / 2).toFixed(1)}" y="${Y(d.actual).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Y(0) - Y(d.actual)).toFixed(1)}"/>`; });
+  fired.forEach((i) => { s += `<rect class="tick" x="${(L + slot * i - slot * 0.15).toFixed(1)}" y="${T - 12}" width="${Math.max(3, slot).toFixed(1)}" height="8" rx="1.5"/>`; });
+  const seen = {};
+  series.forEach((d, i) => { const y = d.week.slice(0, 4); if (!seen[y]) { seen[y] = 1; s += `<line class="grid" x1="${L + slot * i}" x2="${L + slot * i}" y1="${T}" y2="${H - B}"/><text x="${L + slot * i + 4}" y="${H - B + 16}">${y}</text>`; } });
+  s += `<text class="axis-title" transform="translate(11 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Cases per week</text>`;
+  const desc = `${lineDesc(series)} The warning went off in ${fired.size} of these weeks.`;
+  return `<svg class="chart-city" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${s}</svg>`;
+}
+const METHOD_LABEL = { rain_model: "Rain warning", seasonal: "Seasonal average", last_week: "Last week's cases" };
 function alertPanel(m) {
   const a = m.alert, c = m.meta;
   if (a.status !== "evaluated") {
@@ -423,27 +463,33 @@ function alertPanel(m) {
     return `<div class="card"><h2 class="card-title">Rain warning</h2><p>${a.status === "too_few_cases" ? "Too few cases to test a rain warning for this city" : "The rain warning was not tested for this city"}${isNum(n) ? `: only ${fmt(n)} leptospirosis cases were reported from 2008 to 2022` : ""}. Any score would be noise, so none is shown.</p></div>`;
   }
   const yrs = `${a.years[0]} to ${a.years[1]}`;
-  const base = (v, f) => (v == null ? "No baseline score" : `Seasonal baseline: ${f(v)}`);
-  const card = (label, v, b, cap) => `<div class="card stat"><span class="stat-label">${label}</span><span class="stat-value num">${v}</span><p class="stat-note">${b}</p><p class="stat-caption">${cap}</p></div>`;
-  const cards = `<div class="city-grid">
-    ${card("Correlation with real cases", dec(a.corr), base(a.bCorr, (v) => dec(v)), "How closely the rain model follows weekly cases. 1 is a perfect match.")}
-    ${card("Outbreak weeks caught", pct(a.caught), base(a.bCaught, (v) => pct(v)), "Share of outbreak weeks the warning flagged two weeks ahead.")}
-    ${card("False alarms", pct(a.falseA), base(a.bFalse, (v) => pct(v)), "Share of quiet weeks that still raised a warning. Lower is better.")}
-  </div>`;
-  let chart = "";
-  if (m.series && m.series.length > 1) {
-    chart = `<div class="card" style="margin-top:var(--s2)"><h2 class="card-title">Weekly cases, actual and predicted</h2>
-      <div class="chart-host" data-chart="line"></div>
-      <ul class="legend"><li><span class="ln"></span>Actual cases</li><li><span class="ln rain"></span>Rain model</li><li><span class="ln seas"></span>Seasonal baseline (dashed)</li></ul>
-      <p class="note">${esc(lineDesc(m.series))} The rain model is ${isNum(a.corr) ? "correlated " + dec(a.corr) : "scored"}${isNum(a.bCorr) ? ` against ${dec(a.bCorr)} for the seasonal baseline` : ""}.</p></div>`;
-  } else {
-    chart = `<div class="card" style="margin-top:var(--s2)"><p class="empty">The weekly series is not available for this city.</p></div>`;
-  }
+  const hasSeries = m.series && m.series.length > 1;
   const v = verdict(a);
-  return `<div class="card"><h2 class="card-title">Rain warning (tested ${yrs})</h2>
+  const fired = hasSeries ? firedWeeks(m.series, a) : new Set();
+  const chart = hasSeries
+    ? `<div class="chart-host" data-chart="bars"></div>
+       <ul class="legend"><li><span class="sw cases"></span>Blue bars: cases reported each week</li>${fired.size ? '<li><span class="sw gold"></span>Gold: weeks the warning went off</li>' : ""}</ul>`
+    : `<p class="empty">The weekly series is not available for this city.</p>`;
+  const rows = a.all
+    ? a.all.map((r) => `<tr><th scope="row" class="l">${esc(METHOD_LABEL[r.method] || r.method)}</th><td>${dec(r.correlation)}</td><td>${dec(r.mae)}</td><td>${pct(r.sensitivity)}</td><td>${pct(r.false_alert_rate)}</td></tr>`).join("")
+    : `<tr><th scope="row" class="l">Rain warning</th><td>${dec(a.corr)}</td><td>${dec(a.mae)}</td><td>${pct(a.caught)}</td><td>${pct(a.falseA)}</td></tr>${isNum(a.bCorr) ? `<tr><th scope="row" class="l">Seasonal average</th><td>${dec(a.bCorr)}</td><td>${dec(a.bMae)}</td><td>${pct(a.bCaught)}</td><td>${pct(a.bFalse)}</td></tr>` : ""}`;
+  const tech = `<details class="rd-details city-tech"><summary>Technical details</summary>
+    <div class="table-wrap"><table class="table"><caption class="sr-only">Rain warning compared with simple guesses, test years ${yrs}</caption>
+      <thead><tr><th scope="col" class="l">Method</th><th scope="col">Correlation</th><th scope="col">MAE (cases per week)</th><th scope="col">Outbreak weeks caught</th><th scope="col">False alarms</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <p class="note">Correlation: how closely the forecast follows weekly cases, 1 is a perfect match. MAE: the average miss in cases per week, lower is better. False alarms: share of quiet weeks that still raised a warning. ${a.outbreakWeeks ? `The test years held ${a.outbreakWeeks} outbreak weeks. ` : ""}${fired.size ? `Gold weeks are the ${fired.size} weeks with the highest rain-model score, matching the ${a.alerts} alerts the test counted. ` : ""}The model learned from ${a.trainYears[0]} to ${a.trainYears[1]} and was tested on ${yrs}, years it had never seen. Case records run to 2022, but the test stops at ${a.years[1]}.</p>
+    ${hasSeries ? `<h3 class="card-title" style="margin-top:var(--s2)">Cases and both forecasts</h3><div class="chart-host" data-chart="line"></div>
+      <ul class="legend"><li><span class="ln"></span>Actual cases</li><li><span class="ln rain"></span>Rain model</li><li><span class="ln seas"></span>Seasonal average (dashed)</li></ul>` : ""}
+  </details>`;
+  return `<div class="card warn-story">
+    <h2 class="card-title">Rain warning</h2>
+    <p class="test-label"><span class="badge badge-neutral">Test on past data (${yrs}), not a live warning</span></p>
+    <p class="warn-lead">Leptospirosis cases rise 2 to 4 weeks after heavy rain. This warning uses past weeks' rain to say, two weeks ahead, when a hospital should get ready.</p>
+    ${chart}
     ${v ? `<p class="verdict-line">${esc(v)}</p>` : ""}
-    <p class="caption" style="margin:0">A two-week-ahead warning from rainfall, tested on past data. It is not live. The model learned from ${a.trainYears[0]} to ${a.trainYears[1]} and was tested on ${yrs}, years it had never seen. Case records run to 2022, but the test stops at ${a.years[1]}.</p></div>
-    <div style="margin-top:var(--s2)">${cards}</div>${chart}`;
+    <p class="warn-do"><b>What a hospital would do:</b> stock doxycycline and alert the ER staff.</p>
+    ${tech}
+  </div>`;
 }
 
 // ---------- page ----------
@@ -538,6 +584,7 @@ export async function render(el, params = {}) {
   const drawers = {
     cov: (w) => covChart(m, w),
     line: (w) => lineChart(m.series, m.alert.years, w),
+    bars: (w) => barChart(m.series, firedWeeks(m.series, m.alert), m.alert.years, w),
   };
   const ros = [];
   el.querySelectorAll(".chart-host").forEach((host) => {

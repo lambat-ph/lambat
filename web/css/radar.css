@@ -70,3 +70,24 @@
 .rd-sec>h2{scroll-margin-top:var(--s3)}
 .rd-tech{margin:var(--s1) 0 0;max-width:62ch}
 .rd-tech p{margin:0;font-size:var(--t-sm);color:var(--muted)}
+
+/* story layout: about two screens */
+.rd-hero .rd-one{font-size:1.25rem;max-width:44ch;margin:0 0 var(--s2)}
+.rd-story{margin-top:var(--s4)}
+.rd-story>h2{font-size:var(--t-lg);margin:0 0 var(--s2)}
+.rd-trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
+.rd-trio figure{margin:0}
+.rd-trio img{display:block;width:100%;height:auto;aspect-ratio:1;border-radius:var(--radius-sm);background:var(--blue-tint)}
+.rd-trio figcaption{margin-top:var(--s1);line-height:1.3}
+.rd-trio figcaption b{display:block;color:var(--ink);font:700 var(--t-sm)/1.25 var(--f-display)}
+.rd-big{font:700 clamp(1.25rem,2.6vw,1.75rem)/1.3 var(--f-display);max-width:32ch;margin:0 0 var(--s1)}
+.rd-big b{color:var(--blue)}
+.rd-num .caption{max-width:62ch}
+.rd-tech-all{margin-top:var(--s5)}
+.rd-tech-all>summary{font-size:var(--t-md)}
+.rd-tech-all .rd-sec{margin-top:var(--s4)}
+.rd-tech-all .rd-sec>h3{font-size:var(--t-lg);margin:0 0 var(--s1)}
+@media (max-width:720px){
+  .rd-trio{grid-template-columns:1fr}
+  .rd-trio figure{display:grid;grid-template-columns:120px minmax(0,1fr);gap:var(--s2);align-items:center}
+}

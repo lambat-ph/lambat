@@ -292,7 +292,7 @@ body.route-map #view{position:relative;padding-bottom:0}
   .col-foot{margin-top:var(--s1);padding-top:0;border-top:0}
   .col-foot .linkbtn{min-height:36px}
   .sec-legend .key{display:none}
-  .col-top .src{display:none}
+
   .src-m{display:block;padding:0 var(--gx) var(--s2);margin:0}
   .col-top .plan-pick{margin-top:var(--s1)}
   .col-right{top:124px;left:var(--s1);right:var(--s1);width:auto;max-height:calc(100% - var(--peek) - 124px - var(--s2))}
@@ -395,3 +395,18 @@ body.route-map #view{position:relative;padding-bottom:0}
 .island{transition:left .35s cubic-bezier(.3,.9,.3,1),right .35s cubic-bezier(.3,.9,.3,1)}
 .mapwrap.opts-on .island{right:calc(340px + var(--s2))}
 .mapwrap.opts-on .island.full{left:var(--colw)}
+
+/* answer card: one line saying what to do */
+.a .a-do{margin-top:var(--s2);font:600 var(--t-sm)/1.4 var(--f-text);color:var(--blue-dark)}
+/* How to read this map */
+.howto{margin-top:var(--s2);padding-top:var(--s1);border-top:1px solid var(--line)}
+.howto-h{font:700 var(--t-sm) var(--f-display);margin:0 0 var(--s1)}
+.howto ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--s1)}
+.howto li{display:grid;grid-template-columns:36px minmax(0,1fr);gap:var(--s1);align-items:center;font-size:var(--t-xs);line-height:1.35}
+.howto .dot-gold{font:700 11px var(--f-display);color:var(--ink);justify-self:center}
+.hw-sw{display:block;width:28px;height:12px;border-radius:4px;background:linear-gradient(90deg,var(--ramp-1),var(--ramp-3),var(--ramp-5));border:1px solid rgba(20,26,46,.3);justify-self:center}
+.hw-seg{display:inline-flex;justify-self:center;border-radius:999px;background:var(--blue-tint);padding:2px}
+.hw-seg b{font:700 10px/1 var(--f-display);width:11px;height:14px;display:grid;place-items:center;color:var(--blue-dark)}
+.hw-seg b:first-child{background:var(--blue);color:#fff;border-radius:999px;width:14px}
+.sec-legend .src{margin-top:var(--s2)}
+@media (max-width:599px){.sec-legend .key{display:none}}

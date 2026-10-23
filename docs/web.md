@@ -24,7 +24,7 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 | `js/format.js` | `fmt`, `pct`, `compact`, `esc`, `useCss` |
 | `js/pages/map.js` | Map page. 600 px and up: floating frosted cards on the left over a full-size map (answer with hazard band, tour link, 3/5/8 picker, coverage line, ranked expandable site rows, dose point footnote, legend) beside the map; under 600 px: the column is a two-height bottom sheet. On the map: controls, frosted More options button and drawer, barangay card, tour (`localStorage` key `lambat.tourSeen`). Rolling numbers, `?` popovers, branded loader removed on first `idle`, skeletons with `aria-busy`. National view lists cities in the column. `window.__lambatMap` for debugging; `ResizeObserver` keeps the canvas sized |
 | `js/pages/city.js` | Tabs: Overview, Dose points, Barangays (search, sort, CSV), Alert |
-| `js/pages/radar.js` | Radar explainer, USA and Spain example chips, "How it learned" and "How it works" GIFs, results, Egay card |
+| `js/pages/radar.js` | Satellite flood maps (nav label; route #/radar): short story plus collapsed Technical details. Radar explainer, USA and Spain example chips, "How it learned" and "How it works" GIFs, results, Egay card |
 | `js/pages/method.js` | Problem, 5-step pipeline, definitions, validation forest plot, limits, APA references, run commands |
 | `assets/radar/` | Example chips and the two GIFs; regenerate with `scripts/make_unet_gif.py` and `scripts/make_training_gif.py` (`--render-only` reuses `checkpoints/training_replay.npz`) |
 
@@ -49,9 +49,9 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 | cannot reach care | cut off from care | Exposed residents more than a 30-minute walk from a clinic while the flood is on |
 | access gap | lose access in the flood | Residents who can walk to a clinic on a dry day but not during the flood (estimated) |
 | site, k | dose point; plan size (3, 5 or 8 dose points) | A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood |
-| barangay rank | barangay priority | Barangays ordered by exposed residents cut off from care |
+| barangay rank | rank (most people cut off from care first) | Shown only in the city table, never next to dose point order |
 | site rank | dose point order (1 opens first) | Order that covers the most cut-off residents first |
-| alert | rain warning (tested 2017 to 2019) | A two-week-ahead warning from rainfall, tested on past data, not live |
+| alert | rain warning (test on past data, 2017 to 2019) | A two-week-ahead warning from rainfall, tested on past data, not live |
 
 Facility types are shown in plain words (Barangay hall, School, Health centre), never raw OSM values like `townhall`.
 

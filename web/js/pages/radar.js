@@ -172,82 +172,77 @@ export async function render(root) {
     l.href = "css/radar.css";
     document.head.appendChild(l);
   }
-  // Draw the page now; the case-study card fills in when its file arrives.
   const egay = `<div id="rd-egay" aria-busy="true"><div class="card" aria-hidden="true">${skel(1)}${skel(3)}</div><span class="sr-only" role="status">Loading the Typhoon Egay result.</span></div>`;
+  const alt = EX.usa.alts;
 
   root.innerHTML = `<div class="rd">
   <header class="rd-hero">
-    <span class="eyebrow">Flood from space</span>
-    <h1>Seeing flood water from orbit <span class="badge badge-neutral">Experimental</span></h1>
-    <p>After a typhoon, clouds can hide the flood from ordinary satellite photos. Radar satellites can see through them. Here is how that works and how well our model reads it.</p>
-    <aside class="rd-feeds" aria-labelledby="rd-feeds-t">
-      <h2 id="rd-feeds-t">How this feeds the map</h2>
-      <p>Today the map uses the UP NOAH 25-year flood hazard map. Radar flood maps are the next step, so the tool can map a real flood within days.</p>
-      <a class="btn btn-primary sm" href="#/map">Back to the map</a>
-    </aside>
-    <nav class="rd-toc" aria-label="On this page">
-      <span class="eyebrow">On this page</span>
-      <ol>
-        <li><a href="#rd-h1">Why radar</a></li>
-        <li><a href="#rd-h2">The model</a></li>
-        <li><a href="#rd-h3">How well it works</a></li>
-        <li><a href="#rd-h4">Typhoon Egay case study</a></li>
-      </ol>
-    </nav>
+    <span class="eyebrow">Satellite flood maps</span>
+    <h1>Seeing a flood from space <span class="badge badge-neutral">Experimental</span></h1>
+    <p class="rd-one">The map today uses the UP NOAH flood hazard map. Satellites can show a real flood within days, even through clouds.</p>
+    <a class="btn btn-primary sm" href="#/map">Back to the map</a>
   </header>
 
-  <section class="rd-sec" aria-labelledby="rd-h1">
-    <h2 id="rd-h1">1. Why radar</h2>
-    <p class="lead">A normal satellite camera needs clear sky. A radar satellite sends its own signal and listens for the echo, so clouds do not matter. Rough ground, crops and buildings send plenty of signal back and look bright. Still water acts like a mirror and bounces the signal away from the satellite, so it looks dark.</p>
-    <div class="rd-steps">
-      <div class="card"><h3>1. Send</h3><p>The satellite sends a radar pulse down, day or night, through cloud.</p></div>
-      <div class="card"><h3>2. Listen</h3><p>Land scatters some of it back. Calm water sends almost none back.</p></div>
-      <div class="card"><h3>3. Read</h3><p>Dark patches in the image are candidates for water.</p></div>
+  <section class="rd-story" aria-labelledby="rd-pic-h">
+    <h2 id="rd-pic-h" class="sr-only">One example, three pictures</h2>
+    <div class="rd-trio">
+      <figure><img src="assets/radar/usa_vv.png" width="384" height="384" alt="${alt.vv}"><figcaption><b>What the satellite sees</b></figcaption></figure>
+      <figure><img src="assets/radar/usa_unet.png" width="384" height="384" alt="${alt.unet}"><figcaption><b>What our model marks as water</b></figcaption></figure>
+      <figure><img src="assets/radar/usa_label.png" width="384" height="384" alt="${alt.label}"><figcaption><b>The real flood (hand-drawn)</b></figcaption></figure>
     </div>
-    <div class="card rd-ex">
-      <h3 class="card-title">Real examples</h3>
-      <p class="caption">From the Sen1Floods11 test set (Bonafilia et al., 2020): Sentinel-1 radar chips, not used to train the model. Blue marks water. <b>These are floods in the USA and Spain, not the Philippines:</b> the public training set has no Philippine images. A Dagupan example comes from Typhoon Egay below.</p>
-      <div class="seg rd-seg" role="group" aria-label="Choose an example">
-        <button type="button" data-ex="usa" aria-pressed="true">USA</button>
-        <button type="button" data-ex="spain" aria-pressed="false">Spain</button>
+    <p class="caption">A clear example, from the USA.</p>
+  </section>
+
+  <section class="rd-story rd-num" aria-labelledby="rd-num-h">
+    <h2 id="rd-num-h" class="sr-only">How well it works</h2>
+    <p class="rd-big">Our model found about <b>three times</b> as much of the real flood as a simple rule.</p>
+    <p class="caption">IoU 0.64 vs 0.21. IoU is overlap with the real flood: 0 is none, 1 is perfect.</p>
+  </section>
+
+  <section class="rd-story rd-next" aria-labelledby="rd-next-h">
+    <h2 id="rd-next-h" class="sr-only">Next</h2>
+    <p class="rd-big"><b>Next:</b> run it on Typhoon Egay over Dagupan (July 2023).</p>
+  </section>
+
+  <details class="rd-details rd-tech-all"><summary>Technical details</summary>
+    <p>Dark patches in the radar picture sent little signal back. The three pictures above show one test chip from the USA. The public training data has no Philippine images yet. The 0.64 and 0.21 come from 90 test chips the model had never seen.</p>
+    <section class="rd-sec" aria-labelledby="rd-h1">
+      <h3 id="rd-h1">Why radar</h3>
+      <p>A normal satellite camera needs clear sky. A radar satellite sends its own signal and listens for the echo, so clouds do not matter. Rough ground, crops and buildings send plenty of signal back and look bright. Still water acts like a mirror and bounces the signal away, so it looks dark.</p>
+      <div class="card rd-ex">
+        <h4 class="card-title">More examples</h4>
+        <p class="caption">From the Sen1Floods11 test set (Bonafilia et al., 2020): Sentinel-1 radar chips not used for training. Blue marks water. These are floods in the USA and Spain, not the Philippines.</p>
+        <div class="seg rd-seg" role="group" aria-label="Choose an example">
+          <button type="button" data-ex="usa" aria-pressed="true">USA</button>
+          <button type="button" data-ex="spain" aria-pressed="false">Spain</button>
+        </div>
+        <div id="rd-pics" aria-live="polite">${picsHTML("usa")}</div>
+        <p class="caption" style="margin:0">Both chips were picked because they hold a lot of water. They are not an average sample.</p>
       </div>
-      <div id="rd-pics" aria-live="polite">${picsHTML("usa")}</div>
-      <p class="caption" style="margin:0">Both chips were picked because they hold a lot of water. They are not an average sample. See the scores below.</p>
-    </div>
-  </section>
-
-  <section class="rd-sec" aria-labelledby="rd-h2">
-    <h2 id="rd-h2">2. The model</h2>
-    <p class="lead">A threshold only looks at how dark each pixel is. A U-Net also looks at the shapes around it, so a dark farm field and a dark lake can be told apart. It reads the radar signal in two ways at once, which helps it tell water from land.</p>
-    <details class="rd-details rd-tech"><summary>Technical detail: VV and VH bands</summary>
-      <p>The satellite sends and receives the signal in two orientations. VV means sent and received vertically. VH means sent vertically and received horizontally. Water and land respond differently in each, so the U-Net takes both as input.</p></details>
-    <div class="card">${TRAIN}${FLOW}
-      <details class="rd-details"><summary>Show as diagram</summary>${DIAGRAM}</details></div>
-  </section>
-
-  <section class="rd-sec" aria-labelledby="rd-h3">
-    <h2 id="rd-h3">3. How well it works</h2>
-    <p class="lead">We compared the U-Net with the simplest alternative: pick one brightness cut-off for each image. Both were scored against hand-drawn water on 90 chips the model had never seen.</p>
-    <details class="rd-details rd-tech"><summary>Technical detail: the Otsu threshold</summary>
-      <p>Otsu is a standard method that looks at the histogram of pixel brightness in one image and picks the cut-off that best splits dark pixels from bright ones. Everything darker is called water. It uses one band and no before picture, so it is a weak comparison.</p></details>
-    ${resultsHTML()}
-  </section>
-
-  <section class="rd-sec" aria-labelledby="rd-h4">
-    <h2 id="rd-h4">4. Typhoon Egay case study</h2>
-    <p class="lead">The real test is a real flood in Dagupan.</p>
-    ${egay}
-  </section>
-
-  <p class="rd-foot">Source for the training and test data: Bonafilia, D., Tellman, B., Anderson, T., Issenberg, E. (2020). Sen1Floods11: a georeferenced dataset to train and test deep learning flood algorithms for Sentinel-1. CVPR Workshops. Scores come from one full training run.</p>
+    </section>
+    <section class="rd-sec" aria-labelledby="rd-h2">
+      <h3 id="rd-h2">The model</h3>
+      <p>A threshold only looks at how dark each pixel is. A U-Net also looks at the shapes around it, so a dark farm field and a dark lake can be told apart.</p>
+      <details class="rd-details rd-tech"><summary>VV and VH bands</summary>
+        <p>The satellite sends and receives the signal in two orientations. VV means sent and received vertically. VH means sent vertically and received horizontally. Water and land respond differently in each, so the U-Net takes both as input.</p></details>
+      <div class="card">${TRAIN}${FLOW}
+        <details class="rd-details"><summary>Show as diagram</summary>${DIAGRAM}</details></div>
+    </section>
+    <section class="rd-sec" aria-labelledby="rd-h3">
+      <h3 id="rd-h3">How well it works</h3>
+      <p>We compared the U-Net with the simplest alternative: one brightness cut-off for each image. Both were scored against hand-drawn water on 90 chips the model had never seen.</p>
+      <details class="rd-details rd-tech"><summary>The Otsu threshold</summary>
+        <p>Otsu is a standard method that looks at the histogram of pixel brightness in one image and picks the cut-off that best splits dark pixels from bright ones. Everything darker is called water. It uses one band and no before picture, so it is a weak comparison.</p></details>
+      ${resultsHTML()}
+    </section>
+    <section class="rd-sec" aria-labelledby="rd-h4">
+      <h3 id="rd-h4">Typhoon Egay case study</h3>
+      ${egay}
+    </section>
+    <p class="rd-foot">Source for the training and test data: Bonafilia, D., Tellman, B., Anderson, T., Issenberg, E. (2020). Sen1Floods11: a georeferenced dataset to train and test deep learning flood algorithms for Sentinel-1. CVPR Workshops. Scores come from one full training run.</p>
+  </details>
   </div>`;
 
-  // The router uses the URL hash, so contents links scroll instead of changing it.
-  root.querySelectorAll(".rd-toc a").forEach((a) => a.addEventListener("click", (e) => {
-    e.preventDefault();
-    const t = root.querySelector(a.getAttribute("href"));
-    if (t) { t.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); t.setAttribute("tabindex", "-1"); t.focus({ preventScroll: true }); }
-  }));
   const picsEl = root.querySelector("#rd-pics");
   const btns = [...root.querySelectorAll(".rd-seg button")];
   btns.forEach((b) => b.addEventListener("click", () => {

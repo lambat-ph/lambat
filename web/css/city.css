@@ -120,3 +120,18 @@
 }
 
 .city-head .scn-line{margin:var(--s0) 0 0;max-width:56ch;font-size:var(--t-xs);line-height:1.4;color:var(--muted)}
+
+/* rain warning story */
+.warn-story{max-width:860px}
+.warn-lead{font:500 var(--t-md)/1.5 var(--f-text);max-width:62ch;margin:0 0 var(--s2)}
+.warn-story .test-label{margin:0 0 var(--s1)}
+.warn-story .test-label .badge{background:var(--line);color:var(--ink)}
+.warn-story .verdict-line{font:700 clamp(1.125rem,2.2vw,1.375rem)/1.35 var(--f-display);margin:var(--s2) 0 var(--s1);max-width:50ch}
+.warn-do{margin:0 0 var(--s2);max-width:62ch}
+.legend .sw.cases{background:var(--blue);border-color:var(--blue)}
+.legend .sw.gold{background:var(--gold);border-color:var(--ink)}
+.chart-city .cbar{fill:var(--blue)}
+.chart-city .band{fill:var(--gold);opacity:.4}
+.chart-city .tick{fill:var(--gold);stroke:var(--ink);stroke-width:.75}
+.city-tech{margin-top:var(--s2);border-top:1px solid var(--line);padding-top:var(--s1)}
+.city-tech>summary{cursor:pointer;font-weight:700;color:var(--blue);padding:var(--s1) 0}
