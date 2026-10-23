@@ -68,7 +68,7 @@ function mountNav() {
   sync();
   // The mark and the arrow glide between side by side (open) and stacked (closed) instead of jumping.
   const glide = (change) => {
-    const els = [nav.querySelector(".nav-brand>img"), btn];
+    const els = [nav.querySelector(".nav-brand"), btn]; // the whole brand moves: its own overflow clip would hide a moving mark
     const before = els.map((e) => e.getBoundingClientRect());
     change();
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;

@@ -55,11 +55,11 @@ img,svg{max-width:100%}
 /* ---------- app shell and navigation ---------- */
 .app{display:flex;min-height:100vh;min-height:100dvh}
 #view{flex:1;min-width:0}
-.nav{flex:none;position:sticky;top:0;height:100vh;height:100dvh;width:var(--nav-w);background:var(--blue);color:#fff;display:flex;flex-direction:column;padding:var(--s2) var(--s1);gap:var(--s1);z-index:50;transition:width .22s cubic-bezier(.4,0,.2,1)}
+.nav{flex:none;position:sticky;top:0;height:100vh;height:100dvh;width:var(--nav-w);background:var(--blue);color:#fff;display:flex;flex-direction:column;padding:var(--s2) var(--s1);gap:var(--s1);z-index:50;overflow:hidden;transition:width .22s cubic-bezier(.4,0,.2,1)}
 html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav :focus-visible{outline-color:#fff}
 .nav-head{display:flex;align-items:center;gap:var(--s1);min-height:48px;padding:0 var(--s1)}
-.nav-brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;font:700 var(--t-md) var(--f-display);letter-spacing:.08em;white-space:nowrap;overflow:hidden}
+.nav-brand{display:flex;flex-shrink:0;align-items:center;gap:12px;color:#fff;text-decoration:none;font:700 var(--t-md) var(--f-display);letter-spacing:.08em;white-space:nowrap;overflow:hidden}
 .nav .nav-brand,.nav .nav-brand:link,.nav .nav-brand:visited,.nav .nav-brand:hover,.nav .nav-brand:active,.nav .nav-brand:focus-visible,.nav .nav-brand[aria-current]{color:#fff;text-decoration:none}
 .nav .nav-brand:hover span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
 .nav-brand>img{width:auto;height:30px;flex:none}
