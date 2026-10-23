@@ -78,6 +78,7 @@ const TOC = [
   ["m-defs", "Words we use"],
   ["m-val", "How we checked it"],
   ["m-limits", "Limits"],
+  ["m-notyet", "Not included yet"],
   ["m-refs", "Data and references"],
   ["m-run", "Reproduce it"],
 ];
@@ -182,6 +183,15 @@ const html = () => `
       <li>Each dose point assumes a prescriber is present.</li>
       <li>The tool counts places, not patients. Pregnant and lactating women are flagged for referral, and people who were never diagnosed do not appear.</li>
       <li>The radar flood model is a U-Net, an image-reading neural network. It was tested on floods in other countries, not in Dagupan. Its score is IoU, the overlap between predicted water and true water, where 1 is a perfect match.</li>
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="m-notyet">
+    <h2 class="card-title" id="m-notyet">Not included yet, and why</h2>
+    <p>Four cities are not on the map. Every one is waiting on the same step: downloading the whole-city OpenStreetMap road network, which has not finished because the Overpass service is overloaded. Without roads, we cannot work out who can walk to care.</p>
+    <ul class="limits">
+      <li><strong>Mandaue and Iloilo.</strong> Only a 100-year flood map exists for them, and the road download is incomplete.</li>
+      <li><strong>Navotas and Muntinlupa.</strong> A 25-year flood map exists, but the road download is incomplete.</li>
     </ul>
   </section>
 
