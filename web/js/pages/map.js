@@ -1280,11 +1280,11 @@ function downloadPlan() {
 }
 
 /* ---------- widgets ---------- */
-// More options is a side panel over the right edge of the map. While open: scrim behind, focus trapped, Esc and scrim close.
+// More options is a side panel over the right edge of the map. It does not block or blur the map, so changes show live; Esc or the close button shut it.
 function openOpts(open) {
   const o = $("#opts"), b = $("#optBtn"), sc = $("#optScrim");
   if (!o || open === o.classList.contains("open")) return;
-  o.classList.toggle("open", open); sc.classList.toggle("on", open); o.inert = !open;
+  o.classList.toggle("open", open); sc.classList.remove("on"); o.inert = !open;
   b.setAttribute("aria-expanded", String(open));
   b.classList.toggle("on", open);
   if (open) { document.addEventListener("keydown", onOptKey); $("#optClose").focus({ preventScroll: true }); }
@@ -1299,14 +1299,7 @@ function closeOpts(refocus) {
 }
 function trapOpts(e) {
   const o = $("#opts");
-  if (e.key === "Escape") { e.preventDefault(); closeOpts(true); return; }
-  if (e.key !== "Tab") return;
-  const fs = [...o.querySelectorAll("button,input,select,a[href]")].filter((x) => !x.disabled && !x.closest("[hidden]"));
-  if (!fs.length) return;
-  const first = fs[0], last = fs[fs.length - 1], cur = document.activeElement;
-  if (!o.contains(cur)) { e.preventDefault(); first.focus(); }
-  else if (e.shiftKey && cur === first) { e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && cur === last) { e.preventDefault(); first.focus(); }
+  if (e.key === "Escape" && !S.tour) { e.preventDefault(); closeOpts(o.contains(document.activeElement)); }
 }
 // The "more below" badge goes on whatever scrolls: the whole column on desktop, the sheet body on phones.
 function attachMore() {
