@@ -1,0 +1,52 @@
+.method{max-width:880px;margin:0 auto;padding:var(--s3) var(--s2) var(--s6);display:flex;flex-direction:column;gap:var(--s3)}
+.method h1{font:700 var(--t-xl) var(--f-display);margin:0;line-height:1.1}
+.method .lede{font-size:var(--t-md);color:var(--muted);margin:var(--s1) 0 0;max-width:62ch}
+.method section.card{display:flex;flex-direction:column;gap:var(--s2)}
+.method .card-title{font-size:var(--t-lg);margin:0}
+.method p{margin:0;max-width:68ch;line-height:1.55}
+.method .sources{font-size:var(--t-sm);color:var(--muted)}
+.method .figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--s2)}
+.method .figs .stat-value{font-size:var(--t-lg)}
+.method .defs{display:grid;gap:var(--s2);margin:0}
+.method .defs div{border-left:4px solid var(--gold);padding-left:var(--s2)}
+.method .defs dt{font:700 var(--t-md) var(--f-display)}
+.method .defs dd{margin:var(--s0) 0 0;line-height:1.5;max-width:68ch}
+.method .pipe-wide{display:block;width:100%;height:auto}
+.method .pipe-tall{display:none;width:100%;height:auto;max-width:360px;margin:0 auto}
+.method svg text{font-family:var(--f-text);fill:var(--ink)}
+.method svg .t-h{font-weight:700;font-size:15px;font-family:var(--f-display)}
+.method svg .t-b{font-size:12.5px}
+.method svg .t-m{font-size:11px;fill:var(--muted);font-style:italic}
+.method svg .t-n{font:700 16px var(--f-display);fill:var(--blue-dark)}
+.method svg .box{fill:var(--blue-wash);stroke:var(--blue);stroke-width:1.5}
+.method svg .num{fill:var(--gold)}
+.method svg .arrow{stroke:var(--blue);stroke-width:2;fill:none}
+.method svg .arrow-h{fill:var(--blue)}
+.method .steps-list{margin:0;padding-left:var(--s3);line-height:1.5}
+.method .forest text{font-size:12px}
+.method .forest .axis{stroke:var(--line)}
+.method .forest .zero{stroke:var(--muted);stroke-dasharray:4 3}
+.method .forest .ci{stroke:var(--blue);stroke-width:2.5}
+.method .forest .dot{fill:var(--blue)}
+.method .forest .base .dot{fill:var(--gold);stroke:var(--blue-dark);stroke-width:2}
+.method .forest .ref .ci{stroke:var(--series-muted);stroke-dasharray:none}
+.method .forest .ref .dot{fill:var(--series-muted)}
+.method .forest .lbl{fill:var(--ink)}
+.method .forest .ref .lbl{fill:var(--muted);font-style:italic}
+.method .forest .grid{stroke:var(--grid)}
+.method .scroll{overflow-x:auto}
+.method .scroll svg{min-width:520px}
+.method .verdict{background:var(--blue-wash);border-left:4px solid var(--blue);border-radius:var(--radius-sm);padding:var(--s2);font-weight:600}
+.method ul.limits{margin:0;padding-left:var(--s3);display:grid;gap:var(--s1);line-height:1.5}
+.method .refs{margin:0;padding:0;list-style:none;display:grid;gap:var(--s2);font-size:var(--t-sm)}
+.method .refs li{padding-left:2em;text-indent:-2em;line-height:1.5;overflow-wrap:anywhere}
+.method .refs a{overflow-wrap:anywhere}
+.method pre{margin:0;background:var(--ink);color:#fff;border-radius:var(--radius-sm);padding:var(--s2);overflow-x:auto;font:var(--t-sm)/1.6 ui-monospace,Consolas,monospace}
+.method code{font-family:ui-monospace,Consolas,monospace;font-size:.92em}
+.method details summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+@media (max-width:640px){
+  .method{padding:var(--s2)}
+  .method .pipe-wide{display:none}
+  .method .pipe-tall{display:block}
+  .method .scroll svg{min-width:0}
+}
