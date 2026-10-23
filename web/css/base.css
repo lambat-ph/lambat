@@ -55,7 +55,7 @@ img,svg{max-width:100%}
 /* ---------- app shell and navigation ---------- */
 .app{display:flex;min-height:100vh;min-height:100dvh}
 #view{flex:1;min-width:0}
-.nav{flex:none;position:sticky;top:0;height:100vh;height:100dvh;width:var(--nav-w);background:var(--blue);color:#fff;display:flex;flex-direction:column;padding:var(--s2) var(--s1);gap:var(--s1);z-index:50;transition:width .2s ease}
+.nav{flex:none;position:sticky;top:0;height:100vh;height:100dvh;width:var(--nav-w);background:var(--blue);color:#fff;display:flex;flex-direction:column;padding:var(--s2) var(--s1);gap:var(--s1);z-index:50;transition:width .22s cubic-bezier(.4,0,.2,1)}
 html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav :focus-visible{outline-color:#fff}
 .nav-head{display:flex;align-items:center;gap:var(--s1);min-height:48px;padding:0 var(--s1)}
@@ -71,7 +71,7 @@ html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 @keyframes ltr-up{from{clip-path:inset(100% 0% 0% 0%)}to{clip-path:inset(0% 0% 0% 0%)}}
 @keyframes ltr-down{from{clip-path:inset(0% 0% 100% 0%)}to{clip-path:inset(0% 0% 0% 0%)}}
 /* closing: the same threads pull back out, last letter first */
-.nav.unweave .nav-word .ltr{animation:ltr-up-out .18s cubic-bezier(.6,0,.8,.2) both;animation-delay:calc((5 - var(--i))*22ms)}
+.nav.unweave .nav-word .ltr{animation:ltr-up-out .12s cubic-bezier(.4,0,1,1) both;animation-delay:calc((5 - var(--i))*20ms)}
 .nav.unweave .nav-word .ltr:nth-child(odd){animation-name:ltr-down-out}
 @keyframes ltr-up-out{from{clip-path:inset(0% 0% 0% 0%)}to{clip-path:inset(0% 0% 100% 0%)}}
 @keyframes ltr-down-out{from{clip-path:inset(0% 0% 0% 0%)}to{clip-path:inset(100% 0% 0% 0%)}}
@@ -80,9 +80,9 @@ html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav-toggle:hover,.nav a.item:hover{background:rgba(255,255,255,.14)}
 .nav-toggle svg{transition:transform .2s}
 html[data-nav="closed"] .nav-toggle svg{transform:rotate(180deg)}
-html[data-nav="closed"] .nav-head{flex-direction:column;padding:0;gap:var(--s1);min-height:0}
-html[data-nav="closed"] .nav-head .nav-toggle{margin:0}
-html[data-nav="closed"] .nav-brand span{display:none}
+html[data-nav="closed"] .nav:not(.unweave) .nav-head{flex-direction:column;padding:0;gap:var(--s1);min-height:0}
+html[data-nav="closed"] .nav:not(.unweave) .nav-head .nav-toggle{margin:0}
+html[data-nav="closed"] .nav:not(.unweave) .nav-brand span{display:none}
 .nav ul{list-style:none;margin:var(--s1) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--s0)}
 .nav a.item{position:relative;display:flex;align-items:center;gap:var(--s2);height:48px;padding:0 12px;border-radius:12px;color:#fff;text-decoration:none;font-weight:600;font-size:var(--t-sm);white-space:nowrap;overflow:hidden}
 .nav a.item svg{flex:none}
@@ -92,7 +92,7 @@ html[data-nav="closed"] .nav-brand span{display:none}
 .nav-ind::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--gold)}
 .nav a.item{z-index:1}
 @media (prefers-reduced-motion:reduce){.nav-ind{transition:none}}
-html[data-nav="closed"] .nav a.item span{display:none}
+html[data-nav="closed"] .nav:not(.unweave) a.item span{display:none}
 .nav-foot{margin-top:auto}
 .nav-foot a.item{font-weight:500}
 

@@ -78,8 +78,10 @@ function mountNav() {
     if (root.dataset.nav === "closed") return set("open");
     // Closing: the letters unweave back to bare strands, last letter first, then the sidebar folds.
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return set("closed");
+    // The sidebar starts narrowing at once; the letters leave right to left as its edge passes them.
     nav.classList.add("unweave");
-    setTimeout(() => { nav.classList.remove("unweave"); set("closed"); }, 300);
+    set("closed");
+    setTimeout(() => nav.classList.remove("unweave"), 230);
   });
 }
 
