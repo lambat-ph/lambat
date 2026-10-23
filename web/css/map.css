@@ -1,6 +1,6 @@
 /* ---------- map page ----------
-   Desktop: a solid side column next to the map. Phones: the same column is a bottom sheet over the map.
-   Only the map controls, the options button, the barangay card and the tour float on the map (frosted glass). */
+   600 px and up: the map fills the page and the column is a stack of floating frosted cards on the left
+   (answer, sites, legend). Phones: the same column is a bottom sheet over the map. */
 body.route-map{overflow:hidden}
 body.route-map .app{height:100vh;height:100dvh;min-height:0}
 body.route-map #view{position:relative;padding-bottom:0}
@@ -170,13 +170,13 @@ body.route-map #view{position:relative;padding-bottom:0}
 .dots i.on{background:var(--blue);width:20px;border-radius:4px}
 .tour-btns{display:flex;gap:var(--s1);flex-wrap:wrap;justify-content:flex-end}
 
-@media (max-width:1100px) and (min-width:900px){
+@media (max-width:1100px) and (min-width:600px){
   .col{width:340px}
   .col-right{width:264px}
 }
 
-/* ---------- phones and small tablets: the column becomes a bottom sheet over the map ---------- */
-@media (max-width:899px){
+/* ---------- phones: the column becomes a bottom sheet over the map ---------- */
+@media (max-width:599px){
   .mapwrap{--gx:var(--s2);--t-q:1.125rem}
   .mapside{position:absolute;inset:0}
   .col{position:absolute;left:0;right:0;bottom:0;width:auto;height:min(78%,720px);border-right:0;border-radius:var(--radius) var(--radius) 0 0;box-shadow:0 -4px 20px rgba(20,26,46,.22);overflow:hidden;transition:transform .3s cubic-bezier(.3,.9,.3,1)}
@@ -200,6 +200,24 @@ body.route-map #view{position:relative;padding-bottom:0}
 @media (max-width:767px){
   .mapwrap{bottom:var(--tab-h)}
 }
+
+/* ---------- 600 px and up: floating cards over a full-size map ---------- */
+@media (min-width:600px){
+  .mapside{position:absolute;inset:0}
+  .col{position:absolute;top:var(--s2);left:var(--s2);bottom:var(--s2);height:auto;background:transparent;border-right:0;gap:var(--s2);pointer-events:none;scrollbar-width:none}
+  .col::-webkit-scrollbar{display:none}
+  .col-more{flex:none;gap:var(--s2)}
+  .col-top,.col .sec{pointer-events:auto;background:var(--glass,rgba(255,255,255,.88));-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);border:.5px solid var(--glass-edge,rgba(255,255,255,.6));border-radius:var(--radius);box-shadow:var(--shadow)}
+  .col-top::before{left:var(--radius);right:var(--radius)}
+  .sec-legend{margin-top:0}
+  .col .spot{border-radius:var(--radius)}
+}
+@media (min-width:600px) and (max-width:899px){
+  .col{width:320px}
+  .mapwrap{--gx:var(--s2)}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){@media (min-width:600px){.col-top,.col .sec{background:var(--card)}}}
+@media (prefers-reduced-transparency:reduce){.col-top,.col .sec{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none}}
 
 /* frosted glass: only for what floats on the map. Tokens from base.css, fallbacks keep text >= 4.5:1 over the darkest fill. */
 .tour,.col-right .w,.maplibregl-ctrl-group,.maplibregl-ctrl-attrib{background:var(--glass,rgba(255,255,255,.88))!important;-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);border:.5px solid var(--glass-edge,rgba(255,255,255,.6))!important}

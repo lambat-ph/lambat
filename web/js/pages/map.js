@@ -91,7 +91,7 @@ const TEMPLATE = `
 </div>`;
 
 const POP = typeof HTMLElement !== "undefined" && typeof HTMLElement.prototype.showPopover === "function";
-const SHEET_Q = "(max-width:899px)";
+const SHEET_Q = "(max-width:599px)";
 
 let map, tip, host, S, mobile, ro, ro2, onKey, tipEl, onDown, onTipKey;
 let loaderOn = false, loaderT, loaderFade;
@@ -277,7 +277,8 @@ function buildNational() {
 // The side column no longer covers the map on desktop, so the padding is small. On phones the sheet covers the bottom.
 function pad() {
   if (mobile.matches) return { top: 64, left: 24, right: 24, bottom: S.peek + 24 };
-  return { top: 72, left: 40, right: 40, bottom: 48 };
+  const col = document.getElementById("col");
+  return { top: 72, left: (col ? col.offsetWidth + 16 : 0) + 40, right: 40, bottom: 48 };
 }
 function showNational(first) {
   endTour(false);
