@@ -64,6 +64,10 @@ html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav .nav-brand:hover span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
 .nav-brand>img{width:auto;height:30px;flex:none}
 .nav-brand .nav-word{display:block;height:18px;width:auto} /* 3/5 of the 30px mark */
+/* wordmark letters are separate paths: when the sidebar opens they rise into place one after another */
+.nav-word .ltr{transform-box:fill-box;transform-origin:50% 100%;animation:ltr-in .42s cubic-bezier(.34,1.45,.5,1) both;animation-delay:calc(60ms + var(--i)*45ms)}
+@keyframes ltr-in{from{opacity:0;transform:translateY(60%) scale(.85)}}
+@media (prefers-reduced-motion:reduce){.nav-word .ltr{animation:none}}
 .nav-toggle{margin-left:auto;flex:none;width:32px;height:32px;border:0;border-radius:var(--radius-sm);background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center}
 .nav-toggle:hover,.nav a.item:hover{background:rgba(255,255,255,.14)}
 .nav-toggle svg{transition:transform .2s}
