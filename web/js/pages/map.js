@@ -1352,7 +1352,7 @@ function sitesOpen(on) {
   const inner = $("#sitesBody").firstElementChild;
   clearTimeout(S.foldT);
   if (on) { inner.hidden = false; requestAnimationFrame(() => $("#sites").classList.remove("shut")); }
-  else { $("#sites").classList.add("shut"); S.foldT = setTimeout(() => { inner.hidden = true; $("#col").dispatchEvent(new Event("scroll")); }, reducedMotion() ? 0 : 320); }
+  else { $("#sites").classList.add("shut"); S.foldT = setTimeout(() => { inner.hidden = true; const c = host && $("#col"); if (c) c.dispatchEvent(new Event("scroll")); }, reducedMotion() ? 0 : 320); }
   const t = $("#sitesTog");
   t.setAttribute("aria-expanded", String(on));
   t.setAttribute("aria-label", on ? "Hide the dose point list" : "Show the dose point list");

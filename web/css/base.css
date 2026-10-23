@@ -65,9 +65,13 @@ html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav-brand>img{width:auto;height:30px;flex:none}
 .nav-brand .nav-word{display:block;height:18px;width:auto} /* 3/5 of the 30px mark */
 /* wordmark letters are separate paths: when the sidebar opens they rise into place one after another */
-.nav-word .ltr{transform-box:fill-box;transform-origin:50% 100%;animation:ltr-in .42s cubic-bezier(.34,1.45,.5,1) both;animation-delay:calc(60ms + var(--i)*45ms)}
-@keyframes ltr-in{from{opacity:0;transform:translateY(60%) scale(.85)}}
-@media (prefers-reduced-motion:reduce){.nav-word .ltr{animation:none}}
+/* opening: each letter is woven like a net strand (its outline draws in gold, then it fills white), left to right */
+.nav-word .ltr{stroke:var(--gold);stroke-width:1.6;stroke-linejoin:round;stroke-dasharray:var(--len,400);stroke-dashoffset:0;fill-opacity:1;stroke-opacity:0;animation:ltr-weave .75s cubic-bezier(.45,0,.2,1) both;animation-delay:calc(80ms + var(--i)*70ms)}
+@keyframes ltr-weave{0%{stroke-dashoffset:var(--len,400);stroke-opacity:1;fill-opacity:0}60%{stroke-dashoffset:0;stroke-opacity:1;fill-opacity:0}100%{stroke-dashoffset:0;stroke-opacity:0;fill-opacity:1}}
+/* closing: the fill drains and the strand pulls back out, last letter first */
+.nav.unweave .nav-word .ltr{animation:ltr-unweave .3s cubic-bezier(.5,0,.75,0) both;animation-delay:calc((5 - var(--i))*25ms)}
+@keyframes ltr-unweave{0%{stroke-dashoffset:0;stroke-opacity:1;fill-opacity:1}45%{fill-opacity:0}100%{stroke-dashoffset:var(--len,400);stroke-opacity:1;fill-opacity:0}}
+@media (prefers-reduced-motion:reduce){.nav-word .ltr,.nav.unweave .nav-word .ltr{animation:none}}
 .nav-toggle{margin-left:auto;flex:none;width:32px;height:32px;border:0;border-radius:var(--radius-sm);background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center}
 .nav-toggle:hover,.nav a.item:hover{background:rgba(255,255,255,.14)}
 .nav-toggle svg{transition:transform .2s}
