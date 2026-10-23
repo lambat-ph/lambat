@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="256" height="256" role="img" aria-labelledby="t"><title id="t">LAMBAT Net Pin, reversed for blue</title><path d="M50 94C50 94 18 62 18 40A32 32 0 0 1 82 40C82 62 50 94 50 94ZM40 40A10 10 0 1 0 60 40A10 10 0 1 0 40 40ZM30.5 28.7L35.3 33.5L30.5 38.3L25.7 33.5ZM30.5 41.7L35.3 46.5L30.5 51.3L25.7 46.5ZM43.5 15.7L48.3 20.5L43.5 25.3L38.7 20.5ZM43.5 54.7L48.3 59.5L43.5 64.3L38.7 59.5ZM43.5 67.7L48.3 72.5L43.5 77.3L38.7 72.5ZM56.5 15.7L61.3 20.5L56.5 25.3L51.7 20.5ZM56.5 54.7L61.3 59.5L56.5 64.3L51.7 59.5ZM56.5 67.7L61.3 72.5L56.5 77.3L51.7 72.5ZM69.5 28.7L74.3 33.5L69.5 38.3L64.7 33.5ZM69.5 41.7L74.3 46.5L69.5 51.3L64.7 46.5Z" fill="#FFFFFF" fill-rule="evenodd"></path><circle cx="50" cy="40" r="6.6" fill="#EFBE01"></circle></svg>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 65.72 58.13" role="img" aria-label="LAMBAT" fill="#FFFFFF">
+  <g id="Layer_1-2" data-name="Layer 1">
+    <path d="M14.55,6.33l14.26,15.79L5.36,47.81,14.55,6.33M12.88,0L0,58.13,32.86,22.13,12.88,0h0Z"/>
+    <rect x="18.4" y="9.58" width="3" height="24.61"/>
+    <rect x="18.62" y="6.73" width="3" height="20.99" transform="translate(-3.1 29.97) rotate(-69.33)"/>
+    <rect x="16.4" y="15.82" width="3" height="24.92" transform="translate(-1.28 55.71) rotate(-112.69)"/>
+    <path d="M51.17,6.33l9.19,41.48-23.45-25.69,14.26-15.79M52.84,0l-19.98,22.13,32.86,36L52.84,0h0Z"/>
+    <rect x="44.33" y="9.58" width="3" height="24.61" transform="translate(91.65 43.76) rotate(-180)"/>
+    <rect x="44.11" y="6.73" width="3" height="20.99" transform="translate(45.58 65.98) rotate(-110.67)"/>
+    <rect x="46.32" y="15.82" width="3" height="24.92" transform="translate(3.28 61.49) rotate(-67.31)"/>
+  </g>
+</svg>

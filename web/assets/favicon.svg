@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32" role="img" aria-labelledby="t"><title id="t">LAMBAT Net Pin favicon</title><path d="M50 94C50 94 18 62 18 40A32 32 0 0 1 82 40C82 62 50 94 50 94ZM37 40A13 13 0 1 0 63 40A13 13 0 1 0 37 40Z" fill="#0038BD" fill-rule="evenodd"></path><circle cx="50" cy="40" r="8.2" fill="#EFBE01"></circle></svg>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 65.72 58.13" role="img" aria-label="LAMBAT" fill="#0038BD">
+  <g id="Layer_1-2" data-name="Layer 1">
+    <path d="M14.55,6.33l14.26,15.79L5.36,47.81,14.55,6.33M12.88,0L0,58.13,32.86,22.13,12.88,0h0Z"/>
+    <rect x="18.4" y="9.58" width="3" height="24.61"/>
+    <rect x="18.62" y="6.73" width="3" height="20.99" transform="translate(-3.1 29.97) rotate(-69.33)"/>
+    <rect x="16.4" y="15.82" width="3" height="24.92" transform="translate(-1.28 55.71) rotate(-112.69)"/>
+    <path d="M51.17,6.33l9.19,41.48-23.45-25.69,14.26-15.79M52.84,0l-19.98,22.13,32.86,36L52.84,0h0Z"/>
+    <rect x="44.33" y="9.58" width="3" height="24.61" transform="translate(91.65 43.76) rotate(-180)"/>
+    <rect x="44.11" y="6.73" width="3" height="20.99" transform="translate(45.58 65.98) rotate(-110.67)"/>
+    <rect x="46.32" y="15.82" width="3" height="24.92" transform="translate(3.28 61.49) rotate(-67.31)"/>
+  </g>
+</svg>

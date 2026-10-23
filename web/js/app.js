@@ -52,7 +52,7 @@ function mountNav() {
   nav.setAttribute("aria-label", "Main");
   nav.innerHTML = `
     <div class="nav-head">
-      <a class="nav-brand" href="#/" aria-label="LAMBAT home"><img src="assets/logo-reversed.svg" alt="" width="32" height="32"><span>LAMBAT</span></a>
+      <a class="nav-brand" href="#/" aria-label="LAMBAT home"><img src="assets/logo-reversed.svg" alt="" width="36" height="32"><span><img class="nav-word" src="assets/wordmark-white.svg" alt="LAMBAT" height="16"></span></a>
       <button class="nav-toggle" type="button" aria-label="Collapse the sidebar" aria-expanded="true">${ICON.chev}</button>
     </div>
     <ul><span class="nav-ind" aria-hidden="true"></span>${NAV.map((n) => `<li><a class="item" data-id="${n.id}" href="${n.href}" title="${n.label}">${ICON[n.icon]}<span class="lbl"></span></a></li>`).join("")}</ul>

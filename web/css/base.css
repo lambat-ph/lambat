@@ -62,7 +62,8 @@ html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav-brand{display:flex;align-items:center;gap:var(--s1);color:#fff;text-decoration:none;font:700 var(--t-md) var(--f-display);letter-spacing:.08em;white-space:nowrap;overflow:hidden}
 .nav .nav-brand,.nav .nav-brand:link,.nav .nav-brand:visited,.nav .nav-brand:hover,.nav .nav-brand:active,.nav .nav-brand:focus-visible,.nav .nav-brand[aria-current]{color:#fff;text-decoration:none}
 .nav .nav-brand:hover span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
-.nav-brand img{width:32px;height:32px;flex:none}
+.nav-brand>img{width:36px;height:32px;flex:none}
+.nav-brand .nav-word{display:block;height:16px;width:auto}
 .nav-toggle{margin-left:auto;flex:none;width:32px;height:32px;border:0;border-radius:var(--radius-sm);background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center}
 .nav-toggle:hover,.nav a.item:hover{background:rgba(255,255,255,.14)}
 .nav-toggle svg{transition:transform .2s}
