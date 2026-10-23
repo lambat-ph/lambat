@@ -16,6 +16,8 @@ const TAB_ALIAS = { warning: "alert", "rain-warning": "alert", dose: "dose-point
 let cleanup = [];
 
 // ---------- helpers ----------
+// The flood this city's numbers are for ("25-year" or "100-year").
+const scn = (c) => D.scenarioOf(c);
 const nf = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const isNum = (v) => v != null && v !== "" && Number.isFinite(+v);
 const fmt = (v) => (isNum(v) ? nf.format(Math.round(+v)) : "n/a");
@@ -206,14 +208,14 @@ function answerCard(m) {
     return `<div class="card answer"><p class="answer-text">Open ${top.length} dose points first: <strong>${names}</strong>. They put <strong>${pct(m.plans[k].share)}</strong> of exposed residents within a 30-minute walk.</p>
       <a class="btn btn-primary" href="#/map/${esc(c.code)}?plan=${k}">See them on the map</a></div>`;
   }
-  return `<div class="card answer"><p class="answer-text"><strong>${fmt(c.exposed)}</strong> of ${fmt(c.population)} residents (${pct(exposedShare)}) live where a 25-year flood reaches. Dose point plans were not computed for this city.</p>
+  return `<div class="card answer"><p class="answer-text"><strong>${fmt(c.exposed)}</strong> of ${fmt(c.population)} residents (${pct(exposedShare)}) live where a ${scn(c).label} flood reaches. Dose point plans were not computed for this city.</p>
     <a class="btn btn-primary" href="#/map/${esc(c.code)}">Open on map</a></div>`;
 }
 
 function overview(m) {
   const c = m.meta;
   const exposedShare = isNum(c.exposed_share) ? +c.exposed_share : isNum(c.population) && c.population > 0 ? c.exposed / c.population : null;
-  const cards = [statCard("Exposed residents", fmt(c.exposed), `${pct(exposedShare)} of ${fmt(c.population)} residents live where a 25-year flood reaches.`),
+  const cards = [statCard("Exposed residents", fmt(c.exposed), `${pct(exposedShare)} of ${fmt(c.population)} residents live where a ${scn(c).label} flood reaches.`),
     statCard("Capsules per flood week", fmt(c.weekly_capsules), "Doxycycline capsules needed each week the flood lasts.")];
   const notes = [];
   if (m.accessOk) {
@@ -322,10 +324,10 @@ function barangayPanel(m, panel, code) {
     <button type="button" class="btn ghost sm" id="brgy-more" aria-expanded="false">More columns</button>
     <button type="button" class="btn btn-primary sm" id="brgy-csv">Download CSV</button></div>
     <div class="table-wrap flat" id="brgy-wrap"><table class="table brgy" id="brgy-t"><caption class="sr-only">Barangays by priority</caption>
-    <thead><tr>${COLS.map((c) => `<th scope="col" data-k="${c.key}" class="${[c.text ? "l" : "", c.cls || ""].join(" ").trim()}" aria-sort="none" title="${esc(c.desc)}"><button type="button">${esc(c.label)}</button></th>`).join("")}</tr></thead><tbody></tbody></table></div>
+    <thead><tr>${COLS.map((c) => ({ ...c, desc: c.desc.replace("25-year", scn(m.meta).label) })).map((c) => `<th scope="col" data-k="${c.key}" class="${[c.text ? "l" : "", c.cls || ""].join(" ").trim()}" aria-sort="none" title="${esc(c.desc)}"><button type="button">${esc(c.label)}</button></th>`).join("")}</tr></thead><tbody></tbody></table></div>
     <div class="empty-state" id="brgy-empty" hidden><p></p><button type="button" class="btn ghost sm" id="brgy-clear">Clear search</button></div>
     <p class="note" id="brgy-count" role="status"></p>
-    <ul class="col-key">${COLS.map((c) => `<li><strong>${esc(c.label)}.</strong> ${esc(c.desc)}</li>`).join("")}</ul></div>`;
+    <ul class="col-key">${COLS.map((c) => `<li><strong>${esc(c.label)}.</strong> ${esc(c.desc.replace("25-year", scn(m.meta).label))}</li>`).join("")}</ul></div>`;
   const tbody = panel.querySelector("tbody"), q = panel.querySelector("#brgy-q"), count = panel.querySelector("#brgy-count");
   const wrap = panel.querySelector("#brgy-wrap"), table = panel.querySelector("#brgy-t"), empty = panel.querySelector("#brgy-empty");
   let sortKey = "priority", dir = 1;
@@ -473,7 +475,7 @@ export async function render(el, params = {}) {
 
   el.innerHTML = `<div class="city">
     <header class="city-head">
-      <div><p class="eyebrow">City dashboard</p><h1>${esc(c.name)}</h1><p class="sub">${esc(place)}</p></div>
+      <div><p class="eyebrow">City dashboard</p><h1>${esc(c.name)}</h1><p class="sub">${esc(place)}</p><p class="scn-line">Figures are for a ${scn(c).label} flood.${scn(c).note ? " " + esc(scn(c).note) : ""}</p></div>
       <div class="city-tools">
         <div class="city-switch"><label for="city-sel">Switch city</label><select id="city-sel" class="field">${opts}</select></div>
         <a class="btn ghost sm" href="#/map/${esc(c.code)}">Open on map</a>

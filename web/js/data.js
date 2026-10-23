@@ -80,10 +80,20 @@ function normAlertFromScores(scores) {
   };
 }
 
+export const NOTE_100 = "No 25-year flood map for this city. Showing the 100-year flood, which is larger.";
+/** Which flood a city's numbers are for. A missing scenario means the 25-year flood. */
+export function scenarioOf(c) {
+  const is100 = !!c && /100/.test(String(c.scenario || ""));
+  return { is100, yrs: is100 ? 100 : 25, label: is100 ? "100-year" : "25-year", note: is100 ? (c.scenario_note || NOTE_100) : "" };
+}
+
 function normCity(c) {
   const a = c.alert || {};
+  const sc = scenarioOf(c);
   return {
     ...c,
+    scenario: sc.is100 ? "100yr" : "25yr",
+    scenario_note: sc.note || null,
     lon: num(c.lon), lat: num(c.lat),
     barangays: num(c.barangays), population: num(c.population), exposed: num(c.exposed),
     exposed_share: share(c.exposed_share) ?? (num(c.population) ? num(c.exposed) / num(c.population) : null),
@@ -150,15 +160,22 @@ export function getNational() {
     const raw = await tryJSON(`${DATA}/national.json`);
     const cities = await getCities();
     const pick = (keys) => { for (const k of keys) if (raw && num(raw[k]) != null) return num(raw[k]); return null; };
-    const sum = (f) => cities.reduce((t, c) => t + (c[f] || 0), 0);
+    // Totals count only cities on the 25-year map. 100-year cities are listed apart, never added in.
+    const c25 = cities.filter((c) => !scenarioOf(c).is100);
+    const c100 = cities.filter((c) => scenarioOf(c).is100);
+    const sum = (f) => c25.reduce((t, c) => t + (c[f] || 0), 0);
+    const mixed = c100.length > 0;
+    // national.json is trusted only when every city is 25-year (then it equals the sum anyway)
+    const use = mixed ? () => null : pick;
     return {
       raw,
-      cities: pick(["cities", "n_cities"]) ?? cities.length,
-      barangays: pick(["barangays", "n_barangays"]) ?? sum("barangays"),
-      population: pick(["population", "total_population"]) ?? sum("population"),
-      exposed: pick(["exposed", "total_exposed", "exposed_total"]) ?? sum("exposed"),
-      weekly_capsules: pick(["weekly_capsules", "capsules_per_week", "total_weekly_capsules"]) ?? sum("weekly_capsules"),
-      access_gap: pick(["access_gap", "total_access_gap"]),
+      cities: use(["cities", "n_cities"]) ?? c25.length,
+      barangays: use(["barangays", "n_barangays"]) ?? sum("barangays"),
+      population: use(["population", "total_population"]) ?? sum("population"),
+      exposed: use(["exposed", "total_exposed", "exposed_total"]) ?? sum("exposed"),
+      weekly_capsules: use(["weekly_capsules", "capsules_per_week", "total_weekly_capsules"]) ?? sum("weekly_capsules"),
+      access_gap: use(["access_gap", "total_access_gap"]),
+      cities_100yr: c100,
     };
   });
 }

@@ -37,14 +37,36 @@ body.route-map #view{position:relative;padding-bottom:0}
 .src{margin:var(--s1) 0 0;font-size:var(--t-xs);line-height:1.45;color:var(--muted)}
 .src-m{display:none}
 .col-top::before{content:"";position:absolute;top:0;left:0;right:0;height:14px;z-index:1;background:repeating-linear-gradient(-45deg,var(--gold) 0 20px,#fff 20px 24px);pointer-events:none}
-.col-top .eyebrow{margin:0 0 var(--s1)}
-.q{font:700 var(--t-q) var(--f-display);line-height:1.2;color:var(--ink);margin:0 0 var(--s2)}
-.a p{margin:0 0 var(--s1);font-size:var(--t-md);line-height:1.5}
-.a .a-main{margin-bottom:0}
-.a .n{font:700 var(--t-lg) var(--f-display);line-height:1;color:var(--blue-dark);font-variant-numeric:tabular-nums;white-space:nowrap}
-.a b{color:var(--blue-dark)}
-.col-top .linkbtn{display:inline-flex;align-items:center;min-height:44px;padding:0;margin-top:var(--s0)}
+/* header group: city title and Change on one row, the flood it is for on a muted line below (4px inside, 16px after) */
+.col-top .eyebrow{margin:0 0 var(--s2);font:400 var(--t-sm)/1.3 var(--f-text);letter-spacing:0;text-transform:none;color:var(--muted)}
+.eyebrow .eb-city{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s1);margin-bottom:var(--s0)}
+.eb-city .cn{font:700 var(--t-md)/1.25 var(--f-display);color:var(--ink);min-width:0}
+.eb-change{flex:none;font:600 var(--t-sm) var(--f-text);text-transform:none;letter-spacing:0}
+.scn{width:fit-content;max-width:100%;margin:calc(var(--s1)*-1) 0 var(--s2);font-size:var(--t-xs);line-height:1.4;color:var(--muted);background:var(--blue-wash);border-radius:var(--radius-sm);padding:var(--s0) var(--s1)}
+.scn[hidden]{display:none}
+/* the question: one step smaller, at most 3 lines */
+.q{font:700 var(--t-q) var(--f-display);line-height:1.25;color:var(--ink);margin:0 0 var(--s2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.a p{margin:0;font-size:var(--t-sm);line-height:1.45}
+.a .a-main{margin-top:var(--s2);color:var(--muted)}
+/* answer: stat blocks side by side; the number on its own line, label under it */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--s2)}
+.stats.one{grid-template-columns:1fr}
+.st{display:flex;flex-direction:column;gap:var(--s0);min-width:0}
+.st-n{font:700 1.75rem/1.1 var(--f-display);color:var(--blue-dark);font-variant-numeric:tabular-nums;white-space:nowrap}
+.st-n .n{font:inherit;color:inherit;line-height:inherit}
+.st-l{font-size:var(--t-sm);line-height:1.35;color:var(--ink)}
+.st-s{font-size:var(--t-xs);line-height:1.35;color:var(--muted)}
+/* footer: tour link and source line, set off by a hairline */
+.col-foot{margin-top:var(--s2);padding-top:var(--s1);border-top:1px solid var(--line)}
+.col-foot .src{margin:0}
+.col-top .linkbtn{display:inline-flex;align-items:center;min-height:44px;padding:0}
 .col-top .linkbtn[hidden]{display:none}
+/* national view: dashed key, city list tags */
+.lg-dash{display:flex;gap:var(--s1);align-items:flex-start;margin-top:var(--s1);font-size:var(--t-xs);line-height:1.4;color:var(--muted)}
+.dsh{flex:none;width:16px;height:16px;border-radius:50%;border:2px dashed var(--blue);background:rgba(0,56,189,.14);margin-top:1px}
+.tag100{display:inline-block;margin-top:var(--s0);padding:1px var(--s1);border-radius:6px;background:var(--bg);color:var(--muted);font-size:var(--t-xs);font-weight:600}
+.citylist .grp{padding:var(--s1) var(--s1) var(--s0);font-size:var(--t-xs);line-height:1.4;color:var(--muted);border-top:1px solid var(--line);margin-top:var(--s1)}
+.city-pin.p100 span{color:var(--muted)}
 
 /* sections below the answer share one rhythm: same side padding, hairline above, 16px between parts */
 .sec{padding:var(--s2) var(--gx);border-top:1px solid var(--line)}
@@ -261,10 +283,14 @@ body.route-map #view{position:relative;padding-bottom:0}
   .col-top{padding-top:calc(14px + var(--s2))}
   .col-top .eyebrow,.col-top .q{padding-right:0}
   .col-more{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-  .a p{font-size:var(--t-sm);line-height:1.45}
-  .a .n{font-size:var(--t-md)}
-  .a .now{display:none}
-  .q{margin-bottom:var(--s1)}
+  .col-top .eyebrow{margin-bottom:var(--s1)}
+  .st-n{font-size:1.375rem}
+  .st-l{font-size:var(--t-xs)}
+  .st-s{display:none}
+  .stats{grid-template-columns:1fr 1fr;gap:var(--s1) var(--s2)}
+  .q{margin-bottom:var(--s1);font-size:1.0625rem}
+  .col-foot{margin-top:var(--s1);padding-top:0;border-top:0}
+  .col-foot .linkbtn{min-height:36px}
   .sec-legend .key{display:none}
   .col-top .src{display:none}
   .src-m{display:block;padding:0 var(--gx) var(--s2);margin:0}

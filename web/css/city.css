@@ -118,3 +118,5 @@
   .city .table.brgy .c-pop{display:none}
   .city .table.brgy.show-more .c-pop{display:table-cell}
 }
+
+.city-head .scn-line{margin:var(--s0) 0 0;max-width:56ch;font-size:var(--t-xs);line-height:1.4;color:var(--muted)}

@@ -1,4 +1,4 @@
-import { getNational, getCities, getCity } from "../data.js";
+import { getNational, getCities, getCity, scenarioOf } from "../data.js";
 import { RAMP, FLAT_CITY } from "../config.js";
 import { fmt, esc, useCss } from "../format.js";
 
@@ -54,7 +54,8 @@ function rollNumbers(root) {
 const onHide = () => { if (document.hidden) live.slice().forEach(settle); };
 
 const ARROW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-const FLOOD = '<abbr title="A flood big enough that it has about a 4% chance of happening in any year (UP NOAH hazard map)">25-year flood</abbr>';
+const floodAbbr = (y) => `<abbr title="A flood big enough that it has about a ${y === 100 ? "1" : "4"}% chance of happening in any year${y === 100 ? ". It is larger than a 25-year flood" : ""} (UP NOAH hazard map)">${y}-year flood</abbr>`;
+const FLOOD = floodAbbr(25);
 const stat = (l, v) => `<div><dt>${l}</dt><dd><span class="num" aria-hidden="true" data-to="${v}" data-final="${fmt(v)}">${fmt(v)}</span><span class="sr-only">${fmt(v)}</span></dd></div>`;
 
 export async function render(el) {
@@ -103,24 +104,26 @@ export async function render(el) {
   const h1 = el.querySelector("#answer"), strip = el.querySelector("#strip");
   let cities = [];
   try { cities = await getCities(); } catch { /* handled below */ }
-  const pilot = cities.find((c) => c.code === FLAT_CITY.code) || cities[0];
+  const c25 = cities.filter((c) => !scenarioOf(c).is100), n100 = cities.length - c25.length;
+  const pilot = c25.find((c) => c.code === FLAT_CITY.code) || c25[0] || cities[0];
   if (pilot && pilot.exposed != null) {
     const cov = pilot.coverage_after && pilot.coverage_after[3];
-    h1.innerHTML = `After a ${FLOOD}, ${fmt(pilot.exposed)} people in ${esc(pilot.name)} live in the water's path.` +
+    h1.innerHTML = `After a ${floodAbbr(scenarioOf(pilot).yrs)}, ${fmt(pilot.exposed)} people in ${esc(pilot.name)} live in the water's path.` +
       (cov != null ? ` <span class="h1-2">3 dose points put ${Math.round(cov * 100)}% of them within a <span class="nb">30-minute</span> walk of free medicine.</span>` : "");
   } else {
     h1.innerHTML = `After a ${FLOOD}, thousands of people live in the water's path. LAMBAT shows where to put dose points.`;
   }
   h1.removeAttribute("aria-busy");
   if (cities.length > 1) {
+    const n = c25.length;
     const a = el.querySelector("#cities");
-    a.textContent = `${fmt(cities.length)} cities covered. See the national map`;
+    a.textContent = n100 ? `${fmt(n)} cities with a 25-year flood map, ${fmt(n100)} more on the 100-year map. See the national map` : `${fmt(cities.length)} cities covered. See the national map`;
     a.hidden = false;
   }
   try {
     const n = await getNational();
     strip.innerHTML = [
-      stat(`residents exposed in a 25-year flood${n.cities > 1 ? `, ${fmt(n.cities)} cities` : ""}`, n.exposed),
+      stat(n.cities > 1 ? `exposed residents in ${fmt(n.cities)} cities with a 25-year flood map` : "residents exposed in a 25-year flood", n.exposed),
       stat("capsules needed for each week the water stays", n.weekly_capsules),
       stat("barangays ranked by priority", n.barangays),
     ].join("");

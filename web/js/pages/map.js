@@ -1,13 +1,13 @@
-import { getCities, getCity, cityHref } from "../data.js";
+import { getCities, getCity, cityHref, scenarioOf } from "../data.js";
 import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
 import { fmt, pct, esc, reducedMotion, useCss, skel, moreBelow } from "../format.js";
 
 const METRICS = [
-  { key: "exposed", seg: "Exposed", prop: "exposed", short: "Exposed residents", desc: "People who live where a 25-year flood reaches.",
+  { key: "exposed", seg: "Exposed", prop: "exposed", short: "Exposed residents", desc: "People who live where a {Y}-year flood reaches.",
     legend: "Exposed residents, per barangay", unit: "residents", lo: "fewer", hi: "more", f: fmt },
   { key: "unreached", seg: "Cut off", prop: "exposed_unreached_flood", short: "Residents cut off from care", desc: `Exposed residents more than a ${WALK_MIN}-minute walk from a clinic while the flood is on.`,
     legend: `Residents cut off from care, per barangay`, unit: "residents", lo: "fewer", hi: "more", f: fmt },
-  { key: "share", seg: "Area flooded", prop: "flooded_share", short: "Area flooded", desc: "How much of each barangay's land a 25-year flood covers.",
+  { key: "share", seg: "Area flooded", prop: "flooded_share", short: "Area flooded", desc: "How much of each barangay's land a {Y}-year flood covers.",
     legend: "Share of each barangay's area flooded", unit: "of the area", lo: "less", hi: "more", f: (v) => pct(v, 0) },
 ];
 const KINDS = {
@@ -31,10 +31,11 @@ const TEMPLATE = `
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
       </button>
       <p class="eyebrow" id="eyebrow"></p>
+      <p class="scn" id="scnNote" hidden></p>
       <h1 class="q" id="stripQ"></h1>
       <div class="a" id="answer"></div>
-      <button class="linkbtn" id="tourBtn" type="button" hidden>New here? Take the tour</button>
-      <p class="src" id="srcNote">Modelled from the UP NOAH 25-year flood map, WorldPop and OpenStreetMap. Not checked on the ground.</p>
+      <div class="col-foot"><button class="linkbtn" id="tourBtn" type="button" hidden>New here? Take the tour</button>
+      <p class="src" id="srcNote">Modelled from the UP NOAH <span class="yr">25</span>-year flood map, WorldPop and OpenStreetMap. Not checked on the ground.</p></div>
     </header>
     <div class="col-more" id="colMore">
       <section class="sec sec-sites" id="sites" aria-labelledby="sitesH" hidden>
@@ -58,7 +59,7 @@ const TEMPLATE = `
         <ul class="citylist" id="cityList"></ul>
       </section>
       <section class="sec sec-legend" id="legend" aria-label="Legend"></section>
-      <p class="src src-m" id="srcNoteM">Modelled from the UP NOAH 25-year flood map, WorldPop and OpenStreetMap. Not checked on the ground.</p>
+      <p class="src src-m" id="srcNoteM">Modelled from the UP NOAH <span class="yr">25</span>-year flood map, WorldPop and OpenStreetMap. Not checked on the ground.</p>
     </div>
   </aside>
 
@@ -142,14 +143,24 @@ function loaderStuck(html) {
 const $ = (s) => host.querySelector(s);
 const dur = (n) => (reducedMotion() ? 0 : n);
 const cityName = () => { const c = S.cities.find((x) => x.code === S.city); return c ? c.name : ""; };
-const years = () => { const m = S.data && S.data.summary && /(\d+)/.exec(S.data.summary.scenario || ""); return m ? +m[1] : YEARS_DEFAULT; };
+const metaOf = (code) => S && S.cities.find((x) => x.code === code);
+// The flood the current city's numbers are for: 25 or 100.
+const years = () => { const c = metaOf(S.city || S.pre); return c ? scenarioOf(c).yrs : YEARS_DEFAULT; };
+const nat25 = () => S.cities.filter((c) => !scenarioOf(c).is100);
+const nat100 = () => S.cities.filter((c) => scenarioOf(c).is100);
+// The quiet badge under the eyebrow, and the year in the source line.
+function setScn(c) {
+  const sc = c ? scenarioOf(c) : null, n = $("#scnNote");
+  if (n) { n.hidden = !(sc && sc.is100); n.textContent = sc && sc.is100 ? sc.note : ""; }
+  host.querySelectorAll(".src .yr").forEach((e) => { e.textContent = sc ? sc.yrs : YEARS_DEFAULT; });
+}
 const sig2 = (v) => { if (v == null) return 0; if (Math.abs(v) < 100) return Math.round(v); const p = 10 ** (Math.floor(Math.log10(Math.abs(v))) - 1); return Math.round(v / p) * p; };
 
 export async function render(el, params) {
   useCss("map");
   host = el;
   mobile = window.matchMedia(SHEET_Q);
-  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "3", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], sites: [], active: null, hover: null, open: null, rollKey: null, peek: 320, cityMarkers: [], tour: null, params, dead: false, ready: false, colHidden: false };
+  S = { cities: [], city: null, pre: null, data: null, metric: METRICS[0], view: "2d", plan: "3", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], sites: [], active: null, hover: null, open: null, rollKey: null, peek: 320, cityMarkers: [], tour: null, params, dead: false, ready: false, colHidden: false };
   clearTimeout(I.chipT);
   Object.assign(I, { key: null, kind: null, stage: null, chip: null, cur: null, hover: null, rolled: null, live: "" });
   el.innerHTML = TEMPLATE;
@@ -291,20 +302,38 @@ async function onLoad() {
 }
 
 /* ---------- national view: flat circles sized by exposed residents ---------- */
+const NAT_IDS = ["nat-dot", "nat-dot100", "nat-ring100"];
+const setNat = (on) => NAT_IDS.forEach((id) => { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); });
+// A dashed circle drawn once on a canvas, in the brand blue.
+function dashRing(n) {
+  const cv = document.createElement("canvas"); cv.width = cv.height = n;
+  const g = cv.getContext("2d"); g.strokeStyle = COLORS.blue; g.lineWidth = 5; g.setLineDash([14, 10]); g.lineCap = "butt";
+  g.beginPath(); g.arc(n / 2, n / 2, n / 2 - 4, 0, Math.PI * 2); g.stroke();
+  return g.getImageData(0, 0, n, n);
+}
 const natRadius = (e, mx) => Math.min(34, Math.max(9, 9 + Math.sqrt((e || 0) / mx) * 25));
 function buildNational() {
   const mx = Math.max(...S.cities.map((c) => c.exposed || 0), 1);
-  const gj = { type: "FeatureCollection", features: S.cities.map((c) => ({ type: "Feature", properties: { code: c.code, r: natRadius(c.exposed, mx) }, geometry: { type: "Point", coordinates: [c.lon, c.lat] } })) };
+  const gj = { type: "FeatureCollection", features: S.cities.map((c) => ({ type: "Feature", properties: { code: c.code, r: natRadius(c.exposed, mx), s100: scenarioOf(c).is100 ? 1 : 0 }, geometry: { type: "Point", coordinates: [c.lon, c.lat] } })) };
   map.addSource("nat", { type: "geojson", data: gj });
-  map.addLayer({ id: "nat-dot", type: "circle", source: "nat", layout: { visibility: "none" }, paint: { "circle-radius": ["get", "r"], "circle-color": COLORS.blue, "circle-opacity": 0.55, "circle-stroke-color": "#FFFFFF", "circle-stroke-width": 2 } });
-  map.on("click", "nat-dot", (e) => selectCity(e.features[0].properties.code));
-  map.on("mouseenter", "nat-dot", () => { map.getCanvas().style.cursor = "pointer"; });
-  map.on("mouseleave", "nat-dot", () => { map.getCanvas().style.cursor = ""; });
+  const f100 = ["==", ["get", "s100"], 1], f25 = ["!=", ["get", "s100"], 1];
+  map.addLayer({ id: "nat-dot", type: "circle", source: "nat", filter: f25, layout: { visibility: "none" }, paint: { "circle-radius": ["get", "r"], "circle-color": COLORS.blue, "circle-opacity": 0.55, "circle-stroke-color": "#FFFFFF", "circle-stroke-width": 2 } });
+  // 100-year cities: a pale fill and a dashed ring, so they are not read against the 25-year circles
+  if (!map.hasImage("dash-ring")) map.addImage("dash-ring", dashRing(128), { pixelRatio: 1 });
+  map.addLayer({ id: "nat-dot100", type: "circle", source: "nat", filter: f100, layout: { visibility: "none" }, paint: { "circle-radius": ["get", "r"], "circle-color": COLORS.blue, "circle-opacity": 0.14 } });
+  map.addLayer({ id: "nat-ring100", type: "symbol", source: "nat", filter: f100, layout: { visibility: "none", "icon-image": "dash-ring", "icon-size": ["/", ["*", ["get", "r"], 2.3], 128], "icon-allow-overlap": true, "icon-ignore-placement": true } });
+  NAT_IDS.forEach((id) => {
+    map.on("click", id, (e) => selectCity(e.features[0].properties.code));
+    map.on("mouseenter", id, () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", id, () => { map.getCanvas().style.cursor = ""; });
+  });
   S.cities.forEach((c) => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "city-pin";
-    b.innerHTML = `<b>${esc(c.name)}</b><span>${fmt(c.exposed)} exposed residents</span>`;
-    b.setAttribute("aria-label", `${c.name}, ${fmt(c.exposed)} residents exposed. Open this city.`);
+    const c100 = scenarioOf(c).is100;
+    b.innerHTML = `<b>${esc(c.name)}</b><span>${fmt(c.exposed)} exposed residents${c100 ? ", 100-year flood" : ""}</span>`;
+    b.setAttribute("aria-label", `${c.name}, ${fmt(c.exposed)} residents exposed${c100 ? " to a 100-year flood, which is larger than a 25-year flood" : ""}. Open this city.`);
+    if (c100) b.classList.add("p100");
     b.addEventListener("click", () => selectCity(c.code));
     b.style.display = "none";
     S.cityMarkers.push(new maplibregl.Marker({ element: b, anchor: "left", offset: [natRadius(c.exposed, mx) + 6, 0] }).setLngLat([c.lon, c.lat]).addTo(map));
@@ -331,13 +360,13 @@ function mapReady() {
 }
 function showNational(first) {
   endTour(false);
-  S.city = null; S.data = null; S.active = null; S.hover = null; clearSel();
+  S.city = null; S.pre = null; S.data = null; S.active = null; S.hover = null; clearSel();
   setCityLayers(false);
   if (map.getLayer("b-hov")) { map.setLayoutProperty("b-hov", "visibility", "none"); S.hovB = null; }
   I.hover = null; if (!first) S.ready = true;
   map.setTerrain(null);
   map.setLayoutProperty("hill", "visibility", "none");
-  map.setLayoutProperty("nat-dot", "visibility", "visible");
+  setNat(true);
   if (map.getLayer("s1-fill")) map.setLayoutProperty("s1-fill", "visibility", "none");
   S.cityMarkers.forEach((m) => { m.getElement().style.display = ""; });
   clearDose(); S.rollKey = null;
@@ -439,7 +468,7 @@ function syncMeasure() {
   const ms = $("#measures"), i = METRICS.indexOf(S.metric), inp = ms.querySelectorAll("input");
   if (inp[i]) inp[i].checked = true;
   ms.style.setProperty("--i", Math.max(0, i));
-  $("#measureDesc").textContent = S.metric.desc;
+  $("#measureDesc").textContent = S.metric.desc.replace("{Y}", years());
 }
 function ensureCityLayers() {
   if (map.getSource("brgy")) { map.getSource("brgy").setData(S.data.barangays); return; }
@@ -526,7 +555,7 @@ async function selectCity(code, first) {
   S.scaleH = Math.max(300, diag * 0.06);
   ensureCityLayers();
   S.cityMarkers.forEach((m) => { m.getElement().style.display = "none"; });
-  map.setLayoutProperty("nat-dot", "visibility", "none");
+  setNat(false);
   // Pick a plan this city actually has.
   const avail = availPlans();
   if (!avail.includes(S.plan)) S.plan = avail.includes("3") ? "3" : avail[0] || "3";
@@ -787,7 +816,9 @@ function buildPlanSeg() {
 function preStrip(params) {
   if (params.code === "all") return;
   const c = S.cities.find((x) => x.code === params.code) || S.cities[0];
+  S.pre = c.code;
   $("#eyebrow").innerHTML = eyebrowHtml(c.name, false);
+  setScn(c);
   $("#stripQ").textContent = "Where should the city hand out free leptospirosis medicine?";
   const a = $("#answer");
   a.setAttribute("aria-busy", "true");
@@ -804,13 +835,15 @@ function unbusy() {
 }
 const nb = (t) => `<span class="nb">${t}</span>`;
 // Two short lines: where, then the flood the numbers are for (with its definition one tap away).
-const eyebrowHtml = (name, canChange) => `<span class="eb-l">${esc(name)}${canChange ? ` · <button class="eb-change" id="changeCity" type="button">change</button>` : ""}</span><span class="eb-l">After a ${nb(tipBtn("flood25", `${years()}-year flood`, `What is a ${years()}-year flood?`))}</span>`;
+const eyebrowHtml = (name, canChange) => `<span class="eb-l eb-city"><span class="cn">${esc(name)}</span>${canChange ? `<button class="eb-change" id="changeCity" type="button">Change</button>` : ""}</span><span class="eb-l eb-fl">After a ${nb(tipBtn("flood25", `${years()}-year flood`, `What is a ${years()}-year flood?`))}</span>`;
+// One stat block: the number on its own line, a short label under it, an optional quiet sub-line.
+const statBlock = (num, label, sub) => `<div class="st"><span class="st-n">${num}</span><span class="st-l">${label}</span>${sub ? `<span class="st-s">${sub}</span>` : ""}</div>`;
 const WALK = nb(`${WALK_MIN}-minute walk`);
 // A small "?" next to a term opens a one-line definition.
 // The term itself is the button: dotted blue underline plus a small solid "?" glyph.
 const tipBtn = (k, term, label) => `<button class="tip-q" type="button" data-tip="${k}" aria-label="${label}" aria-expanded="false" aria-controls="tipPop"><span class="tip-t">${term}</span><span class="tip-g" aria-hidden="true">?</span></button>`;
 const TIPS = () => ({
-  flood25: { t: `${years()}-year flood`, b: `A flood big enough that it has about a ${Math.round(100 / years())}% chance of happening in any year (UP NOAH hazard map).` },
+  flood25: { t: `${years()}-year flood`, b: `A flood big enough that it has about a ${Math.round(100 / years())}% chance of happening in any year${years() === 100 ? ". It is larger than a 25-year flood" : ""} (UP NOAH hazard map).` },
   exposed: { t: "Exposed residents", b: `People who live where a ${years()}-year flood reaches.` },
   dose: { t: "Dose point", b: "A temporary spot, like a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood." },
 });
@@ -837,12 +870,16 @@ function renderStrip() {
   if (!S.city) {
     eb.innerHTML = eyebrowHtml("Philippines", false);
     q.textContent = "Where does a flood put the most people at risk of leptospirosis?";
-    const tot = S.cities.reduce((t, c) => t + (c.exposed || 0), 0);
-    $("#answer").innerHTML = `<p class="a-lead">${rollNum(tot, "n")} residents in ${S.cities.length} ${S.cities.length === 1 ? "city are" : "cities are"} ${nb(tipBtn("exposed", "exposed", "What does exposed mean?"))} to a ${YEARS_DEFAULT}-year flood.</p><p class="a-main">Pick a city to see where to hand out free medicine first.</p>`;
+    setScn(null);
+    const c25 = nat25(), k100 = nat100().length;
+    const tot = c25.reduce((t, c) => t + (c.exposed || 0), 0);
+    const more = k100 ? ` ${k100} more ${k100 === 1 ? "city is" : "cities are"} shown on the 100-year flood map. A 100-year flood is larger, so ${k100 === 1 ? "it is" : "they are"} not added in.` : "";
+    $("#answer").innerHTML = `<div class="stats one">${statBlock(rollNum(tot, "n"), `${nb(tipBtn("exposed", "exposed residents", "What does exposed mean?"))} in ${c25.length} ${c25.length === 1 ? "city" : "cities"} with a ${nb(YEARS_DEFAULT + "-year")} flood map`)}</div><p class="a-main">Pick a city to see where to hand out free medicine first.${more}</p>`;
     roll($("#answer"));
     return;
   }
   eb.innerHTML = eyebrowHtml(cityName(), S.cities.length > 1);
+  setScn(metaOf(S.city));
   q.textContent = "Where should the city hand out free leptospirosis medicine?";
   renderSentence();
 }
@@ -858,14 +895,14 @@ function renderSentence() {
   const a = $("#answer");
   a.removeAttribute("aria-busy");
   trackPlan(share);
-  const lead = exposed != null ? `<p class="a-lead">${rollNum(exposed, "n")} residents are ${nb(tipBtn("exposed", "exposed", "What does exposed mean?"))} to a ${years()}-year flood.</p>` : "";
+  const exTip = nb(tipBtn("exposed", "exposed residents", "What does exposed mean?"));
   let html;
-  if (share != null) {
-    html = `${lead}<p class="a-main">Opening <b>${S.plan}</b> temporary ${nb(tipBtn("dose", "dose points", "What is a dose point?"))} brings ${rollNum(share * 100, "p")} of them within a ${WALK} of free doxycycline${now != null ? `<span class="now">, up from ${pct(now, 0)} now</span>` : ""}.</p>`;
-  } else if (exposed != null) {
-    html = `${lead}<p class="a-main">Dose point plans are not computed for this city yet, so the map shows where the water reached.</p>`;
+  if (exposed == null) html = `<p class="a-main">Flood exposure and dose point plans are not available for this city yet.</p>`;
+  else if (share != null) {
+    const dose = nb(tipBtn("dose", `${S.plan} dose points`, "What is a dose point?"));
+    html = `<div class="stats">${statBlock(rollNum(exposed, "n"), exTip)}${statBlock(rollNum(share * 100, "p"), `within a ${nb(WALK_MIN + "-minute")} walk with ${dose}`, now != null ? `${pct(now, 0)} with none` : "")}</div>`;
   } else {
-    html = `<p class="a-main">Flood exposure and dose point plans are not available for this city yet.</p>`;
+    html = `<div class="stats one">${statBlock(rollNum(exposed, "n"), exTip)}</div><p class="a-main">Dose point plans are not computed for this city yet, so the map shows where the water reached.</p>`;
   }
   const next = html.trim();
   if (a.innerHTML !== next) {
@@ -896,7 +933,8 @@ function trackPlan(share) {
 function renderLegend() {
   const lg = $("#legend");
   if (!S.city) {
-    lg.innerHTML = `<div class="metric-name">Circle size: exposed residents</div><p class="map-note" style="margin:0">A bigger circle means more exposed residents: people who live where a ${YEARS_DEFAULT}-year flood reaches. Pick a city to open its map.</p>`;
+    const has100 = nat100().length > 0;
+    lg.innerHTML = `<div class="metric-name">Circle size: exposed residents</div><p class="map-note" style="margin:0">A bigger circle means more exposed residents: people who live where a ${YEARS_DEFAULT}-year flood reaches. Pick a city to open its map.</p>${has100 ? `<div class="lg-dash"><i class="dsh" aria-hidden="true"></i><span>100-year cities drawn with a dashed outline. A 100-year flood is larger, so do not compare these circles with the others.</span></div>` : ""}`;
     return;
   }
   const m = S.metric, edges = [S.hasZero ? S.minPos : S.min, ...S.breaks, S.max], n = Math.max(1, S.breaks.length + 1);
@@ -1141,9 +1179,9 @@ function islWant() {
   }
   if (!S.ready) { const st = I.stage || { n: 1, text: "Getting the basemap" }; return { kind: "load", key: "load", st, html: loadHtml(st), live: "Loading the map." }; }
   if (!S.city || !S.data) {
-    const tot = S.cities.reduce((t, c) => t + (c.exposed || 0), 0), n = S.cities.length;
-    const text = `${fmt(tot)} exposed residents in ${n} ${n === 1 ? "city" : "cities"}`;
-    return { kind: "nat", key: "n|" + tot, html: `<span class="isl-t"><b class="n">${fmt(tot)}</b> exposed residents in ${n} ${n === 1 ? "city" : "cities"}</span>`, live: text + "." };
+    const c25 = nat25(), tot = c25.reduce((t, c) => t + (c.exposed || 0), 0), n = c25.length;
+    const tail = `in ${n} ${n === 1 ? "city" : "cities"} with a 25-year flood map`;
+    return { kind: "nat", key: "n|" + tot + "|" + n, html: `<span class="isl-t"><b class="n">${fmt(tot)}</b> exposed residents ${tail}</span>`, live: `${fmt(tot)} exposed residents ${tail}.` };
   }
   const sum = S.data.summary || {}, meta = S.data.meta || {}, cov = S.data.coverage || {};
   const exposed = sum.exposed != null ? sum.exposed : meta.exposed;
@@ -1338,7 +1376,7 @@ function setPeek() {
 function syncSheet() {
   // On phones the plan picker joins the question and answer, so it shows in the peek state.
   const pp = $("#planPick"), ph = $(".plan-h");
-  if (mobile.matches) { if (pp.parentNode !== $("#colTop")) $("#colTop").insertBefore(pp, $("#tourBtn")); }
+  if (mobile.matches) { if (pp.parentNode !== $("#colTop")) $("#colTop").insertBefore(pp, $(".col-foot")); }
   else if (pp.parentNode !== ph) ph.appendChild(pp);
   setPeek(); attachMore();
   if (!mobile.matches) { $("#colMore").inert = false; $("#col").style.transform = ""; }
@@ -1431,7 +1469,9 @@ function wire() {
   const draw = (q = "") => {
     const t = q.trim().toLowerCase();
     const rows = S.cities.filter((c) => !t || `${c.name} ${c.province} ${c.region}`.toLowerCase().includes(t));
-    list.innerHTML = rows.length ? rows.map((c) => `<li><button type="button" data-c="${esc(c.code)}"><span class="n">${esc(c.name)}<span class="p">${esc(c.province || "")}${c.region ? ", " + esc(c.region) : ""}</span></span><span class="v" aria-label="${fmt(c.exposed)} residents exposed">${fmt(c.exposed)}</span></button></li>`).join("") : '<li class="muted sm" style="padding:8px">No city matches.</li>';
+    const item = (c) => { const h = scenarioOf(c).is100; return `<li><button type="button" data-c="${esc(c.code)}"><span class="n">${esc(c.name)}<span class="p">${esc(c.province || "")}${c.region ? ", " + esc(c.region) : ""}</span>${h ? '<span class="tag100">100-year map</span>' : ""}</span><span class="v" aria-label="${fmt(c.exposed)} residents exposed${h ? " to a 100-year flood" : ""}">${fmt(c.exposed)}</span></button></li>`; };
+    const a = rows.filter((c) => !scenarioOf(c).is100), b = rows.filter((c) => scenarioOf(c).is100);
+    list.innerHTML = rows.length ? a.map(item).join("") + (b.length ? `<li class="grp" role="presentation">100-year flood map. A larger flood, so not comparable with the cities above.</li>` + b.map(item).join("") : "") : '<li class="muted sm" style="padding:8px">No city matches.</li>';
   };
   draw();
   $("#cityPick").addEventListener("input", (e) => draw(e.target.value));
