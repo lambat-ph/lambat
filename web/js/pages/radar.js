@@ -89,9 +89,7 @@ const CHART = `
 <svg class="rd-chart" viewBox="0 0 420 260" role="img" aria-labelledby="ch-t ch-d">
   <title id="ch-t">Pooled IoU on 90 test chips</title>
   <desc id="ch-d">Bar chart. U-Net scores 0.639. Otsu threshold scores 0.208. Higher is better, 1 is perfect.</desc>
-  <g class="gridl"><line x1="60" x2="400" y1="20" y2="20"/><line x1="60" x2="400" y1="70" y2="70"/><line x1="60" x2="400" y1="120" y2="120"/><line x1="60" x2="400" y1="170" y2="170"/></g>
   <line class="axis" x1="60" x2="400" y1="220" y2="220"/>
-  <g class="t-sm t-mu" text-anchor="end"><text x="52" y="224">0</text><text x="52" y="174">0.25</text><text x="52" y="124">0.5</text><text x="52" y="74">0.75</text><text x="52" y="24">1</text></g>
   ${bar(100, 0.639, "bar-u")}${bar(260, 0.208, "bar-o")}
   <text class="v" x="150" y="${(220 - 0.639 * H - 8).toFixed(1)}" text-anchor="middle">0.639</text>
   <text class="v" x="310" y="${(220 - 0.208 * H - 8).toFixed(1)}" text-anchor="middle">0.208</text>

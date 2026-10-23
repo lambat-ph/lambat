@@ -2,16 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#EEEEEE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0E16" media="(prefers-color-scheme: dark)">
 <title>LAMBAT: get the capsule across the water</title>
 <meta name="description" content="LAMBAT shows a city health office who was exposed to floodwater, who can still walk to care, and where to open temporary doxycycline dose points.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="css/base.css">
-<script>try{document.documentElement.dataset.nav=localStorage.getItem("lambat.nav")||(/^#\/map/.test(location.hash)?"closed":"open")}catch(e){document.documentElement.dataset.nav="open"}</script>
+<script>try{document.documentElement.dataset.nav=localStorage.getItem("lambat.nav")||(/^#\/map/.test(location.hash)||innerWidth<1024?"closed":"open")}catch(e){document.documentElement.dataset.nav="open"}</script>
 </head>
 <body>
 <a class="skip" href="#view" id="skip">Skip to content</a>

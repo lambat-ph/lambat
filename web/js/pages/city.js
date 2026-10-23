@@ -167,7 +167,7 @@ function overview(m) {
   let cov;
   if (m.sitingOk) {
     const trio = ["3", "5", "8"].map((k) => `<div><span class="num">${m.plans[k] ? pct(m.plans[k].share) : "n/a"}</span><span class="lab">${k} points</span></div>`).join("");
-    cov = `<div class="card stat"><span class="stat-label">Within reach after dose points</span><div class="stat-trio" style="margin-top:4px">${trio}</div><p class="stat-caption">Share of exposed residents within a 30-minute walk of care if 3, 5 or 8 dose points open.</p></div>`;
+    cov = `<div class="card stat"><span class="stat-label">Within reach after dose points</span><div class="stat-trio">${trio}</div><p class="stat-caption">Share of exposed residents within a 30-minute walk of care if 3, 5 or 8 dose points open.</p></div>`;
   } else {
     cov = statCard("Within reach after dose points", "n/a", "Dose point plans not computed for this city.");
   }
@@ -193,23 +193,23 @@ function planRows(m) {
     return `<tr><td>${k}</td><td>${p.sites ? p.sites.length : "n/a"}</td><td>${fmt(p.newly)}</td><td>${pct(p.share, 1)}</td></tr>`;
   }).join("");
 }
-function covChart(m) {
+function covChart(m, W = 520) {
   const bars = [];
+  const narrow = W < 440;
   if (m.dry != null) bars.push({ k: "Dry day", sub: "no flood", v: m.dry, c: "b-dry" });
-  if (m.flood != null) bars.push({ k: "In the flood", sub: "no dose points", v: m.flood, c: "b-flood" });
-  ["3", "5", "8"].forEach((k) => { if (m.plans[k] && m.plans[k].share != null) bars.push({ k: "+" + k + " points", sub: "dose points open", v: m.plans[k].share, c: "b-plan" }); });
+  if (m.flood != null) bars.push({ k: narrow ? "Flood" : "In the flood", sub: narrow ? "no points" : "no dose points", v: m.flood, c: "b-flood" });
+  ["3", "5", "8"].forEach((k) => { if (m.plans[k] && m.plans[k].share != null) bars.push({ k: narrow ? "+" + k : "+" + k + " points", sub: narrow ? "points" : "dose points open", v: m.plans[k].share, c: "b-plan" }); });
   if (!bars.length) return "";
-  const W = 640, H = 320, L = 52, R = 12, T = 28, B = 62;
-  const step = (W - L - R) / bars.length, bw = Math.min(72, step - 16);
+  const H = 260, L = 8, R = 8, T = 28, B = 52;
+  const step = (W - L - R) / bars.length, bw = Math.min(64, step - 12);
   const Y = (v) => T + (H - T - B) * (1 - v);
   let s = "";
-  [0, .25, .5, .75, 1].forEach((g) => { s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(g)}" y2="${Y(g)}"/><text x="${L - 8}" y="${Y(g) + 4}" text-anchor="end">${Math.round(g * 100)}%</text>`; });
-  s += `<text class="axis-title" transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Within a 30-minute walk</text>`;
+  s += `<line class="grid base" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>`;
   bars.forEach((b, i) => {
     const x = L + step * i + (step - bw) / 2, y = Y(b.v);
-    s += `<rect class="${b.c}" x="${x}" y="${y}" width="${bw}" height="${Y(0) - y}" rx="4"/>`;
+    s += `<rect class="${b.c}" x="${x}" y="${y}" width="${bw}" height="${Y(0) - y}" rx="6"/>`;
     s += `<text class="val" x="${x + bw / 2}" y="${y - 8}" text-anchor="middle">${pct(b.v)}</text>`;
-    s += `<text class="b-lab" x="${x + bw / 2}" y="${H - 38}" text-anchor="middle">${esc(b.k)}</text><text x="${x + bw / 2}" y="${H - 22}" text-anchor="middle">${esc(b.sub)}</text>`;
+    s += `<text class="b-lab" x="${x + bw / 2}" y="${H - 30}" text-anchor="middle">${esc(b.k)}</text><text x="${x + bw / 2}" y="${H - 14}" text-anchor="middle">${esc(b.sub)}</text>`;
   });
   const desc = "Share of exposed residents within a 30-minute walk of care. " + bars.map((b) => `${b.k}: ${pct(b.v)}`).join(". ") + ".";
   return `<svg class="chart-city" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${s}</svg>`;
@@ -218,17 +218,17 @@ function dosePanel(m) {
   if (!m.sitingOk) return `<div class="card"><h2 class="card-title">Dose points</h2><p class="empty">Dose point plans were not computed for this city${m.accessOk ? "" : ": road data unavailable"}.</p></div>`;
   const feats = (m.dose.features || []).map((f) => f.properties || {}).sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
   const list = feats.length
-    ? `<h3 class="card-title" style="margin-top:var(--s3)">Candidate sites, in order of rank</h3><div class="table-wrap"><table class="table"><caption class="sr-only">Dose point sites by rank</caption><thead><tr><th scope="col">Rank</th><th scope="col" class="l">Site</th><th scope="col" class="l">Type</th></tr></thead><tbody>${feats.map((p) => `<tr><td>${esc(p.rank ?? "")}</td><td class="l">${esc(p.name || p.id || "Unnamed")}</td><td class="l">${esc(p.kind || "")}</td></tr>`).join("")}</tbody></table></div>`
+    ? `<h3 class="card-title">Candidate sites, in order of rank</h3><div class="table-wrap"><table class="table"><caption class="sr-only">Dose point sites by rank</caption><thead><tr><th scope="col">Rank</th><th scope="col" class="l">Site</th><th scope="col" class="l">Type</th></tr></thead><tbody>${feats.map((p) => `<tr><td>${esc(p.rank ?? "")}</td><td class="l">${esc(p.name || p.id || "Unnamed")}</td><td class="l">${esc(p.kind || "")}</td></tr>`).join("")}</tbody></table></div>`
     : "";
   return `<div class="city-grid two">
     <div class="card"><h2 class="card-title">Plans</h2>
       <p class="caption">How many exposed residents each plan brings within reach.</p>
       <div class="table-wrap"><table class="table"><caption class="sr-only">Dose point plans</caption>
-      <thead><tr><th scope="col">k</th><th scope="col">Sites</th><th scope="col">Newly covered</th><th scope="col">Within reach after</th></tr></thead>
+      <thead><tr><th scope="col">Plan</th><th scope="col">Sites</th><th scope="col">Newly covered</th><th scope="col">Within reach after</th></tr></thead>
       <tbody>${planRows(m)}</tbody></table></div>
       <p class="note">Each plan is optimised separately, so the 5-point plan is not the 3-point plan plus two.</p></div>
     <div class="card"><h2 class="card-title">Share within a 30-minute walk</h2>
-      <p class="caption">Exposed residents who can walk to care or a dose point.</p>${covChart(m)}</div>
+      <p class="caption">Exposed residents who can walk to care or a dose point.</p><div class="chart-host" data-chart="cov">${covChart(m)}</div></div>
     ${list ? `<div class="card wide">${list}</div>` : ""}
   </div>`;
 }
@@ -297,19 +297,19 @@ function barangayPanel(m, panel, code) {
   draw();
 }
 
-function lineChart(series, years) {
-  const W = 760, H = 340, L = 52, R = 16, T = 16, B = 62, n = series.length;
+function lineChart(series, years, W = 760) {
+  const H = 280, L = 30, R = 8, T = 24, B = 48, n = series.length;
   const mx = Math.max(2, Math.ceil(Math.max(...series.map((d) => Math.max(d.actual, d.rain, d.seasonal)))));
   const X = (i) => L + ((W - L - R) * i) / Math.max(1, n - 1), Y = (v) => T + (H - T - B) * (1 - v / mx);
   let s = "";
-  const stepY = mx > 10 ? 2 : 1;
+  const stepY = Math.max(1, Math.ceil(mx / 4));
   for (let g = 0; g <= mx; g += stepY) s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(g)}" y2="${Y(g)}"/><text x="${L - 8}" y="${Y(g) + 4}" text-anchor="end">${g}</text>`;
   const seen = {};
-  series.forEach((d, i) => { const y = d.week.slice(0, 4); if (!seen[y]) { seen[y] = 1; s += `<line class="grid" x1="${X(i)}" x2="${X(i)}" y1="${T}" y2="${H - B}"/><text x="${X(i) + 4}" y="${H - B + 16}">${y}</text>`; } });
+  series.forEach((d, i) => { const y = d.week.slice(0, 4); if (!seen[y]) { seen[y] = 1; s += `<line class="tick" x1="${X(i)}" x2="${X(i)}" y1="${H - B}" y2="${H - B + 6}"/><text x="${X(i) + 4}" y="${H - B + 18}">${y}</text>`; } });
   const pl = (key, cls) => `<polyline class="${cls}" points="${series.map((d, i) => X(i).toFixed(1) + "," + Y(d[key]).toFixed(1)).join(" ")}"/>`;
   s += pl("seasonal", "l-seas") + pl("rain", "l-rain") + pl("actual", "l-actual");
-  s += `<text class="axis-title" transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Cases per week</text>`;
-  s += `<text class="axis-title" x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle">Week, ${years[0]} to ${years[1]}</text>`;
+  s += `<text class="axis-title" x="${L - 24}" y="${T - 10}">Cases per week</text>`;
+  s += `<text class="axis-title" x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle">Week, ${years[0]} to ${years[1]}</text>`;
   const tot = series.reduce((t, d) => t + d.actual, 0);
   const peak = series.reduce((b, d) => (d.actual > b.actual ? d : b), series[0]);
   const desc = `Weekly leptospirosis cases from ${series[0].week} to ${series[n - 1].week}. Actual cases total ${tot}, peaking at ${peak.actual} in the week of ${peak.week}.`;
@@ -332,7 +332,7 @@ function alertPanel(m) {
   if (m.series && m.series.length > 1) {
     const ch = lineChart(m.series, a.years);
     chart = `<div class="card" style="margin-top:var(--s2)"><h2 class="card-title">Weekly cases, actual and predicted</h2>
-      ${ch.svg}
+      <div class="chart-host" data-chart="line">${ch.svg}</div>
       <ul class="legend"><li><span class="ln"></span>Actual cases</li><li><span class="ln rain"></span>Rain model</li><li><span class="ln seas"></span>Seasonal baseline (dashed)</li></ul>
       <p class="note">${esc(ch.desc)} The rain model is ${isNum(a.corr) ? "correlated " + dec(a.corr) : "scored"}${isNum(a.bCorr) ? ` against ${dec(a.bCorr)} for the seasonal baseline` : ""}.</p></div>`;
   } else {
@@ -388,6 +388,19 @@ export async function render(el, params = {}) {
   Object.entries(panels).forEach(([id, html]) => { el.querySelector("#panel-" + id).innerHTML = html; });
   barangayPanel(m, el.querySelector("#panel-barangays"), c.code);
 
+  // Charts redraw to the width they are shown at, so their text stays a readable size on any screen.
+  const hosts = [...el.querySelectorAll(".chart-host")];
+  if (hosts.length && "ResizeObserver" in window) {
+    const ro = new ResizeObserver((entries) => entries.forEach((en) => {
+      const h = en.target, w = Math.round(en.contentRect.width);
+      if (w < 200 || Math.abs(w - (+h.dataset.w || 0)) < 8) return;
+      h.dataset.w = w;
+      if (h.dataset.chart === "cov") h.innerHTML = covChart(m, w);
+      else if (m.series) h.innerHTML = lineChart(m.series, m.alert.years, w).svg;
+    }));
+    hosts.forEach((h) => ro.observe(h));
+    cleanup.push(() => ro.disconnect());
+  }
   el.querySelector("#city-sel").addEventListener("change", (e) => { location.hash = "#/city/" + e.target.value; });
 
   const tabEls = [...el.querySelectorAll('[role="tab"]')];

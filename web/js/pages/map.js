@@ -1,5 +1,5 @@
 import { getCities, getCity, cityHref } from "../data.js";
-import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
+import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN, isDark } from "../config.js";
 import { fmt, pct, esc, reducedMotion, useCss } from "../format.js";
 
 const METRICS = [
@@ -190,8 +190,24 @@ function quietBasemap() {
   });
 }
 
+// Dark appearance: recolour the light vector basemap by layer role so the choropleth still leads.
+function darkBasemap() {
+  const st = map.getStyle();
+  if (!st || !st.layers) return;
+  st.layers.forEach((l) => {
+    try {
+      const id = l.id;
+      if (l.type === "background") map.setPaintProperty(id, "background-color", "#171B26");
+      else if (l.type === "fill") map.setPaintProperty(id, "fill-color", /water/i.test(id) ? "#0E1420" : /park|wood|grass|landcover/i.test(id) ? "#1B2230" : /building/i.test(id) ? "#222838" : "#1C212E");
+      else if (l.type === "line") map.setPaintProperty(id, "line-color", /water/i.test(id) ? "#0E1420" : /boundary/i.test(id) ? "#3A4258" : "#313950");
+      else if (l.type === "symbol") { map.setPaintProperty(id, "text-color", "#AEB6CA"); map.setPaintProperty(id, "text-halo-color", "#171B26"); }
+    } catch {}
+  });
+}
+
 async function onLoad() {
   quietBasemap();
+  if (isDark()) darkBasemap();
   const sym = map.getStyle().layers.find((l) => l.type === "symbol" && (!l.layout || l.layout.visibility !== "none"));
   S.before = sym ? sym.id : undefined;
   map.addSource("dem", { type: "raster-dem", tiles: [TERRARIUM], encoding: "terrarium", tileSize: 256, maxzoom: 15, attribution: "Terrain: Mapzen, AWS Open Data" });

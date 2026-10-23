@@ -40,7 +40,7 @@ function mountNav() {
   nav.setAttribute("aria-label", "Main");
   nav.innerHTML = `
     <div class="nav-head">
-      <a class="nav-brand" href="#/" aria-label="LAMBAT home"><img src="assets/logo-reversed.svg" alt="" width="32" height="32"><span>LAMBAT</span></a>
+      <a class="nav-brand" href="#/" aria-label="LAMBAT home"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 94C50 94 18 62 18 40A32 32 0 0 1 82 40C82 62 50 94 50 94ZM37 40A13 13 0 1 0 63 40A13 13 0 1 0 37 40Z" fill="var(--pin)" fill-rule="evenodd"/><circle cx="50" cy="40" r="8.2" fill="var(--gold)"/></svg><span>LAMBAT</span></a>
       <button class="nav-toggle" type="button" aria-label="Collapse the sidebar" aria-expanded="true">${ICON.chev}</button>
     </div>
     <ul>${NAV.map((n) => `<li><a class="item" data-id="${n.id}" href="${n.href}" title="${n.label}">${ICON[n.icon]}<span class="lbl"></span></a></li>`).join("")}</ul>
@@ -70,7 +70,7 @@ function parse() {
 }
 
 function message(title, text) {
-  view.innerHTML = `<div style="padding:48px 24px;max-width:560px"><h1 class="num" style="font-size:var(--t-lg)">${title}</h1><p class="muted" style="margin:8px 0 16px">${text}</p><a class="btn" href="#/">Back to home</a></div>`;
+  view.innerHTML = `<div style="padding:48px 24px;max-width:560px"><h1 class="num" style="font-size:var(--t-xl)">${title}</h1><p class="muted" style="margin:8px 0 16px">${text}</p><a class="btn" href="#/">Back to home</a></div>`;
 }
 
 async function go() {
