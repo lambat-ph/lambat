@@ -1,5 +1,5 @@
 import { getCities, getCity, cityHref } from "../data.js";
-import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP } from "../config.js";
+import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
 import { fmt, pct, compact, esc, reducedMotion, useCss } from "../format.js";
 
 const METRICS = [
@@ -7,27 +7,34 @@ const METRICS = [
   { key: "unreached", prop: "exposed_unreached_flood", short: "Cut off", label: "Out of reach in a flood", unit: "residents", f: fmt },
   { key: "share", prop: "flooded_share", short: "Flooded", label: "Share of area flooded", unit: "of area", f: (v) => pct(v, 0) },
 ];
+const SEEN_KEY = "lambat.tourSeen";
 
 const TEMPLATE = `
 <div class="mapwrap">
-  <div id="map" role="region" aria-label="Map of flood exposure. The city dashboard shows the same data as tables."></div>
+  <div id="map" role="region" aria-label="Map of flood exposure by barangay. The city dashboard shows the same data as tables."></div>
   <div class="loading" id="loading" role="status">Loading the map</div>
   <div class="dock closed" id="dock">
     <button class="sheet-handle" id="handle" type="button" aria-expanded="false" aria-label="Show map controls"></button>
     <section class="w w-legend" id="legend" aria-label="Legend"></section>
-    <section class="w w-picker" id="picker" aria-label="City">
-      <div class="head"><strong id="pickTitle">Choose a city</strong><button class="linkbtn" id="pickBack" type="button" hidden>All cities</button></div>
-      <div id="pickList">
-        <label class="sr-only" for="cityPick">Search cities</label>
-        <input class="field" id="cityPick" type="search" placeholder="Search a city" autocomplete="off">
-        <ul class="citylist" id="cityList" style="margin-top:8px"></ul>
-      </div>
-      <div id="pickCity" hidden>
-        <label class="wt" for="brgyPick" style="display:block">Find a barangay</label>
-        <select class="field" id="brgyPick"><option value="">Choose a barangay</option></select>
-        <p style="margin:8px 0 0"><a id="dashLink" href="#/city">Open city dashboard</a> <span class="muted xs">(the same data as a table)</span></p>
-      </div>
-    </section>
+    <div class="col-left">
+      <section class="w w-caption" id="caption" aria-label="What this map shows" aria-live="polite">
+        <p class="cap-text" id="capText"></p>
+        <button class="linkbtn" id="tourBtn" type="button" hidden>How to read this map</button>
+      </section>
+      <section class="w w-picker" id="picker" aria-label="City">
+        <div class="head"><strong id="pickTitle">Choose a city</strong><button class="linkbtn" id="pickBack" type="button" hidden>All cities</button></div>
+        <div id="pickList">
+          <label class="sr-only" for="cityPick">Search cities</label>
+          <input class="field" id="cityPick" type="search" placeholder="Search a city" autocomplete="off">
+          <ul class="citylist" id="cityList" style="margin-top:8px"></ul>
+        </div>
+        <div id="pickCity" hidden>
+          <label class="wt" for="brgyPick" style="display:block">Find a barangay</label>
+          <select class="field" id="brgyPick"><option value="">Choose a barangay</option></select>
+          <p style="margin:8px 0 0"><a id="dashLink" href="#/city">Open city dashboard</a> <span class="muted xs">(the same data as a table)</span></p>
+        </div>
+      </section>
+    </div>
     <div class="col-right">
       <section class="w w-metric opt" id="wMetric" aria-label="Measure" hidden>
         <h2 id="metricH">Show</h2>
@@ -35,17 +42,16 @@ const TEMPLATE = `
       </section>
       <section class="w w-view opt" id="wView" aria-label="View" hidden>
         <div class="w-row">
-          <div><h2 id="viewH">View</h2>
-            <div class="seg" id="viewSeg" role="group" aria-labelledby="viewH"><button type="button" data-v="3d" aria-pressed="true">3D</button><button type="button" data-v="2d" aria-pressed="false">2D</button></div></div>
           <div><h2 id="planH">Dose points</h2>
             <div class="seg" id="planSeg" role="group" aria-labelledby="planH"></div>
             <p class="map-note" id="planNote" style="margin-top:8px" aria-live="polite"></p></div>
+          <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
         </div>
       </section>
       <section class="w w-layers opt" id="wLayers" aria-label="Layers" hidden>
         <h2>Layers</h2>
         <label class="switch"><span>Dose points</span><input type="checkbox" role="switch" id="lyDose" checked></label>
-        <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief" checked></label>
+        <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
         <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
         <p class="map-note" id="reliefNote" hidden></p>
       </section>
@@ -54,15 +60,17 @@ const TEMPLATE = `
   </div>
 </div>`;
 
-let map, tip, host, S, mobile, ro;
+let map, tip, host, S, mobile, ro, onKey;
 const $ = (s) => host.querySelector(s);
 const dur = (n) => (reducedMotion() ? 0 : n);
+const cityName = () => { const c = S.cities.find((x) => x.code === S.city); return c ? c.name : ""; };
+const years = () => { const m = S.data && S.data.summary && /(\d+)/.exec(S.data.summary.scenario || ""); return m ? +m[1] : 25; };
 
 export async function render(el, params) {
   useCss("map");
   host = el;
   mobile = window.matchMedia("(max-width:767px)");
-  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "3d", plan: "8", sel: null, reliefOn: true, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], cityMarkers: [], params, dead: false };
+  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "8", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], cityMarkers: [], tour: null, params, dead: false };
   el.innerHTML = TEMPLATE;
   try { S.cities = await getCities(); } catch { S.cities = []; }
   if (!S.cities.length) { $("#loading").textContent = "No city data found."; return; }
@@ -71,7 +79,7 @@ export async function render(el, params) {
 }
 
 export function destroy() {
-  if (S) S.dead = true;
+  if (S) { S.dead = true; endTour(false, true); }
   if (ro) { ro.disconnect(); ro = null; }
   try { if (map) map.remove(); } catch {}
   map = null;
@@ -79,11 +87,11 @@ export function destroy() {
 
 function syncUrl() {
   if (S.dead) return;
-  let h = "#/map";
+  let h = "#/map/all";
   if (S.city) {
     const p = new URLSearchParams({ metric: S.metric.key, plan: S.plan });
-    if (S.view === "2d") p.set("view", "2d");
-    h += "/" + encodeURIComponent(S.city) + "?" + p;
+    if (S.view === "3d") p.set("view", "3d");
+    h = "#/map/" + encodeURIComponent(S.city) + "?" + p;
   }
   history.replaceState(null, "", h);
 }
@@ -105,10 +113,10 @@ async function boot() {
     map = new maplibregl.Map({
       container: $("#map"),
       style,
-      center: [121.8, 12.6], zoom: 4.6, pitch: 40, maxPitch: 75, attributionControl: false,
+      center: [121.8, 12.6], zoom: 5, pitch: 0, maxPitch: 75, attributionControl: false,
     });
   } catch (e) {
-    $("#loading").innerHTML = 'This browser could not start the 3D map. <a href="#/city">Open the city dashboard</a> for the same data as tables.';
+    $("#loading").innerHTML = 'This browser could not start the map. <a href="#/city">Open the city dashboard</a> for the same data as tables.';
     $("#loading").style.pointerEvents = "auto";
     return;
   }
@@ -131,57 +139,57 @@ async function onLoad() {
   map.addLayer({ id: "hill", type: "hillshade", source: "dem", layout: { visibility: "none" }, paint: { "hillshade-exaggeration": 0.5, "hillshade-shadow-color": "#3B4A78", "hillshade-highlight-color": "#FFFFFF", "hillshade-accent-color": "#6F7FB0" } }, S.before);
   buildNational();
   const code = S.params.code;
-  if (code && S.cities.some((c) => c.code === code)) {
-    const q = S.params.query;
-    const m = METRICS.find((x) => x.key === q.get("metric"));
-    if (m) S.metric = m;
-    if (["3", "5", "8"].includes(q.get("plan"))) S.plan = q.get("plan");
-    if (q.get("view") === "2d") S.view = "2d";
-    await selectCity(code, true);
-  } else {
+  const q = S.params.query;
+  const m = METRICS.find((x) => x.key === q.get("metric"));
+  if (m) S.metric = m;
+  if (["3", "5", "8"].includes(q.get("plan"))) S.plan = q.get("plan");
+  if (q.get("view") === "3d") S.view = "3d";
+  if (code === "all") {
     showNational(true);
+  } else if (code && S.cities.some((c) => c.code === code)) {
+    await selectCity(code, true);
+    maybeTour();
+  } else {
+    // No city in the address: open the biggest city straight in its barangay map.
+    await selectCity(S.cities[0].code, true);
+    maybeTour();
   }
 }
 
-/* ---------- national view ---------- */
-function circle(lon, lat, rKm, n = 32) {
-  const ring = [];
-  for (let i = 0; i <= n; i++) {
-    const a = (i / n) * 2 * Math.PI;
-    ring.push([lon + (rKm / (111.32 * Math.cos((lat * Math.PI) / 180))) * Math.cos(a), lat + (rKm / 110.57) * Math.sin(a)]);
-  }
-  return [ring];
-}
+/* ---------- national view: flat circles sized by exposed residents ---------- */
+const natRadius = (e, mx) => Math.min(34, Math.max(9, 9 + Math.sqrt((e || 0) / mx) * 25));
 function buildNational() {
   const mx = Math.max(...S.cities.map((c) => c.exposed || 0), 1);
-  const gj = { type: "FeatureCollection", features: S.cities.map((c) => ({ type: "Feature", properties: { code: c.code, h: Math.max(12000, ((c.exposed || 0) / mx) * 170000) }, geometry: { type: "Polygon", coordinates: circle(c.lon, c.lat, 16) } })) };
+  const gj = { type: "FeatureCollection", features: S.cities.map((c) => ({ type: "Feature", properties: { code: c.code, r: natRadius(c.exposed, mx) }, geometry: { type: "Point", coordinates: [c.lon, c.lat] } })) };
   map.addSource("nat", { type: "geojson", data: gj });
-  map.addLayer({ id: "nat-col", type: "fill-extrusion", source: "nat", paint: { "fill-extrusion-color": COLORS.blue, "fill-extrusion-height": ["get", "h"], "fill-extrusion-opacity": 0.92 } });
-  map.on("click", "nat-col", (e) => selectCity(e.features[0].properties.code));
-  map.on("mouseenter", "nat-col", () => { map.getCanvas().style.cursor = "pointer"; });
-  map.on("mouseleave", "nat-col", () => { map.getCanvas().style.cursor = ""; });
+  map.addLayer({ id: "nat-dot", type: "circle", source: "nat", layout: { visibility: "none" }, paint: { "circle-radius": ["get", "r"], "circle-color": COLORS.blue, "circle-opacity": 0.55, "circle-stroke-color": "#FFFFFF", "circle-stroke-width": 2 } });
+  map.on("click", "nat-dot", (e) => selectCity(e.features[0].properties.code));
+  map.on("mouseenter", "nat-dot", () => { map.getCanvas().style.cursor = "pointer"; });
+  map.on("mouseleave", "nat-dot", () => { map.getCanvas().style.cursor = ""; });
   S.cities.forEach((c) => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "city-pin";
-    b.innerHTML = `<i></i>${esc(c.name)}`;
+    b.innerHTML = `<b>${esc(c.name)}</b><span>${fmt(c.exposed)} exposed</span>`;
     b.setAttribute("aria-label", `${c.name}, ${fmt(c.exposed)} residents exposed. Open this city.`);
     b.addEventListener("click", () => selectCity(c.code));
-    S.cityMarkers.push(new maplibregl.Marker({ element: b, anchor: "left", offset: [14, 0] }).setLngLat([c.lon, c.lat]).addTo(map));
+    b.style.display = "none";
+    S.cityMarkers.push(new maplibregl.Marker({ element: b, anchor: "left", offset: [natRadius(c.exposed, mx) + 6, 0] }).setLngLat([c.lon, c.lat]).addTo(map));
   });
 }
 function pad() {
-  if (mobile.matches) return { top: 40, left: 24, right: 24, bottom: 200 };
+  if (mobile.matches) return { top: 40, left: 24, right: 24, bottom: 330 };
   // Leave room for the floating widgets, but never more than about half the map width.
   const w = map ? map.getContainer().clientWidth : window.innerWidth;
   const side = Math.min(320, Math.round(w * 0.22));
   return { top: 72, bottom: 72, left: side, right: side };
 }
 function showNational(first) {
+  endTour(false);
   S.city = null; S.data = null; clearSel();
   setCityLayers(false);
   map.setTerrain(null);
   map.setLayoutProperty("hill", "visibility", "none");
-  map.setLayoutProperty("nat-col", "visibility", "visible");
+  map.setLayoutProperty("nat-dot", "visibility", "visible");
   if (map.getLayer("s1-fill")) map.setLayoutProperty("s1-fill", "visibility", "none");
   S.cityMarkers.forEach((m) => { m.getElement().style.display = ""; });
   clearDose();
@@ -189,10 +197,18 @@ function showNational(first) {
   $("#pickBack").hidden = true; $("#pickList").hidden = false; $("#pickCity").hidden = true;
   ["#wMetric", "#wView", "#wLayers"].forEach((s) => { $(s).hidden = true; });
   $("#info").hidden = true;
+  $("#tourBtn").hidden = true;
   renderLegend();
-  const pts = S.cities.map((c) => [c.lon, c.lat]);
-  const b = pts.reduce((bb, p) => bb.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
-  map.fitBounds(b, { padding: pad(), maxZoom: S.cities.length > 1 ? 6 : 6.4, pitch: 40, bearing: 0, duration: first ? 0 : dur(1600) });
+  updateCaption();
+  if (S.cities.length === 1) {
+    const c = S.cities[0];
+    const o = { center: [c.lon, c.lat], zoom: 7.2, pitch: 0, bearing: 0 };
+    if (first) map.jumpTo(o); else map.flyTo({ ...o, duration: dur(1400) });
+  } else {
+    const pts = S.cities.map((c) => [c.lon, c.lat]);
+    const b = pts.reduce((bb, p) => bb.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
+    map.fitBounds(b, { padding: pad(), maxZoom: 7.5, pitch: 0, bearing: 0, duration: first ? 0 : dur(1400) });
+  }
   highlightList(null);
   syncUrl();
 }
@@ -223,7 +239,7 @@ function applyView() {
   map.setLayoutProperty("b-flat", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-line", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-sel", "visibility", d3 ? "none" : "visible");
-  [...$("#viewSeg").children].forEach((b) => b.setAttribute("aria-pressed", String((b.dataset.v === "3d") === d3)));
+  $("#ly3d").checked = d3;
 }
 function paintMetric() {
   const b = breaksFor(S.metric, S.data.barangays.features);
@@ -232,17 +248,28 @@ function paintMetric() {
   map.setPaintProperty("b-ext", "fill-extrusion-height", heightExpr());
   map.setPaintProperty("b-flat", "fill-color", colorExpr(false));
   renderLegend();
+  updateCaption();
+}
+function setMetric(m) {
+  S.metric = m;
+  [...$("#metricSeg").children].forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.k === m.key)));
+  paintMetric(); syncUrl();
 }
 function ensureCityLayers() {
   if (map.getSource("brgy")) { map.getSource("brgy").setData(S.data.barangays); return; }
   map.addSource("brgy", { type: "geojson", data: S.data.barangays, promoteId: "adm4_pcode" });
-  map.addLayer({ id: "b-ext", type: "fill-extrusion", source: "brgy", paint: { "fill-extrusion-color": RAMP[0], "fill-extrusion-height": 0, "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.94 } });
+  map.addLayer({ id: "b-ext", type: "fill-extrusion", source: "brgy", layout: { visibility: "none" }, paint: { "fill-extrusion-color": RAMP[0], "fill-extrusion-height": 0, "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.94 } });
   map.addLayer({ id: "b-flat", type: "fill", source: "brgy", layout: { visibility: "none" }, paint: { "fill-color": RAMP[0], "fill-opacity": 0.88 } }, S.before);
   map.addLayer({ id: "b-line", type: "line", source: "brgy", layout: { visibility: "none" }, paint: { "line-color": "#FFFFFF", "line-width": 1 } }, S.before);
   map.addLayer({ id: "b-sel", type: "line", source: "brgy", layout: { visibility: "none" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "line-color": COLORS.ink, "line-width": 3 } }, S.before);
+  // Intro highlight: a dark casing under a gold line, visible in both 2D and 3D.
+  const none = ["==", ["get", "adm4_pcode"], ""];
+  map.addLayer({ id: "b-tour-c", type: "line", source: "brgy", filter: none, paint: { "line-color": COLORS.ink, "line-width": 7 } }, S.before);
+  map.addLayer({ id: "b-tour", type: "line", source: "brgy", filter: none, paint: { "line-color": COLORS.gold, "line-width": 3.5 } }, S.before);
   const pick = (e) => { const f = map.queryRenderedFeatures(e.point, { layers: [S.view === "3d" ? "b-ext" : "b-flat"] })[0]; return f ? f.properties.adm4_pcode : null; };
   map.on("click", (e) => {
     if (!S.city) return;
+    if (e.originalEvent && e.originalEvent.target.closest && e.originalEvent.target.closest(".rank,.tour-tag")) return;
     const code = pick(e);
     if (code) selectBrgy(code, false); else clearSel();
   });
@@ -279,6 +306,7 @@ function applyRelief() {
 async function selectCity(code, first) {
   const c = S.cities.find((x) => x.code === code);
   if (!c) return;
+  endTour(false);
   const ld = $("#loading"); ld.hidden = false; ld.textContent = "Loading " + c.name;
   let data;
   try { data = await getCity(code); } catch (e) { data = { error: e.message }; }
@@ -299,28 +327,29 @@ async function selectCity(code, first) {
   S.scaleH = Math.max(300, diag * 0.06);
   ensureCityLayers();
   S.cityMarkers.forEach((m) => { m.getElement().style.display = "none"; });
-  map.setLayoutProperty("nat-col", "visibility", "none");
+  map.setLayoutProperty("nat-dot", "visibility", "none");
   paintMetric();
   setCityLayers(true);
   $("#pickTitle").textContent = c.name;
   $("#pickBack").hidden = false; $("#pickList").hidden = true; $("#pickCity").hidden = false;
+  $("#tourBtn").hidden = false;
   $("#dashLink").href = cityHref(code);
   $("#brgyPick").innerHTML = '<option value="">Choose a barangay</option>' + [...data.rows].sort((a, b) => a.name.localeCompare(b.name)).map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
   ["#wMetric", "#wView", "#wLayers"].forEach((s) => { $(s).hidden = false; });
   buildPlanSeg();
   drawDose();
+  const d3 = S.view === "3d";
+  map.resize();
+  map.fitBounds(bb, { padding: pad(), maxZoom: 14.5, pitch: d3 ? 50 : 0, bearing: d3 ? -12 : 0, duration: first ? 0 : dur(2200) });
+  highlightList(code);
+  syncUrl();
   await probeTerrain(c);
   if (S.dead || !map) return;
   $("#lyRelief").disabled = !S.reliefOK;
   $("#reliefNote").hidden = !!S.reliefOK;
-  $("#reliefNote").textContent = S.reliefOK ? "" : "Terrain tiles could not be loaded, so the map is flat.";
+  $("#reliefNote").textContent = S.reliefOK ? "" : "Terrain tiles could not be loaded.";
   applyRelief();
   loadS1();
-  highlightList(code);
-  const d3 = S.view === "3d";
-  map.resize();
-  map.fitBounds(bb, { padding: pad(), maxZoom: 14.5, pitch: d3 ? 50 : 0, bearing: d3 ? -12 : 0, duration: first ? 0 : dur(2200) });
-  syncUrl();
 }
 
 function loadS1() {
@@ -355,21 +384,30 @@ function selectBrgy(code, fly) {
   const r = S.data.rows.find((x) => x.id === code);
   const info = $("#info");
   info.hidden = false;
+  const said = [];
+  if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents in ${esc(r.name)} live where the flood reaches.`);
+  else said.push(`${fmt(r.exposed)} residents in ${esc(r.name)} live where the flood reaches.`);
+  if (r.unreached != null && r.exposed) said.push(`${fmt(r.unreached)} of them cannot walk to a clinic within ${WALK_MIN} minutes while the flood is on.`);
+  if (r.share != null) said.push(`${pct(r.share, 0)} of the barangay's area is under water.`);
   info.innerHTML = `<button class="close" type="button" aria-label="Close details">&times;</button>
-    <h2>${esc(r.name)}</h2><p class="muted xs" style="margin:0">Priority ${r.priority} of ${S.data.rows.length}. 1 is highest.</p>
+    <h2>${esc(r.name)}</h2><p class="said">${said.join(" ")}</p>
+    <p class="muted xs" style="margin:0">Dose point priority ${r.priority} of ${S.data.rows.length} (1 is first).</p>
     <dl><dt>Residents</dt><dd>${fmt(r.pop)}</dd>
     <dt>Exposed</dt><dd>${fmt(r.exposed)}${r.pop ? " (" + pct(r.exposed / r.pop, 0) + ")" : ""}</dd>
-    ${r.unreached != null ? `<dt>Out of reach in a flood</dt><dd>${fmt(r.unreached)}</dd>` : ""}
+    ${r.unreached != null ? `<dt>Cut off from care in a flood</dt><dd>${fmt(r.unreached)}</dd>` : ""}
     <dt>Area flooded</dt><dd>${pct(r.share, 0)}</dd>
     <dt>Capsules per flood week</dt><dd>${fmt(r.capsules)}</dd></dl>
     <a href="${cityHref(S.city, "barangays")}">Open city dashboard</a>`;
   info.querySelector(".close").addEventListener("click", clearSel);
   if (fly) {
     const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === code);
-    const b = new maplibregl.LngLatBounds();
-    (function walk(c) { if (typeof c[0] === "number") b.extend(c); else c.forEach(walk); })(f.geometry.coordinates);
-    map.fitBounds(b, { padding: pad(), maxZoom: S.view === "3d" ? 13 : 15, duration: dur(900), pitch: S.view === "3d" ? 45 : 0 });
+    map.fitBounds(boundsOf(f), { padding: pad(), maxZoom: S.view === "3d" ? 13 : 15, duration: dur(900), pitch: S.view === "3d" ? 45 : 0 });
   }
+}
+function boundsOf(f) {
+  const b = new maplibregl.LngLatBounds();
+  (function walk(c) { if (typeof c[0] === "number") b.extend(c); else c.forEach(walk); })(f.geometry.coordinates);
+  return b;
 }
 
 /* ---------- dose points ---------- */
@@ -401,35 +439,171 @@ function drawDose() {
   });
   $("#planNote").textContent = shown.length < total ? `${shown.length} of ${total} sites of this plan are on the map.` : `${total} sites. Numbers show rank.`;
 }
+function setPlan(k) {
+  S.plan = k;
+  [...$("#planSeg").children].forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.k === k)));
+  drawDose(); syncUrl();
+}
 function buildPlanSeg() {
   const seg = $("#planSeg");
   seg.innerHTML = "";
   ["3", "5", "8"].forEach((k) => {
     const b = document.createElement("button");
-    b.type = "button"; b.textContent = k; b.setAttribute("aria-pressed", String(k === S.plan));
+    b.type = "button"; b.textContent = k; b.dataset.k = k; b.setAttribute("aria-pressed", String(k === S.plan));
     b.setAttribute("aria-label", k + " dose points");
-    b.addEventListener("click", () => { S.plan = k; [...seg.children].forEach((x) => x.setAttribute("aria-pressed", String(x === b))); drawDose(); syncUrl(); });
+    b.addEventListener("click", () => setPlan(k));
     seg.appendChild(b);
   });
 }
 
-/* ---------- legend ---------- */
+/* ---------- caption and legend ---------- */
+function captionText() {
+  if (!S.city) {
+    return `Each circle is a city. A bigger circle means more residents were exposed to floodwater in a ${years()}-year flood. Click a city to see its barangays.`;
+  }
+  const lead = `${esc(cityName())} after a ${years()}-year flood.`;
+  const k = S.metric.key;
+  if (k === "unreached") return `${lead} Darker barangays have more exposed residents who cannot walk to a clinic within ${WALK_MIN} minutes during the flood.`;
+  if (k === "share") return `${lead} Darker barangays had more of their area under water in the flood map.`;
+  return `${lead} Darker barangays have more residents who waded through floodwater. Gold numbers show where to open temporary dose points first (1 = most people helped).`;
+}
+function updateCaption() { $("#capText").innerHTML = captionText(); }
 function renderLegend() {
   const lg = $("#legend");
   if (!S.city) {
-    lg.innerHTML = `<div class="metric-name">Column height: exposed residents</div><p class="map-note" style="margin:0">Taller means more residents live in areas a 25-year flood covers. Choose a city to see its barangays.</p>`;
+    lg.innerHTML = `<div class="metric-name">Circle size: exposed residents</div><p class="map-note" style="margin:0">Bigger circle = more residents exposed to floodwater in a ${years()}-year flood. Click a city to open its barangay map.</p>`;
     return;
   }
   const m = S.metric, edges = [S.min, ...S.breaks, S.max], n = Math.max(1, S.breaks.length + 1);
   const ticks = edges.map((v, i) => `<span style="left:${(i / n) * 100}%">${m.key === "share" ? pct(v, 0) : compact(v)}</span>`).join("");
+  const what = m.key === "share" ? "less of the area flooded" : "fewer residents";
+  const more = m.key === "share" ? "more of the area flooded" : "more residents";
   lg.innerHTML = `<div class="metric-name">${m.label}</div>
     <div class="ramp" aria-hidden="true">${RAMP.slice(0, n).map((c) => `<i style="background:${c}"></i>`).join("")}</div>
     <div class="ticks" aria-hidden="true">${ticks}</div>
+    <div class="lg-words"><span>Light: ${what}</span><span>Dark: ${more}</span></div>
     <p class="sr-only">${m.label}, from ${m.f(S.min)} to ${m.f(S.max)} ${m.unit}, darker is higher.</p>
-    <div class="key"><span class="dot-gold"></span>Dose point, number is its rank. Height follows the colour.</div>`;
+    <div class="key"><span class="dot-gold"></span>Gold number: a dose point. 1 helps the most people.${S.view === "3d" ? " Column height follows the colour." : ""}</div>`;
 }
 function highlightList(code) {
   host.querySelectorAll("#cityList button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.c === code)));
+}
+
+/* ---------- guided intro ---------- */
+function topRow(key) {
+  return S.data.rows.reduce((a, r) => ((r[key] ?? -1) > (a ? a[key] ?? -1 : -2) ? r : a), null);
+}
+function tourSteps() {
+  const rows = S.data.rows, sum = S.data.summary || {}, name = cityName();
+  const steps = [];
+  const topE = topRow("exposed");
+  steps.push({
+    title: "Who was in the water",
+    metric: "exposed", plan: null, hi: topE, val: fmt(topE.exposed),
+    body: `The map starts with exposure. Darker barangays have more residents who waded through floodwater. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
+  });
+  if (rows.some((r) => r.unreached != null)) {
+    const topU = topRow("unreached");
+    const total = sum.exposed_unreached_in_flood != null ? sum.exposed_unreached_in_flood : rows.reduce((t, r) => t + (r.unreached || 0), 0);
+    steps.push({
+      title: "Who cannot reach care",
+      metric: "unreached", plan: null, hi: topU, val: fmt(topU.unreached),
+      body: `In ${esc(name)}, ${fmt(total)} exposed residents cannot walk to a clinic within ${WALK_MIN} minutes while the flood is on. The most are in ${esc(topU.name)}: ${fmt(topU.unreached)}.`,
+    });
+  }
+  const p3 = sum.dose_point_plans && sum.dose_point_plans["3"];
+  const share = S.data.coverage && S.data.coverage.plans && S.data.coverage.plans["3"];
+  const n3 = Math.min(3, S.data.dosePoints.features.length) || 3;
+  const more = p3 && p3.exposed_newly_covered != null ? `${fmt(p3.exposed_newly_covered)} more exposed residents within a ${WALK_MIN}-minute walk of a dose point` : `more exposed residents within a ${WALK_MIN}-minute walk of a dose point`;
+  // The map only has the markers it has data for. If the 3-point plan's sites are not all there, show the top 3 ranked instead.
+  const onMap = p3 && p3.sites.every((id) => S.data.dosePoints.features.some((f) => f.properties.id === id));
+  steps.push({
+    title: "Where to set up dose points",
+    metric: "exposed", plan: onMap ? "3" : "8", top: n3, hi: null,
+    body: `Gold numbers 1 to ${n3} are the first dose points to open. A plan of 3 dose points brings ${more}${share != null ? `, so ${pct(share, 0)} of exposed residents are within reach` : ""}.`,
+    last: true,
+  });
+  return steps;
+}
+function tourSeen() { try { return localStorage.getItem(SEEN_KEY) === "1"; } catch { return false; } }
+function markSeen() { try { localStorage.setItem(SEEN_KEY, "1"); } catch {} }
+function maybeTour() { if (!tourSeen() && S.city && !S.dead) startTour(false); }
+
+function startTour(user) {
+  if (!S.city || !S.data) return;
+  endTour(false, true);
+  S.tour = { i: 0, steps: tourSteps(), restore: { metric: S.metric, plan: S.plan }, tag: null, user, from: user ? document.activeElement : null };
+  const card = document.createElement("div");
+  card.className = "tour"; card.id = "tour";
+  card.setAttribute("role", "dialog"); card.setAttribute("aria-labelledby", "tourT");
+  $(".mapwrap").appendChild(card);
+  onKey = (e) => { if (e.key === "Escape" && S.tour) { e.preventDefault(); endTour(true); } };
+  document.addEventListener("keydown", onKey);
+  tourStep(0);
+}
+function tourStep(i) {
+  const t = S.tour; if (!t) return;
+  t.i = i;
+  const st = t.steps[i], n = t.steps.length;
+  const k = METRICS.find((m) => m.key === st.metric);
+  if (S.metric !== k) setMetric(k);
+  if (st.plan && S.plan !== st.plan) setPlan(st.plan);
+  if (!$("#lyDose").checked) { $("#lyDose").checked = true; drawDose(); }
+  S.markers.forEach((m) => { const e = m.getElement(), r = +e.textContent; e.classList.toggle("hl", !!st.top && r <= st.top); e.classList.toggle("dim", !!st.top && !(r <= st.top)); });
+  tourClearHi();
+  if (st.hi) {
+    const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === st.hi.id);
+    const flt = ["==", ["get", "adm4_pcode"], st.hi.id];
+    map.setFilter("b-tour-c", flt); map.setFilter("b-tour", flt);
+    const el = document.createElement("div");
+    el.className = "tour-tag"; el.innerHTML = `<b>${esc(st.hi.name)}</b><span>${st.val} ${k.key === "unreached" ? "cut off" : "exposed"}</span>`;
+    t.tag = new maplibregl.Marker({ element: el, anchor: "bottom" }).setLngLat(boundsOf(f).getCenter()).addTo(map);
+  }
+  const dots = t.steps.map((_, j) => `<i${j === i ? ' class="on"' : ""}></i>`).join("");
+  const card = $("#tour");
+  card.innerHTML = `<div class="tour-top"><span class="tour-step">Step ${i + 1} of ${n}</span><button class="linkbtn" type="button" data-a="skip">Skip intro</button></div>
+    <h2 id="tourT" tabindex="-1">${st.title}</h2>
+    <p id="tourB">${st.body}</p>
+    <div class="tour-foot"><span class="dots" aria-hidden="true">${dots}</span>
+    <span class="tour-btns">${st.last
+      ? `<button class="btn sm" type="button" data-a="done">Explore the map</button><a class="btn sm ghost" href="${cityHref(S.city)}" data-a="dash">Open the city dashboard</a>`
+      : `${i > 0 ? '<button class="btn sm ghost" type="button" data-a="back">Back</button>' : ""}<button class="btn sm" type="button" data-a="next">Next</button>`}</span></div>`;
+  card.setAttribute("aria-describedby", "tourB");
+  card.onclick = (e) => {
+    const a = e.target.closest("[data-a]"); if (!a) return;
+    const act = a.dataset.a;
+    if (act === "next") tourStep(i + 1);
+    else if (act === "back") tourStep(i - 1);
+    else if (act === "skip") endTour(true);
+    else if (act === "done") endTour(true, false, true);
+    else if (act === "dash") endTour(false, false, true);
+  };
+  card.querySelector("#tourT").focus({ preventScroll: true });
+}
+function tourClearHi(tt) {
+  const t = tt || S.tour;
+  if (t && t.tag) { t.tag.remove(); t.tag = null; }
+  if (map && map.getLayer("b-tour")) {
+    const none = ["==", ["get", "adm4_pcode"], ""];
+    map.setFilter("b-tour-c", none); map.setFilter("b-tour", none);
+  }
+}
+// restoreView: put metric and plan back as they were. quiet: skip focus handling (page teardown).
+function endTour(refocus, quiet, keepView) {
+  const t = S && S.tour;
+  if (!t) return;
+  S.tour = null;
+  tourClearHi(t);
+  document.removeEventListener("keydown", onKey);
+  const card = host && host.querySelector("#tour"); if (card) card.remove();
+  if (quiet) return;
+  markSeen();
+  S.markers.forEach((m) => m.getElement().classList.remove("hl", "dim"));
+  if (!keepView) {
+    if (S.metric !== t.restore.metric) setMetric(t.restore.metric);
+    if (S.plan !== t.restore.plan) setPlan(t.restore.plan);
+  }
+  if (refocus) { const b = $("#tourBtn"); if (b && !b.hidden) b.focus({ preventScroll: true }); }
 }
 
 /* ---------- widgets ---------- */
@@ -445,21 +619,17 @@ function wire() {
   list.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) selectCity(b.dataset.c); });
   $("#pickBack").addEventListener("click", () => showNational(false));
   $("#brgyPick").addEventListener("change", (e) => { if (e.target.value) selectBrgy(e.target.value, true); else clearSel(); });
+  $("#tourBtn").addEventListener("click", () => startTour(true));
 
   const seg = $("#metricSeg");
   METRICS.forEach((m) => {
     const b = document.createElement("button");
     b.type = "button"; b.textContent = m.short; b.dataset.k = m.key; b.setAttribute("aria-pressed", String(m === S.metric));
-    b.addEventListener("click", () => {
-      if (b.disabled) return;
-      S.metric = m; [...seg.children].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      paintMetric(); syncUrl();
-    });
+    b.addEventListener("click", () => { if (!b.disabled) setMetric(m); });
     seg.appendChild(b);
   });
-  $("#viewSeg").addEventListener("click", (e) => {
-    const b = e.target.closest("button"); if (!b) return;
-    S.view = b.dataset.v; applyView();
+  $("#ly3d").addEventListener("change", (e) => {
+    S.view = e.target.checked ? "3d" : "2d"; applyView(); renderLegend();
     map.easeTo({ pitch: S.view === "3d" ? 50 : 0, bearing: S.view === "3d" ? -12 : 0, duration: dur(900) });
     syncUrl();
   });

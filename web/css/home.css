@@ -8,7 +8,7 @@
 @keyframes wave{to{transform:translateX(-50%)}}
 .home-inner{max-width:880px;width:100%;margin:0 auto}
 .home h1{font-size:var(--t-xl);font-weight:700;letter-spacing:-.01em;max-width:18ch;margin:var(--s2) 0 var(--s2)}
-.home .lede{font-size:var(--t-md);max-width:52ch;color:var(--ink);margin-bottom:var(--s4)}
+.home .lede{font-size:var(--t-md);max-width:52ch;color:var(--ink);margin-bottom:var(--s3)}
 .home .brand-line{display:flex;align-items:center;gap:var(--s1);font:700 var(--t-sm) var(--f-display);letter-spacing:.1em;color:var(--blue)}
 .home .brand-line img{width:32px;height:32px}
 .stats-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s3);margin-top:var(--s6);padding-top:var(--s3);border-top:1px solid var(--line)}
@@ -27,3 +27,20 @@
   .home-bg .net,.home-bg svg{animation:none}
 }
 
+.how{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:var(--s4);align-items:center;margin-top:var(--s4)}
+.how:has(.preview[hidden]){grid-template-columns:1fr}
+.preview{margin:0;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:var(--s2)}
+.pv-map svg{display:block;width:100%;height:auto;background:var(--blue-wash);border-radius:var(--radius-sm)}
+.preview figcaption{font-size:var(--t-sm);margin:var(--s1) 0 var(--s1);line-height:1.4}
+.pv-key{display:flex;align-items:center;gap:var(--s0);font-size:var(--t-xs);color:var(--muted)}
+.pv-key i{width:20px;height:10px;display:block;flex:none}
+.pv-key span:first-child{margin-right:var(--s0)}
+.pv-key span:last-child{margin-left:var(--s0)}
+.steps h2{font:700 var(--t-md) var(--f-display);margin:0 0 var(--s2)}
+.steps ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s2)}
+.steps li{display:flex;gap:var(--s2);align-items:flex-start;font-size:var(--t-sm);line-height:1.45}
+.steps .n{flex:none;width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font:700 var(--t-sm) var(--f-display)}
+.steps b{display:block;font-size:var(--t-md)}
+@media (max-width:767px){
+  .how{grid-template-columns:1fr;gap:var(--s3);margin-top:var(--s3)}
+}
