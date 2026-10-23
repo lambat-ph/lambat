@@ -4,6 +4,23 @@
 
 **Leptospirosis Alert, Mapping and Barangay Allocation Tool.** *Lambat* is Filipino for *net*, and a net is only as good as where you cast it.
 
+**In one sentence:** after a flood, LAMBAT shows a city health office which barangays waded through floodwater, who can no longer walk to a clinic, and where to open temporary stations for the free doxycycline that prevents leptospirosis.
+
+![The LAMBAT map of Dagupan City: barangays shaded by how many residents were in the floodwater, with gold numbered dose points](docs/img/map.jpg)
+
+*Darker barangays had more residents in the water. Gold numbers are where to set up dose points first.*
+
+**See it:** run `uv run python scripts/build_web.py`, then `uv run python -m http.server 8000 -d web` and open http://localhost:8000. The map opens with a three-step guided tour.
+
+| Folder | What is in it |
+|---|---|
+| `web/` | The site: home, map, city dashboard, radar page, method page |
+| `src/lambat/` | The pipeline: data loading, exposure, walking access, dose-point siting, alert, radar flood mapping, validation |
+| `scripts/` | One script per job: `run_pipeline.py`, `run_alert.py`, `train_unet.py`, `run_s1_flood.py`, `run_validation.py`, `build_web.py` |
+| `results/` | What the scripts produce (tables, maps, summaries) |
+| `docs/` | How each part works and how well it does: `flood.md`, `validation.md`, `sentinel1.md`, `development.md` |
+| `tests/` | Automated tests, run on every push |
+
 > The flood was gone by the time Rosa's fever came. For six days she had waded through it to sell fish. The capsule that could have protected her was free. But it was on the other side of the water.
 
 Rosa is a composite; the numbers are not. By September 2026 the Philippines had 10,936 suspected leptospirosis cases, 3,005 more than a year earlier, while 3.73 million doxycycline capsules sat in government warehouses (Villanueva, 2026). The country did not run short of medicine. We think it ran short of a map. LAMBAT is that map, for a city health office in the days after a flood. Pilot: Dagupan City.
