@@ -53,9 +53,9 @@ def chip_name(pair):
 def pick_hard_chip(test, names):
     """Chip with per-chip IoU under the reported checkpoint closest to the median."""
     import torch
+    from train_unet import predict
 
     from lambat import flood
-    from train_unet import predict
 
     model = flood.build_unet()
     model.load_state_dict(torch.load(CKPT, map_location="cpu"))
@@ -71,8 +71,8 @@ def pick_hard_chip(test, names):
 
 def record():
     import torch
-
     import train_unet
+
     from lambat import flood
 
     rec = {"loss": [], "val_iou": [], "prob": [], "chip_iou": []}
@@ -159,7 +159,7 @@ class Painter:
         self.loss = loss
 
     def sc(self, v):
-        return int(round(v * SS))
+        return round(v * SS)
 
     def text(self, d, xy, s, f, fill=INK, anchor="la"):
         d.text((self.sc(xy[0]), self.sc(xy[1])), s, font=f, fill=fill, anchor=anchor)

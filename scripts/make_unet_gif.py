@@ -9,6 +9,7 @@ Fixed chip and seed, so the output is reproducible.
 
 from __future__ import annotations
 
+import itertools
 from pathlib import Path
 
 import numpy as np
@@ -115,7 +116,7 @@ def build_assets(thumbs, vv, mask, label):
     lo, hi = np.percentile(vv[np.isfinite(vv)], [1, 99])
     g = np.nan_to_num((vv - lo) / (hi - lo), nan=0.0).clip(0, 1)
     inp = Image.fromarray((g * 255).astype(np.uint8)).convert("RGB")
-    two = lambda m: ramp(m.astype(np.float32))  # noqa: E731
+    two = lambda m: ramp(m.astype(np.float32))
     lab = ramp((label == 1).astype(np.float32))
     return {"in": inp, "out": two(mask), "hand": lab,
             **{k: ramp(v[0]) for k, v in thumbs.items()}}
@@ -136,20 +137,20 @@ def layout(thumbs):
     dnames = {"d1": "Step 1: sharp edges", "d2": "Step 2: shapes",
               "d3": "Step 3: regions", "d4": "Step 4: scene"}
     nodes = {}
-    nodes["in"] = dict(label="Radar in (VV and VH)", cx=80, cy=cy["in"], s=104,
-                       side="r", dim="512 x 512")
+    nodes["in"] = {"label": "Radar in (VV and VH)", "cx": 80, "cy": cy["in"], "s": 104,
+                       "side": "r", "dim": "512 x 512"}
     for k in ("e1", "e2", "e3", "e4"):
-        nodes[k] = dict(label=names[k], cx=80, cy=cy[k], s=sizes[k], side="r",
-                        dim=f"{thumbs[k][1]} x {thumbs[k][1]}")
-    nodes["bn"] = dict(label="Compact summary of the image", cx=480, cy=cy["bn"],
-                       s=68, side="b", dim=f"{thumbs['bn'][1]} x {thumbs['bn'][1]}")
+        nodes[k] = {"label": names[k], "cx": 80, "cy": cy[k], "s": sizes[k], "side": "r",
+                        "dim": f"{thumbs[k][1]} x {thumbs[k][1]}"}
+    nodes["bn"] = {"label": "Compact summary of the image", "cx": 480, "cy": cy["bn"],
+                       "s": 68, "side": "b", "dim": f"{thumbs['bn'][1]} x {thumbs['bn'][1]}"}
     for e, d in (("e1", "d1"), ("e2", "d2"), ("e3", "d3"), ("e4", "d4")):
-        nodes[d] = dict(label=dnames[d], cx=880, cy=cy[e], s=sizes[e], side="l",
-                        dim=f"{thumbs[d][1]} x {thumbs[d][1]}")
-    nodes["out"] = dict(label="Water mask", cx=880, cy=cy["in"], s=104, side="t",
-                        dim="")
-    nodes["hand"] = dict(label="Hand label (the answer key)", cx=730, cy=cy["in"],
-                         s=104, side="t", dim="")
+        nodes[d] = {"label": dnames[d], "cx": 880, "cy": cy[e], "s": sizes[e], "side": "l",
+                        "dim": f"{thumbs[d][1]} x {thumbs[d][1]}"}
+    nodes["out"] = {"label": "Water mask", "cx": 880, "cy": cy["in"], "s": 104, "side": "t",
+                        "dim": ""}
+    nodes["hand"] = {"label": "Hand label (the answer key)", "cx": 730, "cy": cy["in"],
+                         "s": 104, "side": "t", "dim": ""}
     return nodes
 
 
@@ -162,7 +163,7 @@ def paths(nodes):
     """Polyline for each main-flow transition."""
     p = {}
     chain = ["in", "e1", "e2", "e3", "e4"]
-    for a, b in zip(chain, chain[1:]):
+    for a, b in itertools.pairwise(chain):
         p[(a, b)] = [edge(nodes[a], "b"), edge(nodes[b], "t")]
     a, b = nodes["e4"], nodes["bn"]
     ax, ay = edge(a, "b")
@@ -173,15 +174,15 @@ def paths(nodes):
     bx, by = edge(b, "b")
     p[("bn", "d4")] = [(ax, ay), (bx, ay), (bx, by)]
     up = ["d4", "d3", "d2", "d1", "out"]
-    for a, b in zip(up, up[1:]):
+    for a, b in itertools.pairwise(up):
         p[(a, b)] = [edge(nodes[a], "t"), edge(nodes[b], "b")]
     return p
 
 
 def point_on(poly, f):
-    seg = [np.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(poly, poly[1:])]
+    seg = [np.hypot(b[0] - a[0], b[1] - a[1]) for a, b in itertools.pairwise(poly)]
     d = f * sum(seg)
-    for (a, b), n in zip(zip(poly, poly[1:]), seg):
+    for (a, b), n in zip(itertools.pairwise(poly), seg):
         if d <= n or n == seg[-1]:
             t = min(d / max(n, 1e-6), 1)
             return a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t
@@ -198,7 +199,7 @@ class Painter:
         self.cache = {}
 
     def sc(self, v):
-        return int(round(v * SS))
+        return round(v * SS)
 
     def line(self, d, pts, color, width, dash=None):
         pts = [(self.sc(x), self.sc(y)) for x, y in pts]
@@ -254,7 +255,7 @@ class Painter:
             p, a = (n["cx"], y0 + n["s"] + 6), "ma"
         self.text(d, p, n["label"], self.f_b, col, a)
         if n["dim"] and side != "t":
-            q = (p[0], p[1] + (18 if side != "b" else 18))
+            q = (p[0], p[1] + 18)
             self.text(d, q, n["dim"] if live else "", self.f_m, MUTED, a)
         elif n["dim"] and live:
             self.text(d, (n["cx"], y0 + n["s"] + 4), n["dim"], self.f_s, MUTED, "ma")
@@ -319,7 +320,7 @@ def main():
     shown = ["in"]
     for _ in range(4):
         add(p.frame(shown, hot="in"))
-    for a, b in zip(order, order[1:]):
+    for a, b in itertools.pairwise(order):
         poly = p.paths[(a, b)]
         for j in range(1, 5):
             add(p.frame(shown, dot=point_on(poly, j / 5)))

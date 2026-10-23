@@ -163,7 +163,7 @@ def run_city(city: str, scenario: str, ks: list[int], limit_min: float, scope: s
         "step_notes": notes,
         "access_scope": scope_used,
         "population": float(pop.sum()),
-        "barangays": int(len(brgy)),
+        "barangays": len(brgy),
         "barangays_flooded": n_flooded,
         "exposed": total_exposed,
         "weekly_capsules": float(tab.weekly_capsules.sum()),
@@ -227,7 +227,7 @@ def main() -> None:
     for c in cities.resolve(args.city):
         try:
             run_city(c, args.scenario, args.k, args.limit_min, args.scope)
-        except Exception as e:  # noqa: BLE001  one city must not block the others
+        except Exception as e:
             print(f"[{c}] FAILED: {type(e).__name__}: {e}", flush=True)
             if args.city.lower() != "all":
                 raise
