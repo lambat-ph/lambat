@@ -66,8 +66,6 @@ function mountNav() {
     btn.setAttribute("aria-label", open ? "Collapse the sidebar" : "Expand the sidebar");
   };
   sync();
-  // Each wordmark letter knows its outline length so it can be drawn like a strand of net.
-  nav.querySelectorAll(".nav-word .ltr").forEach((p) => p.style.setProperty("--len", Math.ceil(p.getTotalLength())));
   const set = (state) => {
     root.dataset.nav = state;
     try { localStorage.setItem("lambat.nav", state); } catch {}
@@ -81,7 +79,7 @@ function mountNav() {
     // Closing: the letters unweave back to bare strands, last letter first, then the sidebar folds.
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return set("closed");
     nav.classList.add("unweave");
-    setTimeout(() => { nav.classList.remove("unweave"); set("closed"); }, 430);
+    setTimeout(() => { nav.classList.remove("unweave"); set("closed"); }, 300);
   });
 }
 
