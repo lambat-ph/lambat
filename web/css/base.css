@@ -63,7 +63,7 @@ html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav .nav-brand,.nav .nav-brand:link,.nav .nav-brand:visited,.nav .nav-brand:hover,.nav .nav-brand:active,.nav .nav-brand:focus-visible,.nav .nav-brand[aria-current]{color:#fff;text-decoration:none}
 .nav .nav-brand:hover span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
 .nav-brand>img{width:auto;height:30px;flex:none}
-.nav-brand .nav-word{display:block;height:18px;width:auto} /* 3/5 of the 30px mark */
+.nav-brand>span{flex:none}.nav-brand .nav-word{display:block;height:18px;width:98px;flex:none} /* 3/5 of the 30px mark */
 /* wordmark letters are separate paths: when the sidebar opens they rise into place one after another */
 /* opening: each letter is drawn along its own strokes, alternating up and down like threads passing over and under in a net */
 .nav-word .ltr{animation:ltr-up .26s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(40ms + var(--i)*35ms)}
