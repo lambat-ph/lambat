@@ -69,7 +69,7 @@ export async function render(el) {
       <i class="wave w2"></i>
     </div>
     <div class="home-inner">
-      <div class="brand-line"><img src="assets/lockup.svg" alt="LAMBAT" height="28" style="height:28px;width:auto"></div>
+      <div class="brand-line"><img src="assets/lockup.svg?v=2" alt="LAMBAT" height="30" style="height:30px;width:auto"></div>
       <p class="eyebrow tagline">Get the capsule to the other side of the water</p>
       <h1 id="answer" aria-busy="true"><span class="skel sk-h" aria-hidden="true"></span><span class="skel sk-h s2" aria-hidden="true"></span></h1>
       <p class="def" id="def">A 25-year flood has about a 4% chance of happening in any year. Dose points are temporary spots where a nurse hands out free doxycycline.</p>
