@@ -11,17 +11,34 @@
 .method .defs div{border-left:4px solid var(--gold);padding-left:var(--s2)}
 .method .defs dt{font:700 var(--t-md) var(--f-display)}
 .method .defs dd{margin:var(--s0) 0 0;line-height:1.5;max-width:68ch}
-.method .pipe-wide{display:block;width:100%;height:auto}
-.method .pipe-tall{display:none;width:100%;height:auto;max-width:360px;margin:0 auto}
 .method svg text{font-family:var(--f-text);fill:var(--ink)}
-.method svg .t-h{font-weight:700;font-size:15px;font-family:var(--f-display)}
-.method svg .t-b{font-size:12.5px}
-.method svg .t-m{font-size:11px;fill:var(--muted);font-style:italic}
-.method svg .t-n{font:700 16px var(--f-display);fill:var(--blue-dark)}
-.method svg .box{fill:var(--blue-wash);stroke:var(--blue);stroke-width:1.5}
-.method svg .num{fill:var(--gold)}
-.method svg .arrow{stroke:var(--blue);stroke-width:2;fill:none}
-.method svg .arrow-h{fill:var(--blue)}
+/* five-step pipeline as HTML cards */
+.method .pipe{list-style:none;margin:0;padding:0;display:grid;gap:var(--s1);grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.method .pipe li{display:flex;flex-direction:column;gap:var(--s1);background:var(--blue-wash);border-radius:var(--radius);padding:var(--s2)}
+.method .pipe-n{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--gold);color:var(--blue-dark);font:700 var(--t-md) var(--f-display)}
+.method .pipe h3{margin:0;font:700 var(--t-md) var(--f-display);line-height:1.25}
+.method .pipe p{margin:0;font-size:var(--t-sm);line-height:1.45}
+.method .pipe .pipe-m{margin-top:auto;color:var(--muted);font-style:italic}
+/* contents list */
+.method .toc ol{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1)}
+.method .toc a{display:inline-flex;align-items:center;min-height:40px;padding:0 var(--s2);border-radius:999px;background:var(--blue-tint);color:var(--blue-dark);font:600 var(--t-sm) var(--f-text);text-decoration:none}
+.method .toc a:hover{background:var(--blue);color:#fff}
+.method [id^="m-"]{scroll-margin-top:var(--s2)}
+/* what we know / don't know */
+.method .know{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.method .know-col{border-radius:var(--radius);padding:var(--s2)}
+.method .know-yes{background:var(--blue-wash)}
+.method .know-no{background:var(--warn-bg)}
+.method .know h3{margin:0 0 var(--s1);font:700 var(--t-md) var(--f-display)}
+.method .know ul{margin:0;padding-left:var(--s3);display:grid;gap:var(--s1);line-height:1.5;font-size:var(--t-sm)}
+/* collapsible cards */
+.method .fold summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:var(--s2);min-height:44px}
+.method .fold summary::-webkit-details-marker{display:none}
+.method .fold summary::after{content:"";flex:none;width:10px;height:10px;border-right:3px solid var(--blue);border-bottom:3px solid var(--blue);transform:rotate(45deg);margin-right:6px;transition:transform .15s}
+.method .fold[open] summary::after{transform:rotate(-135deg)}
+.method .fold summary .card-title{margin:0}
+.method .fold-body{display:flex;flex-direction:column;gap:var(--s2);margin-top:var(--s2)}
+.method .fold summary{display:flex}
 .method .steps-list{margin:0;padding-left:var(--s3);line-height:1.5}
 .method .forest text{font-size:12px}
 .method .forest .axis{stroke:var(--line)}
@@ -35,7 +52,7 @@
 .method .forest .ref .lbl{fill:var(--muted);font-style:italic}
 .method .forest .grid{stroke:var(--grid)}
 .method .scroll{overflow-x:auto}
-.method .scroll svg{min-width:520px}
+.method .scroll svg{min-width:640px}
 .method .verdict{background:var(--blue-wash);border-left:4px solid var(--blue);border-radius:var(--radius-sm);padding:var(--s2);font-weight:600}
 .method ul.limits{margin:0;padding-left:var(--s3);display:grid;gap:var(--s1);line-height:1.5}
 .method .refs{margin:0;padding:0;list-style:none;display:grid;gap:var(--s2);font-size:var(--t-sm)}
@@ -48,9 +65,9 @@
 .method details summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
 @media (max-width:640px){
   .method{padding:var(--s2)}
-  .method .pipe-wide{display:none}
-  .method .pipe-tall{display:block}
-  .method .scroll svg{min-width:0}
+}
+@media (max-width:640px){
+  .method .pipe,.method .know{grid-template-columns:minmax(0,1fr)}
 }
 
 /* ---------- copy buttons ---------- */

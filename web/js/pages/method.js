@@ -5,50 +5,16 @@ const CSS_ID = "css-method";
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const STEPS = [
-  { q: "Where is the water?", s: "Start with the NOAH flood hazard map on day zero. Swap in a Sentinel-1 radar image when one arrives.", m: "NOAH map, then radar (threshold or U-Net)" },
-  { q: "Who was in it?", s: "Count the residents living in flooded areas, barangay by barangay.", m: "NOAH x WorldPop" },
-  { q: "Who can still walk to care?", s: "Slow or close flooded roads, then see who can reach a clinic in 30 minutes.", m: "OSM roads, 30-minute walk" },
-  { q: "Where should dose points go?", s: "Pick 3, 5 or 8 temporary sites that reach the most exposed residents.", m: "Maximal covering model" },
-  { q: "Should hospitals get ready?", s: "Rain from the past 2 to 5 weeks flags weeks when more cases are likely.", m: "Rainfall alert, separate clock" },
+  { q: "Where is the water?", s: "Start with the NOAH flood hazard map on day zero. Swap in a Sentinel-1 radar image when one arrives.", m: "NOAH map, then radar read by a threshold or a U-Net (an image-reading neural network)" },
+  { q: "Who was in it?", s: "Count the residents living in flooded areas, barangay by barangay.", m: "NOAH flood map combined with WorldPop population estimates" },
+  { q: "Who can still walk to care?", s: "Slow or close flooded roads, then see who can reach a clinic in 30 minutes.", m: "OpenStreetMap roads, 30-minute walk" },
+  { q: "Where should dose points go?", s: "Pick 3, 5 or 8 temporary sites that reach the most exposed residents.", m: "Maximal covering: a method that picks the sites reaching the most people" },
+  { q: "Should hospitals get ready?", s: "Rain from the past 2 to 5 weeks flags weeks when more cases are likely.", m: "Rain warning, run on a separate clock" },
 ];
 
-function wrap(text, n) {
-  const out = [];
-  let line = "";
-  for (const w of text.split(" ")) {
-    if ((line + " " + w).trim().length > n) { out.push(line); line = w; } else line = (line + " " + w).trim();
-  }
-  if (line) out.push(line);
-  return out;
-}
-const tspans = (lines, x, y0, lh, cls) => lines.map((l, i) => `<text class="${cls}" x="${x}" y="${y0 + i * lh}">${esc(l)}</text>`).join("");
-
-function pipeline(tall) {
-  const desc = STEPS.map((p, i) => `Step ${i + 1}, ${p.q} ${p.s} Method: ${p.m}.`).join(" ");
-  let body = "", w, h;
-  if (!tall) {
-    const bw = 164, gap = 20, bh = 250;
-    w = 5 * bw + 4 * gap; h = bh + 8;
-    STEPS.forEach((p, i) => {
-      const x = i * (bw + gap);
-      const ql = wrap(p.q, 19), ml = wrap(p.m, 24);
-      body += `<rect class="box" x="${x + 1}" y="4" width="${bw - 2}" height="${bh}" rx="12"/><circle class="num" cx="${x + 28}" cy="34" r="16"/><text class="t-n" x="${x + 28}" y="40" text-anchor="middle">${i + 1}</text>`;
-      body += tspans(ql, x + 14, 72, 18, "t-h") + tspans(wrap(p.s, 22), x + 14, 72 + ql.length * 18 + 8, 16, "t-b") + tspans(ml, x + 14, bh - 18 - (ml.length - 1) * 14, 14, "t-m");
-      if (i < 4) body += `<path class="arrow" d="M${x + bw + 2} ${bh / 2} h${gap - 8}"/><path class="arrow-h" d="M${x + bw + gap - 6} ${bh / 2 - 5} l6 5 l-6 5z"/>`;
-    });
-  } else {
-    const bw = 340, gap = 22, bh = 124;
-    w = bw; h = 5 * bh + 4 * gap + 8;
-    STEPS.forEach((p, i) => {
-      const y = 4 + i * (bh + gap);
-      body += `<rect class="box" x="1" y="${y}" width="${bw - 2}" height="${bh}" rx="12"/><circle class="num" cx="28" cy="${y + 28}" r="16"/><text class="t-n" x="28" y="${y + 34}" text-anchor="middle">${i + 1}</text>`;
-      body += `<text class="t-h" x="54" y="${y + 33}">${esc(p.q)}</text>` + tspans(wrap(p.s, 44), 16, y + 58, 16, "t-b") + tspans(wrap(p.m, 54), 16, y + bh - 10, 14, "t-m");
-      if (i < 4) body += `<path class="arrow" d="M${bw / 2} ${y + bh + 1} v${gap - 9}"/><path class="arrow-h" d="M${bw / 2 - 5} ${y + bh + gap - 7} l5 6 l5 -6z"/>`;
-    });
-  }
-  const id = tall ? "pt" : "pw";
-
-  return `<svg class="${tall ? "pipe-tall" : "pipe-wide"}" viewBox="0 0 ${w} ${h}" role="img" aria-labelledby="${id}-t ${id}-d"><title id="${id}-t">LAMBAT pipeline in five steps</title><desc id="${id}-d">${esc(desc)}</desc>${body}</svg>`;
+// The five steps as plain HTML cards: text stays real text, 14px and up, and the row stacks on phones.
+function pipeline() {
+  return `<ol class="pipe">${STEPS.map((p, i) => `<li><span class="pipe-n" aria-hidden="true">${i + 1}</span><h3>${esc(p.q)}</h3><p>${esc(p.s)}</p><p class="pipe-m"><span class="sr-only">Method: </span>${esc(p.m)}</p></li>`).join("")}</ol>`;
 }
 
 // Values read from results/validation_table.csv, outcome events_all, n = 31 barangays.
@@ -105,6 +71,17 @@ uv run python scripts/run_alert.py
 uv run python scripts/run_pipeline.py --scenario 25yr
 uv sync --extra cv   # optional: PyTorch for the U-Net`;
 
+const TOC = [
+  ["m-glance", "What we know and don't"],
+  ["m-problem", "The problem"],
+  ["m-how", "How it works"],
+  ["m-defs", "Words we use"],
+  ["m-val", "How we checked it"],
+  ["m-limits", "Limits"],
+  ["m-refs", "Data and references"],
+  ["m-run", "Reproduce it"],
+];
+
 const html = () => `
 <article class="method">
   <header>
@@ -112,6 +89,35 @@ const html = () => `
     <h1>How LAMBAT works, and what it cannot tell you yet</h1>
     <p class="lede">Every step, every check, and every known weakness, in plain language.</p>
   </header>
+
+  <nav class="toc card" aria-label="On this page">
+    <h2 class="card-title">On this page</h2>
+    <ol>${TOC.map(([id, label]) => `<li><a href="#/method" data-jump="${id}">${esc(label)}</a></li>`).join("")}</ol>
+  </nav>
+
+  <section class="card" aria-labelledby="m-glance">
+    <h2 class="card-title" id="m-glance">What we know, and what we don't know yet</h2>
+    <div class="know">
+      <div class="know-col know-yes">
+        <h3>What we know</h3>
+        <ul>
+          <li>Which barangays a 25-year flood reaches, and how many residents live there.</li>
+          <li>How many of those residents can walk to a clinic in 30 minutes, and how many cannot.</li>
+          <li>Which 3, 5 or 8 dose points reach the most exposed residents on a map.</li>
+          <li>How a rain warning, trained on past years, scored on years it had not seen.</li>
+        </ul>
+      </div>
+      <div class="know-col know-no">
+        <h3>What we don't know yet</h3>
+        <ul>
+          <li><strong>Whether the ranking is right.</strong> We compared it with news reports of 13 flood events in Dagupan City. The Spearman correlation (a score from -1 to 1 for how well two rankings agree, where 0 means none) is -0.10, with a 95% interval of -0.48 to 0.30. That is no detectable agreement.</li>
+          <li><strong>Why reports are a weak ruler.</strong> They mostly follow where people live (0.64 against population density), not where the water goes.</li>
+          <li>Whether the radar flood model works in Dagupan. It was tested on floods in other countries.</li>
+          <li>How access changes on the ground. It is modelled from maps.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
   <section class="card" aria-labelledby="m-problem">
     <h2 class="card-title" id="m-problem">The problem</h2>
@@ -128,23 +134,26 @@ const html = () => `
   <section class="card" aria-labelledby="m-how">
     <h2 class="card-title" id="m-how">How LAMBAT works</h2>
     <p class="caption">Five steps. The first four run after a flood. The fifth runs weeks before.</p>
-    ${pipeline(false)}${pipeline(true)}
+    ${pipeline()}
   </section>
 
   <section class="card" aria-labelledby="m-defs">
     <h2 class="card-title" id="m-defs">Words we use</h2>
     <dl class="defs">
-      <div><dt>Exposed</dt><dd>A resident who lives in an area the flood map says was under water.</dd></div>
+      <div><dt>25-year flood</dt><dd>A flood big enough that it has about a 4% chance of happening in any year (UP NOAH hazard map).</dd></div>
+      <div><dt>Exposed residents</dt><dd>People who live where a 25-year flood reaches.</dd></div>
       <div><dt>Within reach</dt><dd>A resident who can walk to a clinic or hospital in 30 minutes, with flooded roads slowed or closed.</dd></div>
-      <div><dt>Access gap</dt><dd>Residents who can reach care on a dry day but not during the flood. This is a hypothesis we test, not a premise. If the gap is zero, the tool still gives exposure and capsule counts for each barangay.</dd></div>
-      <div><dt>Dose point</dt><dd>A temporary site, such as a barangay hall, where capsules are handed out after a flood.</dd></div>
+      <div><dt>Cut off from care</dt><dd>An exposed resident more than a 30-minute walk from a clinic while the flood is on.</dd></div>
+      <div><dt>Lose access in the flood (estimated)</dt><dd>Residents who can reach care on a dry day but not during the flood. This is a hypothesis we test, not a premise. If the gap is zero, the tool still gives exposure and capsule counts for each barangay.</dd></div>
+      <div><dt>Dose point</dt><dd>A temporary site, such as a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood.</dd></div>
+      <div><dt>Barangay priority</dt><dd>Barangays ordered by exposed residents cut off from care. Not the same as dose point order, which picks the places that reach the most cut-off residents first.</dd></div>
     </dl>
     <p>We report residents within reach of care. We never report lives saved.</p>
   </section>
 
   <section class="card" aria-labelledby="m-val">
     <h2 class="card-title" id="m-val">How we checked it</h2>
-    <p>We asked whether barangays that our flood ranking calls flood-prone were named more often in news reports. The reports cover 13 flood events in Dagupan City, and 31 barangays are ranked.</p>
+    <p>We asked whether barangays that our flood ranking calls flood-prone were named more often in news reports. The reports cover 13 flood events in Dagupan City, and 31 barangays are ranked. We score the match with Spearman correlation: a number from -1 to 1 that says how well two rankings agree. 1 means the same order, 0 means no link, -1 means opposite orders.</p>
     <div class="figs">
       <div class="stat"><span class="stat-value">-0.10</span><span class="stat-label">Spearman correlation</span></div>
       <div class="stat"><span class="stat-value">-0.48 to 0.30</span><span class="stat-label">95% confidence interval</span></div>
@@ -167,26 +176,34 @@ const html = () => `
   <section class="card" aria-labelledby="m-limits">
     <h2 class="card-title" id="m-limits">Limits</h2>
     <ul class="limits">
-      <li>Case data is weekly, for whole cities, and ends in 2022.</li>
-      <li>The rain alert cannot see tidal flooding.</li>
+      <li>Case data is weekly, for whole cities, and ends in 2022. The rain warning learned from 2008 to 2016 and was tested on 2017 to 2019.</li>
+      <li>The rain warning cannot see tidal flooding.</li>
       <li>Access is modelled from maps, not checked on the ground.</li>
       <li>Each dose point assumes a prescriber is present.</li>
       <li>The tool counts places, not patients. Pregnant and lactating women are flagged for referral, and people who were never diagnosed do not appear.</li>
-      <li>The radar flood model (a U-Net) was tested on floods in other countries, not in Dagupan.</li>
+      <li>The radar flood model is a U-Net, an image-reading neural network. It was tested on floods in other countries, not in Dagupan. Its score is IoU, the overlap between predicted water and true water, where 1 is a perfect match.</li>
     </ul>
   </section>
 
-  <section class="card" aria-labelledby="m-refs">
-    <h2 class="card-title" id="m-refs">Data and references</h2>
-    <div class="refs-bar"><button type="button" class="copy-all">Copy all references</button><span class="copy-msg" aria-hidden="true"></span></div>
-    <ul class="refs">${REFS.map((r, i) => `<li data-i="${i}"><span class="ref-text">${r}</span>${copyBtn()}</li>`).join("")}</ul>
+  <section class="card fold-card" aria-labelledby="m-refs">
+    <details class="fold" open>
+      <summary><h2 class="card-title" id="m-refs">Data and references</h2></summary>
+      <div class="fold-body">
+        <div class="refs-bar"><button type="button" class="copy-all">Copy all references</button><span class="copy-msg" aria-hidden="true"></span></div>
+        <ul class="refs">${REFS.map((r, i) => `<li data-i="${i}"><span class="ref-text">${r}</span>${copyBtn()}</li>`).join("")}</ul>
+      </div>
+    </details>
   </section>
 
-  <section class="card" aria-labelledby="m-run">
-    <h2 class="card-title" id="m-run">Reproduce it</h2>
-    <p>You need <a href="https://docs.astral.sh/uv/">uv</a>. Data download steps are in <a href="${REPO_URL}/blob/main/data/README.md">data/README.md</a>.</p>
-<div class="codewrap"><pre><code>${esc(RUN_CMDS)}</code></pre>${copyBtn("Copy commands")}</div>
-    <p><a class="btn" href="${REPO_URL}">Open the repository</a></p>
+  <section class="card fold-card" aria-labelledby="m-run">
+    <details class="fold">
+      <summary><h2 class="card-title" id="m-run">Reproduce it</h2></summary>
+      <div class="fold-body">
+        <p>You need <a href="https://docs.astral.sh/uv/">uv</a>. Data download steps are in <a href="${REPO_URL}/blob/main/data/README.md">data/README.md</a>.</p>
+        <div class="codewrap"><pre><code>${esc(RUN_CMDS)}</code></pre>${copyBtn("Copy commands")}</div>
+        <p><a class="btn" href="${REPO_URL}">Open the repository</a></p>
+      </div>
+    </details>
   </section>
 </article>`;
 
@@ -243,6 +260,18 @@ function selectNode(node) {
 function wire(el) {
   const live = el.querySelector(".copy-live");
   el.addEventListener("click", async (e) => {
+    const jump = e.target.closest("a[data-jump]");
+    if (jump && el.contains(jump)) {
+      e.preventDefault();
+      const target = el.querySelector("#" + jump.dataset.jump);
+      if (!target) return;
+      const det = target.closest("details");
+      if (det) det.open = true;
+      target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
+      return;
+    }
     const btn = e.target.closest("button.copy, button.copy-all");
     if (!btn || !el.contains(btn)) return;
     let text, target;

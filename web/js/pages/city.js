@@ -3,15 +3,15 @@
 // ({meta, barangays, dosePoints, summary, alertScores, alertSeries}) or the
 // loader shape ({meta, bar, rows, dose, summary, coverage, series, alert}).
 import * as D from "../data.js";
-import { skel, moreBelow, reducedMotion } from "../format.js";
+import { skel, reducedMotion } from "../format.js";
 
 const TABS = [
   ["overview", "Overview"],
   ["dose-points", "Dose points"],
   ["barangays", "Barangays"],
-  ["alert", "Alert"],
+  ["alert", "Rain warning"],
 ];
-const TAB_ALIAS = { dose: "dose-points", doses: "dose-points", dosepoints: "dose-points", barangay: "barangays" };
+const TAB_ALIAS = { warning: "alert", "rain-warning": "alert", dose: "dose-points", doses: "dose-points", dosepoints: "dose-points", barangay: "barangays" };
 
 let cleanup = [];
 
@@ -23,6 +23,16 @@ const pct = (v, d = 0) => (isNum(v) ? (+v * 100).toFixed(d) + "%" : "n/a");
 const dec = (v, d = 2) => (isNum(v) ? (+v).toFixed(d) : "n/a");
 const share01 = (v) => (isNum(v) ? (+v > 1 ? +v / 100 : +v) : null);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const KINDS = {
+  school: "School", townhall: "Barangay hall", town_hall: "Barangay hall", community_centre: "Community centre", community_center: "Community centre",
+  hospital: "Hospital", clinic: "Clinic", doctors: "Clinic", pharmacy: "Pharmacy", place_of_worship: "Place of worship", church: "Church",
+  fire_station: "Fire station", police: "Police station", library: "Library", marketplace: "Market", sports_centre: "Sports centre",
+  social_facility: "Social facility", kindergarten: "Kindergarten", college: "College", university: "University", government: "Government office",
+};
+const kindLabel = (k) => { if (!k) return "Site"; if (KINDS[k]) return KINDS[k]; const t = String(k).replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
+const planVal = (v, k) => (v != null && typeof v === "object" ? v[k] : v);
+const GLOSS = "Dose point order and barangay priority are different lists. Dose point order (1 opens first) picks the places that reach the most cut-off residents first. Barangay priority ranks whole barangays by exposed residents cut off from care.";
 
 // Placeholder page shown while the city data loads, shaped like the tab being opened.
 function ghost(tab) {
@@ -122,6 +132,7 @@ function model(raw) {
     bCaught: seas && isNum(seas.sensitivity) ? seas.sensitivity : null,
     bFalse: seas && isNum(seas.false_alert_rate) ? seas.false_alert_rate : null,
     years: (scores && scores.test_years) || ra.testYears || [2017, 2019],
+    trainYears: (scores && scores.train_years) || ra.trainYears || [2008, 2016],
   };
   const ser = raw.alertSeries || raw.series || null;
   const series = ser && ser.length
@@ -138,6 +149,7 @@ function ringsOf(g) {
   if (g.type === "MultiPolygon") return g.coordinates;
   return [];
 }
+// Shaded by the count of exposed residents, the same metric the Map page opens with.
 function locator(m) {
   const feats = m.gj.features;
   let w = 180, s = 90, e = -180, n = -90;
@@ -149,7 +161,7 @@ function locator(m) {
   const H = Math.ceil((n - s) * sc + 2 * pad);
   const X = (x) => (pad + (x - w) * k * sc).toFixed(1);
   const Y = (y) => (pad + (n - y) * sc).toFixed(1);
-  const sh = feats.map((f) => { const p = f.properties || {}; const pop = +p.population; return pop > 0 ? (+p.exposed || 0) / pop : 0; });
+  const sh = feats.map((f) => { const p = f.properties || {}; return isNum(p.exposed) ? +p.exposed : 0; });
   const sorted = [...sh].sort((a, b) => a - b);
   const q = (t) => sorted[Math.min(sorted.length - 1, Math.floor(t * sorted.length))];
   const br = [q(0.2), q(0.4), q(0.6), q(0.8)];
@@ -159,45 +171,65 @@ function locator(m) {
   feats.forEach((f, i) => {
     const d = ringsOf(f.geometry).map((poly) => poly.map((r) => "M" + r.map(([x, y]) => X(x) + " " + Y(y)).join("L") + "Z").join("")).join("");
     const p = f.properties || {};
-    paths += `<path d="${d}" style="fill:var(--ramp-${cls(sh[i])})" fill-rule="evenodd"><title>${esc(p.adm4_en)}: ${pct(sh[i])} of residents exposed</title></path>`;
+    paths += `<path d="${d}" style="fill:var(--ramp-${cls(sh[i])})" fill-rule="evenodd"><title>${esc(p.adm4_en)}: ${fmt(sh[i])} exposed residents</title></path>`;
   });
-  const legend = [1, 2, 3, 4, 5].map((c) => `<li><span class="sw" style="background:var(--ramp-${c})"></span>${pct(lo[c - 1])} to ${pct(hi[c - 1])}</li>`).join("");
-  const desc = `Outline map of ${feats.length} barangays shaded by the share of residents exposed to floodwater, from ${pct(sorted[0])} to ${pct(sorted[sorted.length - 1])}.`;
+  const legend = [1, 2, 3, 4, 5].map((c) => `<li><span class="sw" style="background:var(--ramp-${c})"></span>${fmt(lo[c - 1])} to ${fmt(hi[c - 1])}</li>`).join("");
+  const desc = `Outline map of ${feats.length} barangays shaded by the number of exposed residents, from ${fmt(sorted[0])} to ${fmt(sorted[sorted.length - 1])}.`;
   return `<svg class="locator" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${paths}</svg>
-    <ul class="legend" aria-label="Share of residents exposed, by shade">${legend}</ul>`;
+    <ul class="legend" aria-label="Exposed residents, by shade">${legend}</ul>`;
 }
 
 // ---------- panels ----------
-function statCard(label, value, caption, extra = "") {
-  return `<div class="card stat"><span class="stat-label">${esc(label)}</span><span class="stat-value num">${value}</span>${extra}<p class="stat-caption">${caption}</p></div>`;
+function statCard(label, value, caption, extra = "", labelHtml = "") {
+  return `<div class="card stat"><span class="stat-label">${labelHtml || esc(label)}</span><span class="stat-value num">${value}</span>${extra}<p class="stat-caption">${caption}</p></div>`;
+}
+
+// Sites of one plan size, in order (1 opens first).
+function planOrder(m, k) {
+  const feats = (m.dose.features || []).map((f) => f.properties || {});
+  const ids = m.plans[k] && m.plans[k].sites;
+  const rk = (p) => { const v = planVal(p.rank_in_plan, k); const r = v != null ? +v : p.rank; return isNum(r) ? +r : 99; };
+  let list = ids ? feats.filter((p) => ids.includes(p.id)) : feats.slice();
+  if (list.length < +k) list = feats.slice(); // plan sites missing from the file: first k by rank
+  list.sort((a, b) => rk(a) - rk(b));
+  return list.slice(0, +k).map((p) => ({ ...p, order: rk(p) }));
+}
+const joinNames = (a) => (a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]);
+
+function answerCard(m) {
+  const c = m.meta;
+  const exposedShare = isNum(c.exposed_share) ? +c.exposed_share : isNum(c.population) && c.population > 0 ? c.exposed / c.population : null;
+  const k = m.plans["3"] ? "3" : Object.keys(m.plans)[0];
+  const top = k ? planOrder(m, k) : [];
+  if (m.sitingOk && k && top.length && isNum(m.plans[k].share)) {
+    const names = joinNames(top.map((p) => esc(p.name || kindLabel(p.kind))));
+    return `<div class="card answer"><p class="answer-text">Open ${top.length} dose points first: <strong>${names}</strong>. They put <strong>${pct(m.plans[k].share)}</strong> of exposed residents within a 30-minute walk.</p>
+      <a class="btn btn-primary" href="#/map/${esc(c.code)}?plan=${k}">See them on the map</a></div>`;
+  }
+  return `<div class="card answer"><p class="answer-text"><strong>${fmt(c.exposed)}</strong> of ${fmt(c.population)} residents (${pct(exposedShare)}) live where a 25-year flood reaches. Dose point plans were not computed for this city.</p>
+    <a class="btn btn-primary" href="#/map/${esc(c.code)}">Open on map</a></div>`;
 }
 
 function overview(m) {
   const c = m.meta;
   const exposedShare = isNum(c.exposed_share) ? +c.exposed_share : isNum(c.population) && c.population > 0 ? c.exposed / c.population : null;
-  const gapCard = m.accessOk
-    ? statCard("Access gap", fmt(m.gap), "People who can reach care on a dry day but not in the flood.")
-    : statCard("Access gap", "n/a", "Access not computed for this city: road data unavailable.");
-  let cov;
+  const cards = [statCard("Exposed residents", fmt(c.exposed), `${pct(exposedShare)} of ${fmt(c.population)} residents live where a 25-year flood reaches.`),
+    statCard("Capsules per flood week", fmt(c.weekly_capsules), "Doxycycline capsules needed each week the flood lasts.")];
+  const notes = [];
+  if (m.accessOk) {
+    cards.push(statCard("", fmt(m.gap), "Residents who can walk to a clinic on a dry day but not during the flood. Estimated from road maps.", "",
+      `Lose access in the flood (estimated) <a class="help" href="#/method" title="How this is estimated" aria-label="How this is estimated, opens the Method page">?</a>`));
+  } else notes.push("Access in the flood was not computed for this city: road data unavailable.");
   if (m.sitingOk) {
-    const trio = ["3", "5", "8"].map((k) => `<div><span class="num">${m.plans[k] ? pct(m.plans[k].share) : "n/a"}</span><span class="lab">${k} points</span></div>`).join("");
-    cov = `<div class="card stat"><span class="stat-label">Within reach after dose points</span><div class="stat-trio" style="margin-top:4px">${trio}</div><p class="stat-caption">Share of exposed residents within a 30-minute walk of care if 3, 5 or 8 dose points open.</p></div>`;
-  } else {
-    cov = statCard("Within reach after dose points", "n/a", "Dose point plans not computed for this city.");
-  }
-  const cases = isNum(c.lepto_cases_2008_2022)
-    ? statCard("Leptospirosis cases", fmt(c.lepto_cases_2008_2022), "Reported cases, 2008 to 2022.")
-    : statCard("Leptospirosis cases", "n/a", "No case history for this city.");
-  return `<div class="city-split">
-    <div class="city-grid two">
-      ${statCard("Exposed residents", fmt(c.exposed), `${pct(exposedShare)} of ${fmt(c.population)} residents live where a 25-year flood reaches.`)}
-      ${statCard("Capsules per flood week", fmt(c.weekly_capsules), "Doxycycline capsules needed each week the flood lasts.")}
-      ${gapCard}
-      ${cov}
-      ${cases}
-    </div>
+    const rows = ["3", "5", "8"].filter((k) => m.plans[k] && isNum(m.plans[k].share)).map((k) => `<div class="reach-row"><span class="lab">${k} dose points</span><span class="bar big" aria-hidden="true"><span class="bar-fill" style="width:${(m.plans[k].share * 100).toFixed(1)}%"></span></span><span class="num">${pct(m.plans[k].share)}</span></div>`).join("");
+    cards.push(`<div class="card stat"><span class="stat-label">Within a 30-minute walk of care after</span><div class="reach" style="margin-top:var(--s1)">${rows}</div></div>`);
+  } else notes.push("Dose point plans were not computed for this city.");
+  if (isNum(c.lepto_cases_2008_2022)) cards.push(statCard("Leptospirosis cases", fmt(c.lepto_cases_2008_2022), "Reported cases, 2008 to 2022."));
+  else notes.push("Case counts are not available for this city.");
+  return `${answerCard(m)}<div class="city-split">
+    <div><div class="city-grid two">${cards.join("")}</div>${notes.length ? `<p class="quiet">${notes.map(esc).join(" ")}</p>` : ""}</div>
     <div class="card"><h2 class="card-title">Where the exposure is</h2>
-      <p class="caption">Each shape is a barangay, shaded by the share of its residents exposed.</p>${locator(m)}</div>
+      <p class="caption">Each shape is a barangay, shaded by its number of exposed residents. The Map page opens with the same shading.</p>${locator(m)}</div>
   </div>`;
 }
 
@@ -209,81 +241,107 @@ function planRows(m) {
     return `<tr><td>${k}</td><td>${p.sites ? p.sites.length : "n/a"}</td><td>${fmt(p.newly)}</td><td class="has-bar"><span class="num">${pct(p.share, 1)}</span>${isNum(p.share) ? bar(p.share) : ""}</td></tr>`;
   }).join("");
 }
-function covChart(m) {
+// Coverage chart. W is the real pixel width of its box, so text stays 12px.
+function covChart(m, W) {
   const bars = [];
-  if (m.dry != null) bars.push({ k: "Dry day", sub: "no flood", v: m.dry, c: "b-dry" });
-  if (m.flood != null) bars.push({ k: "In the flood", sub: "no dose points", v: m.flood, c: "b-flood" });
-  ["3", "5", "8"].forEach((k) => { if (m.plans[k] && m.plans[k].share != null) bars.push({ k: "+" + k + " points", sub: "dose points open", v: m.plans[k].share, c: "b-plan" }); });
+  if (m.dry != null) bars.push({ k: ["Dry", "day"], v: m.dry, c: "b-dry" });
+  if (m.flood != null) bars.push({ k: ["In the", "flood"], v: m.flood, c: "b-flood" });
+  ["3", "5", "8"].forEach((k) => { if (m.plans[k] && m.plans[k].share != null) bars.push({ k: ["With " + k, "points"], v: m.plans[k].share, c: "b-plan" }); });
   if (!bars.length) return "";
-  const W = 640, H = 320, L = 52, R = 12, T = 28, B = 62;
-  const step = (W - L - R) / bars.length, bw = Math.min(72, step - 16);
+  W = Math.max(280, Math.round(W));
+  const wide = W >= 420;
+  const H = 300, L = wide ? 56 : 42, R = 8, T = 28, B = 52;
+  const step = (W - L - R) / bars.length, bw = Math.min(72, step - 10);
   const Y = (v) => T + (H - T - B) * (1 - v);
   let s = "";
-  [0, .25, .5, .75, 1].forEach((g) => { s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(g)}" y2="${Y(g)}"/><text x="${L - 8}" y="${Y(g) + 4}" text-anchor="end">${Math.round(g * 100)}%</text>`; });
-  s += `<text class="axis-title" transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Within a 30-minute walk</text>`;
+  [0, .25, .5, .75, 1].forEach((g) => { s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(g)}" y2="${Y(g)}"/><text x="${L - 6}" y="${Y(g) + 4}" text-anchor="end">${Math.round(g * 100)}%</text>`; });
+  if (wide) s += `<text class="axis-title" transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Within a 30-minute walk</text>`;
   bars.forEach((b, i) => {
     const x = L + step * i + (step - bw) / 2, y = Y(b.v);
     s += `<rect class="${b.c}" x="${x}" y="${y}" width="${bw}" height="${Y(0) - y}" rx="4"/>`;
     s += `<text class="val" x="${x + bw / 2}" y="${y - 8}" text-anchor="middle">${pct(b.v)}</text>`;
-    s += `<text class="b-lab" x="${x + bw / 2}" y="${H - 38}" text-anchor="middle">${esc(b.k)}</text><text x="${x + bw / 2}" y="${H - 22}" text-anchor="middle">${esc(b.sub)}</text>`;
+    s += `<text class="b-lab" x="${x + bw / 2}" y="${H - 32}" text-anchor="middle">${esc(b.k[0])}</text><text class="b-lab" x="${x + bw / 2}" y="${H - 16}" text-anchor="middle">${esc(b.k[1])}</text>`;
   });
-  const desc = "Share of exposed residents within a 30-minute walk of care. " + bars.map((b) => `${b.k}: ${pct(b.v)}`).join(". ") + ".";
-  return `<svg class="chart-city" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${s}</svg>`;
+  const desc = "Share of exposed residents within a 30-minute walk of care. " + bars.map((b) => `${b.k.join(" ")}: ${pct(b.v)}`).join(". ") + ".";
+  return `<svg class="chart-city" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${s}</svg>`;
 }
 function dosePanel(m) {
   if (!m.sitingOk) return `<div class="card"><h2 class="card-title">Dose points</h2><p class="empty">Dose point plans were not computed for this city${m.accessOk ? "" : ": road data unavailable"}.</p></div>`;
-  const feats = (m.dose.features || []).map((f) => f.properties || {}).sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
-  const list = feats.length
-    ? `<h3 class="card-title" style="margin-top:var(--s3)">Candidate sites, in order of rank</h3><div class="table-wrap"><table class="table"><caption class="sr-only">Dose point sites by rank</caption><thead><tr><th scope="col">Rank</th><th scope="col" class="l">Site</th><th scope="col" class="l">Type</th></tr></thead><tbody>${feats.map((p) => `<tr><td>${esc(p.rank ?? "")}</td><td class="l">${esc(p.name || p.id || "Unnamed")}</td><td class="l">${esc(p.kind || "")}</td></tr>`).join("")}</tbody></table></div>`
-    : "";
+  const feats = (m.dose.features || []).map((f) => f.properties || {});
+  const perPlan = feats.some((p) => p.rank_in_plan != null && typeof p.rank_in_plan === "object");
+  const ks = ["3", "5", "8"].filter((k) => m.plans[k]);
+  const base = (p) => { if (perPlan) { const v = Object.values(p.rank_in_plan || {}).map(Number).filter(Number.isFinite); return v.length ? Math.min(...v) : 99; } return isNum(p.rank) ? +p.rank : 99; };
+  const sorted = feats.slice().sort((a, b) => base(a) - base(b));
+  const inPlans = (p) => ks.filter((k) => m.plans[k].sites && m.plans[k].sites.includes(p.id));
+  let list = "";
+  if (sorted.length) {
+    const head = perPlan
+      ? `<th scope="col" class="l">Dose point</th><th scope="col" class="l">Type</th>${ks.map((k) => `<th scope="col" title="Order in the ${k}-point plan. 1 opens first.">Order, plan of ${k}</th>`).join("")}`
+      : `<th scope="col">Order</th><th scope="col" class="l">Dose point</th><th scope="col" class="l">Type</th><th scope="col" class="l">In plan size</th>`;
+    const body = sorted.map((p) => {
+      const nm = esc(p.name || kindLabel(p.kind) || "Unnamed"), ty = esc(kindLabel(p.kind));
+      if (perPlan) return `<tr><td class="l">${nm}</td><td class="l">${ty}</td>${ks.map((k) => { const v = planVal(p.rank_in_plan, k); return `<td>${v != null && isNum(v) ? esc(v) : "-"}</td>`; }).join("")}</tr>`;
+      return `<tr><td>${esc(p.rank ?? "")}</td><td class="l">${nm}</td><td class="l">${ty}</td><td class="l">${esc(inPlans(p).join(", ") || "-")}</td></tr>`;
+    }).join("");
+    list = `<h3 class="card-title" style="margin-top:var(--s3)">Candidate dose points, in order</h3><p class="caption">${esc(GLOSS)}</p><div class="table-wrap wrapcols"><table class="table"><caption class="sr-only">Dose points in order</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  }
   return `<div class="city-grid two">
     <div class="card"><h2 class="card-title">Plans</h2>
-      <p class="caption">How many exposed residents each plan brings within reach.</p>
-      <div class="table-wrap"><table class="table"><caption class="sr-only">Dose point plans</caption>
-      <thead><tr><th scope="col">k</th><th scope="col">Sites</th><th scope="col">Newly covered</th><th scope="col">Within reach after</th></tr></thead>
+      <p class="caption">How many exposed residents each plan size brings within reach.</p>
+      <div class="table-wrap wrapcols"><table class="table"><caption class="sr-only">Dose point plans</caption>
+      <thead><tr><th scope="col">Plan size</th><th scope="col">Dose points</th><th scope="col">Newly covered</th><th scope="col">Within reach after</th></tr></thead>
       <tbody>${planRows(m)}</tbody></table></div>
       <p class="note">Each plan is optimised separately, so the 5-point plan is not the 3-point plan plus two.</p></div>
     <div class="card"><h2 class="card-title">Share within a 30-minute walk</h2>
-      <p class="caption">Exposed residents who can walk to care or a dose point.</p>${covChart(m)}</div>
+      <p class="caption">Exposed residents who can walk to care or a dose point.</p><div class="chart-host" data-chart="cov"></div></div>
     ${list ? `<div class="card wide">${list}</div>` : ""}
   </div>`;
 }
 
 const COLS = [
-  { key: "priority", label: "Priority", desc: "Rank for opening dose points. 1 is the most urgent. The badge splits the ranking into thirds: High is the top third of barangays by rank, Medium the middle third, Low the rest.", num: true },
+  { key: "priority", label: "Priority", desc: "Barangay priority: barangays ordered by exposed residents cut off from care. 1 comes first. The top 10 are marked.", num: true },
   { key: "name", label: "Barangay", desc: "Smallest administrative area.", text: true },
-  { key: "pop", label: "Population", desc: "Residents living there.", num: true },
-  { key: "exposed", label: "Exposed", desc: "Residents living where the flood reaches. The bar shows each barangay's share of the city's largest barangay figure.", num: true },
-  { key: "unreached", label: "Out of reach in flood", desc: "Exposed residents with no care within a 30-minute walk during the flood.", num: true },
-  { key: "fshare", label: "Flooded share", desc: "Share of the barangay's area under water.", num: true },
-  { key: "capsules", label: "Capsules/week", desc: "Capsules needed each flood week.", num: true },
+  { key: "pop", label: "Population", desc: "Residents living there.", num: true, cls: "c-pop" },
+  { key: "exposed", label: "Exposed residents", desc: "Residents living where a 25-year flood reaches. The bar compares each barangay with the largest one in the city.", num: true },
+  { key: "unreached", label: "Cut off from care", desc: "Exposed residents more than a 30-minute walk from a clinic while the flood is on.", num: true },
+  { key: "fshare", label: "Flooded share", desc: "Share of the barangay's area under water.", num: true, cls: "c-extra" },
+  { key: "capsules", label: "Capsules per week", desc: "Doxycycline capsules needed each flood week.", num: true, cls: "c-extra" },
 ];
 function cell(c, r, ctx) {
-  const v = r[c.key];
-  if (c.key === "priority") {
-    const t = ctx.n ? v / ctx.n : 1;
-    const lvl = t <= 1 / 3 ? "High" : t <= 2 / 3 ? "Medium" : "Low";
-    return `<td class="has-badge"><span class="num">${fmt(v)}</span><span class="pri pri-${lvl.toLowerCase()}">${lvl}</span></td>`;
-  }
+  const v = r[c.key], k = c.cls ? ` class="${c.cls}"` : "";
+  if (c.key === "priority") return `<td><span class="num">${fmt(v)}</span>${ctx.n > 10 && v != null && v <= 10 ? '<span class="top10">Top 10</span>' : ""}</td>`;
   if (c.key === "exposed") return `<td class="has-bar"><span class="num">${fmt(v)}</span>${bar(ctx.maxExposed > 0 ? v / ctx.maxExposed : 0)}</td>`;
   if (c.key === "name") return `<td class="l">${esc(v)}</td>`;
-  if (c.key === "fshare") return `<td>${pct(v)}</td>`;
-  return `<td>${v == null ? '<span title="Not computed">n/a</span>' : fmt(v)}</td>`;
+  if (c.key === "fshare") return `<td${k}>${pct(v)}</td>`;
+  return `<td${k}>${v == null ? '<span title="Not computed">n/a</span>' : fmt(v)}</td>`;
 }
 function barangayPanel(m, panel, code) {
   panel.innerHTML = `<div class="card"><h2 class="card-title">Barangays by priority</h2>
-    <p class="caption">Sort any column. Search by barangay name.</p>
+    <p class="caption">Sort any column. Search by barangay name. ${esc(GLOSS)}</p>
     <div class="table-tools"><div style="flex:1;min-width:200px"><label class="sr-only" for="brgy-q">Search barangays</label><input id="brgy-q" class="field" type="search" placeholder="Search barangays" autocomplete="off"></div>
+    <button type="button" class="btn ghost sm" id="brgy-more" aria-expanded="false">More columns</button>
     <button type="button" class="btn btn-primary sm" id="brgy-csv">Download CSV</button></div>
-    <div class="table-wrap" tabindex="0" role="region" aria-label="Barangay table, scrolls sideways on small screens"><table class="table" id="brgy-t"><caption class="sr-only">Barangays by priority</caption>
-    <thead><tr>${COLS.map((c) => `<th scope="col" data-k="${c.key}" class="${c.text ? "l" : ""}" aria-sort="none" title="${esc(c.desc)}"><button type="button">${esc(c.label)}</button></th>`).join("")}</tr></thead><tbody></tbody></table></div>
+    <div class="table-wrap flat" id="brgy-wrap"><table class="table brgy" id="brgy-t"><caption class="sr-only">Barangays by priority</caption>
+    <thead><tr>${COLS.map((c) => `<th scope="col" data-k="${c.key}" class="${[c.text ? "l" : "", c.cls || ""].join(" ").trim()}" aria-sort="none" title="${esc(c.desc)}"><button type="button">${esc(c.label)}</button></th>`).join("")}</tr></thead><tbody></tbody></table></div>
+    <div class="empty-state" id="brgy-empty" hidden><p></p><button type="button" class="btn ghost sm" id="brgy-clear">Clear search</button></div>
     <p class="note" id="brgy-count" role="status"></p>
     <ul class="col-key">${COLS.map((c) => `<li><strong>${esc(c.label)}.</strong> ${esc(c.desc)}</li>`).join("")}</ul></div>`;
   const tbody = panel.querySelector("tbody"), q = panel.querySelector("#brgy-q"), count = panel.querySelector("#brgy-count");
+  const wrap = panel.querySelector("#brgy-wrap"), table = panel.querySelector("#brgy-t"), empty = panel.querySelector("#brgy-empty");
   let sortKey = "priority", dir = 1;
   const ctx = { n: m.rows.length, maxExposed: Math.max(0, ...m.rows.map((r) => r.exposed || 0)) };
-  const box = panel.querySelector(".table-wrap");
-  cleanup.push(moreBelow(box));
+  const moreBtn = panel.querySelector("#brgy-more");
+  // Sideways scroll only when the extra columns do not fit; otherwise the page scrolls and the header stays sticky.
+  const fit = () => { wrap.classList.remove("scroll-x"); if (table.scrollWidth > wrap.clientWidth + 1) wrap.classList.add("scroll-x"); };
+  window.addEventListener("resize", fit);
+  cleanup.push(() => window.removeEventListener("resize", fit));
+  moreBtn.addEventListener("click", () => {
+    const on = !table.classList.contains("show-more");
+    table.classList.toggle("show-more", on);
+    fit();
+    moreBtn.setAttribute("aria-expanded", on);
+    moreBtn.textContent = on ? "Fewer columns" : "More columns";
+  });
   const view = () => {
     const term = q.value.trim().toLowerCase();
     const list = m.rows.filter((r) => !term || r.name.toLowerCase().includes(term));
@@ -298,7 +356,10 @@ function barangayPanel(m, panel, code) {
   };
   const draw = () => {
     const list = view();
-    tbody.innerHTML = list.length ? list.map((r) => `<tr>${COLS.map((c) => cell(c, r, ctx)).join("")}</tr>`).join("") : `<tr><td colspan="${COLS.length}" class="empty">No barangay matches.</td></tr>`;
+    tbody.innerHTML = list.map((r) => `<tr>${COLS.map((c) => cell(c, r, ctx)).join("")}</tr>`).join("");
+    wrap.hidden = !list.length;
+    empty.hidden = !!list.length;
+    if (!list.length) empty.querySelector("p").textContent = `No barangay matches "${q.value.trim()}". Check the spelling or clear the search.`;
     count.textContent = `Showing ${list.length} of ${m.rows.length} barangays.`;
     panel.querySelectorAll("th[data-k]").forEach((th) => th.setAttribute("aria-sort", th.dataset.k === sortKey ? (dir === 1 ? "ascending" : "descending") : "none"));
   };
@@ -308,6 +369,7 @@ function barangayPanel(m, panel, code) {
     draw();
   }));
   q.addEventListener("input", draw);
+  panel.querySelector("#brgy-clear").addEventListener("click", () => { q.value = ""; draw(); q.focus(); });
   panel.querySelector("#brgy-csv").addEventListener("click", () => {
     const head = ["priority", "barangay", "population", "exposed", "out_of_reach_in_flood", "flooded_share", "capsules_per_week"];
     const cs = (v) => (v == null ? "" : /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v));
@@ -321,8 +383,9 @@ function barangayPanel(m, panel, code) {
   draw();
 }
 
-function lineChart(series, years) {
-  const W = 760, H = 340, L = 52, R = 16, T = 16, B = 62, n = series.length;
+function lineChart(series, years, W) {
+  W = Math.max(280, Math.round(W));
+  const H = 320, L = 40, R = 12, T = 16, B = W >= 420 ? 56 : 40, n = series.length;
   const mx = Math.max(2, Math.ceil(Math.max(...series.map((d) => Math.max(d.actual, d.rain, d.seasonal)))));
   const X = (i) => L + ((W - L - R) * i) / Math.max(1, n - 1), Y = (v) => T + (H - T - B) * (1 - v / mx);
   let s = "";
@@ -332,37 +395,53 @@ function lineChart(series, years) {
   series.forEach((d, i) => { const y = d.week.slice(0, 4); if (!seen[y]) { seen[y] = 1; s += `<line class="grid" x1="${X(i)}" x2="${X(i)}" y1="${T}" y2="${H - B}"/><text x="${X(i) + 4}" y="${H - B + 16}">${y}</text>`; } });
   const pl = (key, cls) => `<polyline class="${cls}" points="${series.map((d, i) => X(i).toFixed(1) + "," + Y(d[key]).toFixed(1)).join(" ")}"/>`;
   s += pl("seasonal", "l-seas") + pl("rain", "l-rain") + pl("actual", "l-actual");
-  s += `<text class="axis-title" transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Cases per week</text>`;
-  s += `<text class="axis-title" x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle">Week, ${years[0]} to ${years[1]}</text>`;
+  if (W >= 420) {
+    s += `<text class="axis-title" transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Cases per week</text>`;
+    s += `<text class="axis-title" x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle">Week, ${years[0]} to ${years[1]}</text>`;
+  }
+  return `<svg class="chart-city" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(lineDesc(series))}">${s}</svg>`;
+}
+function lineDesc(series) {
+  const n = series.length;
   const tot = series.reduce((t, d) => t + d.actual, 0);
   const peak = series.reduce((b, d) => (d.actual > b.actual ? d : b), series[0]);
-  const desc = `Weekly leptospirosis cases from ${series[0].week} to ${series[n - 1].week}. Actual cases total ${tot}, peaking at ${peak.actual} in the week of ${peak.week}.`;
-  return { desc, svg: `<svg class="chart-city" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${s}</svg>` };
+  return `Weekly leptospirosis cases from ${series[0].week} to ${series[n - 1].week}. Actual cases total ${tot}, peaking at ${peak.actual} in the week of ${peak.week}.`;
+}
+function verdict(a) {
+  if (!isNum(a.caught) || !isNum(a.falseA)) return "";
+  const test = `In the test years it caught ${pct(a.caught)} of outbreak weeks, and ${pct(a.falseA)} of quiet weeks raised a false alarm`;
+  const base = isNum(a.bCaught) ? `, against ${pct(a.bCaught)} caught by a simple seasonal average` : "";
+  const word = a.caught >= 0.6 && a.falseA <= 0.15 ? "strong enough to plan around" : a.caught >= 0.3 && a.falseA <= 0.2 ? "good enough to prepare, not to rely on alone" : "too weak to rely on";
+  return `${test}${base}. Verdict: ${word}.`;
 }
 function alertPanel(m) {
   const a = m.alert, c = m.meta;
   if (a.status !== "evaluated") {
     const n = c.lepto_cases_2008_2022;
-    return `<div class="card"><h2 class="card-title">Alert</h2><p>${a.status === "too_few_cases" ? "Too few cases to test an alert for this city" : "The alert was not tested for this city"}${isNum(n) ? `: only ${fmt(n)} leptospirosis cases were reported from 2008 to 2022` : ""}. Any score would be noise, so none is shown.</p></div>`;
+    return `<div class="card"><h2 class="card-title">Rain warning</h2><p>${a.status === "too_few_cases" ? "Too few cases to test a rain warning for this city" : "The rain warning was not tested for this city"}${isNum(n) ? `: only ${fmt(n)} leptospirosis cases were reported from 2008 to 2022` : ""}. Any score would be noise, so none is shown.</p></div>`;
   }
+  const yrs = `${a.years[0]} to ${a.years[1]}`;
   const base = (v, f) => (v == null ? "No baseline score" : `Seasonal baseline: ${f(v)}`);
   const card = (label, v, b, cap) => `<div class="card stat"><span class="stat-label">${label}</span><span class="stat-value num">${v}</span><p class="stat-note">${b}</p><p class="stat-caption">${cap}</p></div>`;
   const cards = `<div class="city-grid">
     ${card("Correlation with real cases", dec(a.corr), base(a.bCorr, (v) => dec(v)), "How closely the rain model follows weekly cases. 1 is a perfect match.")}
-    ${card("Outbreak weeks caught", pct(a.caught), base(a.bCaught, (v) => pct(v)), "Share of outbreak weeks the alert warned about in advance.")}
-    ${card("False alerts", pct(a.falseA), base(a.bFalse, (v) => pct(v)), "Share of quiet weeks that still raised an alert. Lower is better.")}
+    ${card("Outbreak weeks caught", pct(a.caught), base(a.bCaught, (v) => pct(v)), "Share of outbreak weeks the warning flagged two weeks ahead.")}
+    ${card("False alarms", pct(a.falseA), base(a.bFalse, (v) => pct(v)), "Share of quiet weeks that still raised a warning. Lower is better.")}
   </div>`;
   let chart = "";
   if (m.series && m.series.length > 1) {
-    const ch = lineChart(m.series, a.years);
     chart = `<div class="card" style="margin-top:var(--s2)"><h2 class="card-title">Weekly cases, actual and predicted</h2>
-      ${ch.svg}
+      <div class="chart-host" data-chart="line"></div>
       <ul class="legend"><li><span class="ln"></span>Actual cases</li><li><span class="ln rain"></span>Rain model</li><li><span class="ln seas"></span>Seasonal baseline (dashed)</li></ul>
-      <p class="note">${esc(ch.desc)} The rain model is ${isNum(a.corr) ? "correlated " + dec(a.corr) : "scored"}${isNum(a.bCorr) ? ` against ${dec(a.bCorr)} for the seasonal baseline` : ""}.</p></div>`;
+      <p class="note">${esc(lineDesc(m.series))} The rain model is ${isNum(a.corr) ? "correlated " + dec(a.corr) : "scored"}${isNum(a.bCorr) ? ` against ${dec(a.bCorr)} for the seasonal baseline` : ""}.</p></div>`;
   } else {
-    chart = `<div class="card" style="margin-top:var(--s2)"><span class="badge test-label">Test period ${a.years[0]} to ${a.years[1]}, not a live alert</span><p class="empty">The weekly series is not available for this city.</p></div>`;
+    chart = `<div class="card" style="margin-top:var(--s2)"><p class="empty">The weekly series is not available for this city.</p></div>`;
   }
-  return `<span class="badge test-label">Test period ${a.years[0]} to ${a.years[1]}, not a live alert</span>${cards}${chart}`;
+  const v = verdict(a);
+  return `<div class="card"><h2 class="card-title">Rain warning (tested ${yrs})</h2>
+    ${v ? `<p class="verdict-line">${esc(v)}</p>` : ""}
+    <p class="caption" style="margin:0">A two-week-ahead warning from rainfall, tested on past data. It is not live. The model learned from ${a.trainYears[0]} to ${a.trainYears[1]} and was tested on ${yrs}, years it had never seen. Case records run to 2022, but the test stops at ${a.years[1]}.</p></div>
+    <div style="margin-top:var(--s2)">${cards}</div>${chart}`;
 }
 
 // ---------- page ----------
@@ -400,7 +479,7 @@ export async function render(el, params = {}) {
         <a class="btn ghost sm" href="#/map/${esc(c.code)}">Open on map</a>
       </div>
     </header>
-    <div class="tabs" role="tablist" aria-label="City sections"><span class="tab-ind" aria-hidden="true"></span>${TABS.map(([id, label]) => `<button type="button" role="tab" id="tab-${id}" aria-controls="panel-${id}" aria-selected="false" tabindex="-1" data-tab="${id}">${label}</button>`).join("")}</div>
+    <div class="tabs" role="tablist" aria-label="City sections"><span class="tab-ind" aria-hidden="true"></span>${TABS.map(([id, label]) => `<button type="button" role="tab" id="tab-${id}" aria-controls="panel-${id}" aria-selected="false" tabindex="-1" data-tab="${id}" data-label="${esc(label)}">${label}</button>`).join("")}</div>
     ${TABS.map(([id]) => `<section role="tabpanel" id="panel-${id}" aria-labelledby="tab-${id}" tabindex="0" hidden></section>`).join("")}
   </div>`;
 
@@ -442,13 +521,39 @@ export async function render(el, params = {}) {
       }
     });
     placeInd(prev !== -1);
+    fadeCue();
     const act = tabEls.find((t) => t.dataset.tab === id);
     if (act && tabsBox.scrollWidth > tabsBox.clientWidth) act.scrollIntoView({ inline: "nearest", block: "nearest" });
   };
-  const onResize = () => placeInd(false);
+  // Fade cue on the tab strip when it scrolls sideways (phones).
+  const fadeCue = () => {
+    const sc = tabsBox.scrollWidth - tabsBox.clientWidth;
+    tabsBox.classList.toggle("fade-r", sc > 2 && tabsBox.scrollLeft < sc - 2);
+    tabsBox.classList.toggle("fade-l", sc > 2 && tabsBox.scrollLeft > 2);
+  };
+  tabsBox.addEventListener("scroll", fadeCue, { passive: true });
+  // Charts draw at their real pixel width so axis text stays readable on phones.
+  const drawers = {
+    cov: (w) => covChart(m, w),
+    line: (w) => lineChart(m.series, m.alert.years, w),
+  };
+  const ros = [];
+  el.querySelectorAll(".chart-host").forEach((host) => {
+    let last = 0;
+    const ro = new ResizeObserver(() => {
+      const w = Math.floor(host.clientWidth);
+      if (!w || w === last) return;
+      last = w;
+      host.innerHTML = drawers[host.dataset.chart](w);
+    });
+    ro.observe(host);
+    ros.push(ro);
+  });
+  cleanup.push(() => ros.forEach((r) => r.disconnect()));
+  const onResize = () => { placeInd(false); fadeCue(); };
   window.addEventListener("resize", onResize);
   cleanup.push(() => window.removeEventListener("resize", onResize));
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => placeInd(false));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { placeInd(false); fadeCue(); });
   tabEls.forEach((t, i) => {
     t.addEventListener("click", () => {
       show(t.dataset.tab);
