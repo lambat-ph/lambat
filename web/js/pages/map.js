@@ -1,6 +1,6 @@
 import { getCities, getCity, cityHref } from "../data.js";
 import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
-import { fmt, pct, esc, reducedMotion, useCss } from "../format.js";
+import { fmt, pct, esc, reducedMotion, useCss, skel } from "../format.js";
 
 const METRICS = [
   { key: "exposed", prop: "exposed", short: "Residents in the floodwater", desc: "People who live where the flood reaches.",
@@ -24,7 +24,15 @@ const YEARS_DEFAULT = 25;
 const TEMPLATE = `
 <div class="mapwrap" id="mapwrap">
   <div id="map" role="region" aria-label="Map of flood exposure by barangay, with numbered dose points. The list on the left and the city dashboard give the same information as text."></div>
-  <div class="loading" id="loading" role="status">Loading the map</div>
+  <div class="loading" id="loading" role="status" hidden></div>
+  <div class="loader" id="loader" role="status" aria-live="polite">
+    <div class="loader-box">
+      <img class="loader-logo" src="assets/favicon.svg" alt="" width="72" height="72">
+      <h2 class="loader-title">Loading the flood map</h2>
+      <p class="loader-step" id="loaderStep">Getting the basemap.</p>
+      <div class="loader-bar" id="loaderBar" aria-hidden="true"></div>
+    </div>
+  </div>
 
   <header class="strip" id="strip" hidden>
     <div class="strip-main">
@@ -87,6 +95,27 @@ const TEMPLATE = `
 </div>`;
 
 let map, tip, host, S, mobile, ro, ro2, onKey;
+let loaderOn = false, loaderT, loaderFade;
+
+/* ---------- loading screen ---------- */
+const loaderStep = (t) => { const e = loaderOn && host.querySelector("#loaderStep"); if (e) e.textContent = t; };
+function hideLoader() {
+  if (!loaderOn) return;
+  loaderOn = false; clearTimeout(loaderT);
+  const l = host && host.querySelector("#loader");
+  if (!l) return;
+  l.classList.add("loader-out");
+  if (reducedMotion()) l.remove(); else loaderFade = setTimeout(() => l.remove(), 400);
+}
+// A stuck load gets a plain retry hint instead of spinning forever.
+function loaderStuck(html) {
+  const e = loaderOn && host.querySelector("#loaderStep");
+  if (!e) return;
+  clearTimeout(loaderT);
+  e.innerHTML = html || 'This is taking longer than usual. Check your connection, then <button class="btn sm loader-retry" type="button" id="loaderRetry">Try again</button>';
+  const bar = host.querySelector("#loaderBar"); if (bar) bar.hidden = true;
+  const b = host.querySelector("#loaderRetry"); if (b) b.addEventListener("click", () => location.reload());
+}
 const $ = (s) => host.querySelector(s);
 const dur = (n) => (reducedMotion() ? 0 : n);
 const cityName = () => { const c = S.cities.find((x) => x.code === S.city); return c ? c.name : ""; };
@@ -99,8 +128,10 @@ export async function render(el, params) {
   mobile = window.matchMedia("(max-width:767px)");
   S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "3", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], sites: [], active: null, hover: null, cityMarkers: [], tour: null, params, dead: false };
   el.innerHTML = TEMPLATE;
+  loaderOn = true; clearTimeout(loaderT); clearTimeout(loaderFade);
+  loaderT = setTimeout(() => loaderStuck(), 45000);
   try { S.cities = await getCities(); } catch { S.cities = []; }
-  if (!S.cities.length) { $("#loading").textContent = "No city data found."; return; }
+  if (!S.cities.length) { loaderStuck("No city data found. Reload the page to try again."); return; }
   wire();
   preStrip(params);
   boot();
@@ -108,6 +139,8 @@ export async function render(el, params) {
 
 export function destroy() {
   if (S) { S.dead = true; endTour(false, true); }
+  loaderOn = false; clearTimeout(loaderT); clearTimeout(loaderFade);
+  if (host) { const l = host.querySelector("#loader"); if (l) l.remove(); }
   if (ro) { ro.disconnect(); ro = null; }
   if (ro2) { ro2.disconnect(); ro2 = null; }
   try { if (map) map.remove(); } catch {}
@@ -145,8 +178,7 @@ async function boot() {
       center: [121.8, 12.6], zoom: 5, pitch: 0, maxPitch: 75, attributionControl: false,
     });
   } catch (e) {
-    $("#loading").innerHTML = 'This browser could not start the map. <a href="#/city">Open the city dashboard</a> for the same data as tables.';
-    $("#loading").style.pointerEvents = "auto";
+    loaderStuck('This browser could not start the map. <a href="#/city">Open the city dashboard</a> for the same data as tables.');
     return;
   }
   map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
@@ -191,6 +223,7 @@ function quietBasemap() {
 }
 
 async function onLoad() {
+  loaderStep("Basemap ready. Loading barangay outlines.");
   quietBasemap();
   const sym = map.getStyle().layers.find((l) => l.type === "symbol" && (!l.layout || l.layout.visibility !== "none"));
   S.before = sym ? sym.id : undefined;
@@ -205,6 +238,8 @@ async function onLoad() {
   if (q.get("view") === "3d") S.view = "3d";
   if (code === "all") {
     showNational(true);
+    loaderStep("Placing the cities.");
+    map.once("idle", hideLoader);
   } else if (code && S.cities.some((c) => c.code === code)) {
     await selectCity(code, true);
     maybeTour();
@@ -257,7 +292,7 @@ function showNational(first) {
   if (map.getLayer("s1-fill")) map.setLayoutProperty("s1-fill", "visibility", "none");
   S.cityMarkers.forEach((m) => { m.getElement().style.display = ""; });
   clearDose();
-  $("#sites").hidden = true; $("#cities").hidden = false;
+  $("#sites").hidden = true; $("#cities").hidden = false; unbusy();
   closeOpts();
   $("#optBtn").hidden = true; $("#tourBtn").hidden = true;
   renderStrip();
@@ -368,15 +403,18 @@ async function selectCity(code, first) {
   const c = S.cities.find((x) => x.code === code);
   if (!c) return;
   endTour(false);
-  const ld = $("#loading"); ld.hidden = false; ld.textContent = "Loading " + c.name;
+  const ld = $("#loading"); if (!loaderOn) { ld.hidden = false; ld.textContent = "Loading " + c.name; }
   let data;
   try { data = await getCity(code); } catch (e) { data = { error: e.message }; }
   if (S.dead || !map) return;
   ld.hidden = true;
   if (!data || data.error || !data.barangays) {
+    hideLoader(); unbusy(); $("#sites").hidden = true;
+    $("#answer").removeAttribute("aria-busy"); $("#answer").textContent = "The numbers could not be loaded.";
     const n = infoEl(); n.hidden = false; n.innerHTML = `<p class="notice">Could not load ${esc(c.name)}: ${esc((data && data.error) || "no data")}</p>`;
     return;
   }
+  loaderStep("Barangays ready. Placing dose sites.");
   S.data = data; S.city = code; S.active = null; S.hover = null; clearSel();
   const hasUnreached = data.rows.some((r) => r.unreached != null);
   const ub = $("#measures").children[1];
@@ -406,6 +444,8 @@ async function selectCity(code, first) {
   map.fitBounds(bb, { padding: pad(), maxZoom: 14.5, pitch: d3 ? 50 : 0, bearing: d3 ? -12 : 0, duration: first ? 0 : dur(2200) });
   highlightList(code);
   syncUrl();
+  loaderStep("Almost ready. Drawing the map.");
+  map.once("idle", hideLoader);
   await probeTerrain(c);
   if (S.dead || !map) return;
   $("#lyRelief").disabled = !S.reliefOK;
@@ -548,7 +588,7 @@ function drawDose() {
   paintMarkers();
 }
 function renderSites(total) {
-  $("#sites").hidden = false;
+  $("#sites").hidden = false; unbusy();
   const ol = $("#siteList");
   ol.innerHTML = S.sites.map((s, i) => `<li><button type="button" class="site" data-id="${esc(s.id)}">
       <span class="badge-n" aria-hidden="true">${s.rank ?? i + 1}</span>
@@ -603,11 +643,21 @@ function preStrip(params) {
   const c = S.cities.find((x) => x.code === params.code) || S.cities[0];
   $("#eyebrow").textContent = `${c.name} · after a ${YEARS_DEFAULT}-year flood`;
   $("#stripQ").textContent = "Where should the city hand out free leptospirosis medicine?";
-  $("#answer").textContent = "Loading the numbers.";
+  const a = $("#answer");
+  a.setAttribute("aria-busy", "true");
+  a.innerHTML = `<span class="sr-only">Loading the numbers.</span><span style="display:block;width:min(520px,60vw)">${skel(2)}</span>`;
   $("#strip").hidden = false;
+  // The ranked list shows placeholder rows until the dose sites arrive.
+  $("#sites").hidden = false; $("#sites").setAttribute("aria-busy", "true"); $("#planBox").hidden = true;
+  $("#siteList").innerHTML = `<li>${skel("list", { n: 3 })}</li>`;
+}
+// Placeholders in the answer and the site list give way to real content.
+function unbusy() {
+  $("#sites").removeAttribute("aria-busy"); $("#planBox").hidden = false;
 }
 function renderStrip() {
   $("#strip").hidden = false;
+  $("#answer").removeAttribute("aria-busy");
   const q = $("#stripQ"), eb = $("#eyebrow");
   if (!S.city) {
     eb.textContent = `Philippines · after a ${YEARS_DEFAULT}-year flood`;
@@ -630,6 +680,7 @@ function renderSentence() {
   if (share == null && plan && plan.share_of_exposed_within_reach_after != null) { const v = +plan.share_of_exposed_within_reach_after; share = v > 1 ? v / 100 : v; }
   const now = cov.flood != null ? cov.flood : null;
   const a = $("#answer");
+  a.removeAttribute("aria-busy");
   const lead = exposed != null ? `<b>${fmt(exposed)}</b> residents waded through floodwater.` : "";
   let html;
   if (share != null) {

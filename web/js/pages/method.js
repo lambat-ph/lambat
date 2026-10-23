@@ -1,4 +1,5 @@
 import { REPO_URL } from "../config.js";
+import { skel } from "../format.js";
 
 const CSS_ID = "css-method";
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -178,13 +179,22 @@ uv sync --extra cv   # optional: PyTorch for the U-Net</code></pre>
   </section>
 </article>`;
 
+// Placeholder cards shown until the page stylesheet has arrived.
+const ghost = () => `<article aria-busy="true" style="max-width:880px;margin:0 auto;padding:var(--s3) var(--s2);display:flex;flex-direction:column;gap:var(--s3)"><span class="sr-only" role="status">Loading the method page.</span>
+  <header aria-hidden="true"><span class="skel skel-line" style="--w:20%"></span><span class="skel skel-big" style="--w:70%"></span></header>
+  ${[3, 2, 4].map((n) => `<section class="card" aria-hidden="true"><span class="skel skel-big" style="--w:35%"></span>${skel(n)}</section>`).join("")}</article>`;
+
 export async function render(el, params) {
+  let ready = Promise.resolve();
   if (!document.getElementById(CSS_ID)) {
     const l = document.createElement("link");
     l.id = CSS_ID;
     l.rel = "stylesheet";
     l.href = "css/method.css";
+    ready = new Promise((res) => { l.onload = l.onerror = res; setTimeout(res, 3000); });
     document.head.appendChild(l);
+    el.innerHTML = ghost();
+    await ready;
   }
   el.innerHTML = html();
 }

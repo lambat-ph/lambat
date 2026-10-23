@@ -29,3 +29,14 @@ export function useCss(name) {
     document.head.appendChild(l);
   }
 }
+// Skeleton placeholders. skel(3) = three text lines; or a shape: "stat", "chart", "list", "rows".
+// Always aria-hidden: put aria-busy="true" on the container and remove it when real content lands.
+export function skel(a = 1, o = {}) {
+  const line = (w) => `<span class="skel skel-line" style="--w:${w}%"></span>`;
+  if (typeof a === "number") return `<div class="skel-lines" aria-hidden="true">${Array.from({ length: a }, (_, i) => line(i === a - 1 && a > 1 ? 60 : 100)).join("")}</div>`;
+  if (a === "stat") return `<div class="card stat skel-card" aria-hidden="true">${line(45)}<span class="skel skel-big"></span>${line(90)}</div>`;
+  if (a === "chart") return `<div class="skel skel-chart" style="--h:${o.h || 240}px" aria-hidden="true"></div>`;
+  if (a === "list") return `<div class="skel-list" aria-hidden="true">${Array.from({ length: o.n || 3 }, () => `<div class="skel-item"><span class="skel skel-dot"></span><span>${line(70)}${line(45)}</span></div>`).join("")}</div>`;
+  if (a === "rows") return Array.from({ length: o.n || 6 }, () => `<tr class="skel-row" aria-hidden="true">${Array.from({ length: o.cols || 4 }, (_, i) => `<td>${line(i ? 60 : 80)}</td>`).join("")}</tr>`).join("");
+  return "";
+}

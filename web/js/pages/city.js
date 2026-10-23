@@ -3,6 +3,7 @@
 // ({meta, barangays, dosePoints, summary, alertScores, alertSeries}) or the
 // loader shape ({meta, bar, rows, dose, summary, coverage, series, alert}).
 import * as D from "../data.js";
+import { skel } from "../format.js";
 
 const TABS = [
   ["overview", "Overview"],
@@ -22,6 +23,19 @@ const pct = (v, d = 0) => (isNum(v) ? (+v * 100).toFixed(d) + "%" : "n/a");
 const dec = (v, d = 2) => (isNum(v) ? (+v).toFixed(d) : "n/a");
 const share01 = (v) => (isNum(v) ? (+v > 1 ? +v / 100 : +v) : null);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// Placeholder page shown while the city data loads, shaped like the tab being opened.
+function ghost(tab) {
+  const head = `<header class="city-head"><div>${skel(1)}<span class="skel skel-big" style="--w:240px"></span>${skel(1)}</div></header>`;
+  const tabs = `<div class="tabs" aria-hidden="true">${TABS.map(() => '<span class="skel skel-line" style="width:96px;height:20px;margin:14px 16px"></span>').join("")}</div>`;
+  const table = (cols) => `<div class="card"><div class="table-wrap"><table class="table"><tbody>${skel("rows", { n: 8, cols })}</tbody></table></div></div>`;
+  let body;
+  if (tab === "barangays") body = table(6);
+  else if (tab === "dose-points") body = `<div class="city-grid two"><div class="card">${skel(2)}${skel("chart", { h: 120 })}</div><div class="card">${skel("chart", { h: 220 })}</div></div>`;
+  else if (tab === "alert") body = `<div class="city-grid">${skel("stat")}${skel("stat")}${skel("stat")}</div><div class="card" style="margin-top:var(--s2)">${skel("chart", { h: 300 })}</div>`;
+  else body = `<div class="city-split"><div class="city-grid two">${[1, 2, 3, 4, 5].map(() => skel("stat")).join("")}</div><div class="card">${skel(2)}${skel("chart", { h: 280 })}</div></div>`;
+  return `<div class="city" aria-busy="true"><span class="sr-only" role="status">Loading city data.</span>${head}${tabs}${body}</div>`;
+}
 
 function ensureCss() {
   if (document.querySelector('link[href="css/city.css"]')) return;
@@ -349,7 +363,7 @@ export async function render(el, params = {}) {
   let tab = String(params.tab || "overview").toLowerCase();
   tab = TAB_ALIAS[tab] || tab;
   if (!TABS.some((t) => t[0] === tab)) tab = "overview";
-  el.innerHTML = '<div class="city"><p class="muted" role="status">Loading city data.</p></div>';
+  el.innerHTML = ghost(tab);
 
   let cities = [], raw, m;
   try {

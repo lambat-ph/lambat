@@ -13,6 +13,10 @@
   --blue-wash:#F3F6FD;
   --warn-bg:#FBE7DC;
   --warn-ink:#6B2A0A;
+  /* frosted glass */
+  --glass:rgba(255,255,255,.78);
+  --glass-thin:rgba(255,255,255,.66);
+  --glass-edge:rgba(20,26,46,.08);
   /* sequential ramp, light to dark, one hue (tints of the brand blue) */
   --ramp-1:#E3EAF8;
   --ramp-2:#AFC2EA;
@@ -56,6 +60,8 @@ html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav :focus-visible{outline-color:#fff}
 .nav-head{display:flex;align-items:center;gap:var(--s1);min-height:48px;padding:0 var(--s1)}
 .nav-brand{display:flex;align-items:center;gap:var(--s1);color:#fff;text-decoration:none;font:700 var(--t-md) var(--f-display);letter-spacing:.08em;white-space:nowrap;overflow:hidden}
+.nav .nav-brand,.nav .nav-brand:link,.nav .nav-brand:visited,.nav .nav-brand:hover,.nav .nav-brand:active,.nav .nav-brand:focus-visible,.nav .nav-brand[aria-current]{color:#fff;text-decoration:none}
+.nav .nav-brand:hover span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
 .nav-brand img{width:32px;height:32px;flex:none}
 .nav-toggle{margin-left:auto;flex:none;width:32px;height:32px;border:0;border-radius:var(--radius-sm);background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center}
 .nav-toggle:hover,.nav a.item:hover{background:rgba(255,255,255,.14)}
@@ -137,5 +143,38 @@ select.field{appearance:auto}
 .tabs [role="tab"]:hover{color:var(--ink);background:rgba(0,56,189,.06)}
 .tabs [role="tab"][aria-selected="true"]{color:var(--blue);border-bottom-color:var(--gold)}
 .tabs :focus-visible{outline-offset:-3px}
+/* ---------- frosted glass ---------- */
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);border:.5px solid var(--glass-edge)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass,.loader{background:var(--card)}}
+@media (prefers-reduced-transparency:reduce){.glass,.loader{background:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* ---------- skeleton loaders ---------- */
+.skel{display:block;border-radius:var(--radius-sm);background:linear-gradient(90deg,var(--blue-tint) 30%,var(--card) 50%,var(--blue-tint) 70%) 0 0/300% 100%;animation:skel-shimmer 1.5s ease-in-out infinite}
+.skel-line{height:1em;width:var(--w,100%);margin:var(--s0) 0}
+.skel-line+.skel-line{margin-top:var(--s1)}
+.skel-big{height:2.5rem;width:var(--w,55%);margin:var(--s0) 0}
+.skel-chart{width:100%;height:var(--h,240px);border-radius:var(--radius-sm)}
+.skel-dot{width:32px;height:32px;border-radius:50%;flex:none}
+.skel-card{pointer-events:none}
+.skel-list{display:flex;flex-direction:column;gap:var(--s1)}
+.skel-item{display:flex;align-items:center;gap:var(--s1)}
+.skel-item>span:last-child{flex:1}
+.skel-row td{padding:var(--s2)}
+.skel-row .skel-line{margin:0}
+@keyframes skel-shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (prefers-reduced-motion:reduce){.skel{background:var(--blue-tint)}}
+
+/* ---------- map loading screen ---------- */
+.loader{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:var(--s3);background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);color:var(--ink);transition:opacity .35s ease}
+.loader.loader-out{opacity:0;pointer-events:none}
+.loader-box{display:flex;flex-direction:column;align-items:center;gap:var(--s1);text-align:center;max-width:360px}
+.loader-logo{width:72px;height:72px;margin-bottom:var(--s1)}
+.loader-title{font:700 var(--t-lg) var(--f-display);margin:0;color:var(--blue-dark)}
+.loader-step{margin:0;font-size:var(--t-md);color:var(--muted);min-height:3em}
+.loader-bar{position:relative;width:220px;height:6px;border-radius:3px;background:var(--blue-tint);overflow:hidden;margin-top:var(--s1)}
+.loader-bar::after{content:"";position:absolute;top:0;bottom:0;width:40%;border-radius:3px;background:var(--blue);animation:loader-slide 1.3s ease-in-out infinite}
+.loader-retry{margin-top:var(--s1)}
+@keyframes loader-slide{from{left:-40%}to{left:100%}}
+@media (prefers-reduced-motion:reduce){.loader{transition:none}.loader-bar::after{left:0;width:100%;opacity:.5}}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}

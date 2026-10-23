@@ -31,8 +31,8 @@ export async function render(el) {
   <div class="home">
     <div class="home-bg" aria-hidden="true">
       <div class="net"></div>
-      <svg viewBox="0 0 1200 200" preserveAspectRatio="none"><path fill="currentColor" d="M0 90C100 50 200 50 300 90S500 130 600 90 800 50 900 90s200 40 300 0V200H0Z"/></svg>
-      <svg viewBox="0 0 1200 200" preserveAspectRatio="none"><path fill="currentColor" d="M0 110C120 70 220 70 330 110S520 150 600 110 840 70 930 110s190 40 270 0V200H0Z"/></svg>
+      <i class="wave"></i>
+      <i class="wave w2"></i>
     </div>
     <div class="home-inner">
       <div class="brand-line"><img src="assets/favicon.svg" alt="" width="32" height="32">LAMBAT</div>
@@ -55,7 +55,7 @@ export async function render(el) {
           </ol>
         </div>
       </div>
-      <dl class="stats-strip" id="strip" aria-label="National totals for a 25-year flood"></dl>
+      <dl class="stats-strip" id="strip" aria-label="National totals for a 25-year flood"><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div></dl>
       <blockquote class="quote">
         <p>The capsule that could have protected Rosa was free. But it was on the other side of the water.</p>
         <cite>Rosa is a composite; the numbers are not.</cite>

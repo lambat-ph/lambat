@@ -1,3 +1,4 @@
+import { skel } from "../format.js";
 // "Flood from space" page. Numbers come from docs/flood.md (full run, one seed).
 const EX = {
   usa: {
@@ -168,11 +169,8 @@ export async function render(root) {
     l.href = "css/radar.css";
     document.head.appendChild(l);
   }
-  let egay = COMING;
-  try {
-    const r = await fetch("data/PH015518000/s1_flood.geojson");
-    if (r.ok) egay = egayHTML(await r.json());
-  } catch (e) { /* keep placeholder */ }
+  // Draw the page now; the case-study card fills in when its file arrives.
+  const egay = `<div id="rd-egay" aria-busy="true"><div class="card" aria-hidden="true">${skel(1)}${skel(3)}</div><span class="sr-only" role="status">Loading the Typhoon Egay result.</span></div>`;
 
   root.innerHTML = `<div class="rd">
   <header class="rd-hero">
@@ -229,6 +227,13 @@ export async function render(root) {
     btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
     picsEl.innerHTML = picsHTML(b.dataset.ex);
   }));
+  const slot = root.querySelector("#rd-egay");
+  let card = COMING;
+  try {
+    const r = await fetch("data/PH015518000/s1_flood.geojson");
+    if (r.ok) card = egayHTML(await r.json());
+  } catch (e) { /* keep placeholder */ }
+  if (slot.isConnected) { slot.innerHTML = card; slot.removeAttribute("aria-busy"); }
 }
 
 export function destroy() {}
