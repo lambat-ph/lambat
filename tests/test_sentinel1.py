@@ -146,5 +146,5 @@ def test_product_finds_members_in_a_folder(tmp_path):
     assert p.measurement("vv").endswith("-vv-20230728t214651-004.tiff")
     assert p.measurement("vh").endswith("-vh-20230728t214651-005.tiff")
     assert "calibration-s1a" in p.calibration("vv")
-    lines, pixels, grid = s1.parse_calibration(p.read_bytes(p.calibration("vv")))
+    _lines, _pixels, grid = s1.parse_calibration(p.read_bytes(p.calibration("vv")))
     assert grid.shape == (1, 2)

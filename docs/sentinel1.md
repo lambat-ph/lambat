@@ -18,7 +18,7 @@ Both are relative orbit (track) 32, descending, so the viewing angle is the same
 ## Method
 
 1. **Calibrate.** The calibration XML holds a gain table (sigma-nought) on a coarse line/pixel grid. It is interpolated bilinearly to every pixel in the window. Backscatter is `sigma0 = DN^2 / A^2`, then dB. DN 0 is no-data.
-2. **Crop and reproject.** The TIFF is in radar geometry with ground control points. An affine map from lon/lat to line/pixel is fitted to the 12 GCPs nearest Dagupan (the fit error in pixels is saved in the summary), the window is cut with 100 pixels of padding, and the result is resampled (bilinear on linear power) onto one fixed 10 m EPSG:32651 grid. The grid covers all barangays plus 1 km, so both dates land on identical pixels.
+2. **Crop and reproject.** The TIFF is in radar geometry with ground control points. A quadratic map from lon/lat to line/pixel is fitted to the 9 GCPs nearest Dagupan (an affine fit was about 13 px off in a leave-one-out check, the quadratic about 1 px; the fit error is saved in the summary), the window is cut with 100 pixels of padding, and the result is resampled (bilinear on linear power) onto one fixed 10 m EPSG:32651 grid. The grid covers all barangays plus 1 km, so both dates land on identical pixels.
 3. **Speckle.** A 5x5 median filter in dB, the same for both dates. Use `--speckle 1` to switch it off.
 4. **Flood mask (VV).**
    - Change detection, `flood.threshold_extent`: flooded if after < -18 dB and at least 3 dB darker than the dry scene. This is the main result.
@@ -42,7 +42,7 @@ Both are relative orbit (track) 32, descending, so the viewing angle is the same
 
 ## Results
 
-Not filled in yet: the two scenes were not in `data/raw/s1/` when this was written. The code was tested on synthetic scenes only (a synthetic SAFE folder with GCPs went through the whole script, and the calibration, GCP window and grid logic are unit tested). Run the script, then copy the numbers from `results/s1_egay_summary.json` into this section.
+Pending the run on the real scenes. So far the code has been tested on synthetic scenes only: a synthetic SAFE folder with GCPs goes through the whole script, and the calibration, GCP window and grid logic are unit tested. After `scripts/run_s1_flood.py` runs, the numbers here come from `results/s1_egay_summary.json`.
 
 ## Caveats
 

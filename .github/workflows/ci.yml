@@ -37,12 +37,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Non-blocking until existing ruff findings are cleaned up.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.2
         with:
           enable-cache: true
       - name: Ruff
-        run: uvx ruff check src tests scripts
+        run: uvx ruff@0.17.2 check src tests scripts

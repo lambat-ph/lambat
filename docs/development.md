@@ -1,6 +1,6 @@
 # Development notes
 
-How the code fits together, how to run it, and what is still open. Keep this current; it is what a new contributor (or a new session) reads first.
+How the code fits together, how to run it, and what is still open. Keep this current; it is what a new contributor reads first.
 
 ## Run
 
@@ -11,9 +11,12 @@ uv run python scripts/run_alert.py        # outbreak alert evaluation -> results
 uv run python scripts/run_pipeline.py --scenario 25yr   # exposure, access, siting -> results/
 uv sync --extra cv                        # torch + segmentation-models-pytorch
 uv run --extra cv python scripts/train_unet.py --epochs 15 --pretrained
+uv run python scripts/run_validation.py   # ranking vs news reports -> results/validation_*
+uv run python scripts/run_s1_flood.py     # Sentinel-1 Egay flood map (scenes in data/raw/s1/)
+uv run python scripts/build_web.py        # copy results into web/data/ for the dashboard
 ```
 
-Raw data is not committed. `data/raw/cchain/` needs these Project CCHAIN tables (download commands in `data/README.md`): `disease_pidsr_totals`, `climate_atmosphere`, `location`, `brgy_geography`, `project_noah_hazards`, `worldpop_population`. OSM and elevation tiles cache themselves in `data/raw/osm_cache` and `data/raw/dem_cache` on first run (Overpass can take ~65 s per query and sometimes returns 502; the code retries and falls back to mirrors).
+Raw data is not committed. `data/raw/cchain/` needs these six Project CCHAIN tables (download commands in `data/README.md`): `disease_pidsr_totals`, `climate_atmosphere`, `location`, `brgy_geography`, `project_noah_hazards`, `worldpop_population`. OSM and elevation tiles cache themselves in `data/raw/osm_cache` and `data/raw/dem_cache` on first run (Overpass can take ~65 s per query and sometimes returns 502; the code retries and falls back to mirrors).
 
 ## Modules (`src/lambat/`)
 
@@ -45,10 +48,11 @@ Raw data is not committed. `data/raw/cchain/` needs these Project CCHAIN tables 
 2. **OSM gaps.** Five barangays (PH015518010, 011, 016, 027, 028) have no walk-graph nodes; their residents snap to the nearest node (median 933 m). Access figures there are weak.
 3. **Coarse elevation.** Terrarium is ~30 m SRTM-class; Dagupan spans a few metres.
 4. **U-Net is only tested globally.** Full run done (pooled test IoU 0.64 vs 0.21 for Otsu, median per-chip 0.33 vs 0.05, 90 Sen1Floods11 test chips, CPU, 12 min; see `docs/flood.md`). Not yet checked on Dagupan; single seed. The mean/82-chip rows in `docs/flood.md` come from a one-off script.
-5. **Dashboard.** `web/` holds a placeholder. Plan: MapLibre page reading `results/*.geojson`; GitHub Pages deploys `web/` once the repo is public.
+5. **Dashboard.** `web/index.html` is a static MapLibre page: barangay map, priority table, dose points and alert chart. It reads `web/data/`, which `scripts/build_web.py` fills from `results/`. The Pages workflow deploys `web/` once the repo is public and Pages is set to build from GitHub Actions.
+6. **Sentinel-1 Egay run.** Code is tested on synthetic scenes; the real run needs the two scenes in `data/raw/s1/` (see `docs/sentinel1.md`).
 
 ## Conventions
 
-- Commits carry no AI co-author or attribution lines.
-- The project, slides and video must not name the school or team members (organizer rule). GitHub usernames are fine.
+- The project, slides and video must not name the school or team members (organizer rule).
+- `uvx ruff check src tests scripts` must pass; CI blocks on it.
 - Report residents within reach of care, never lives saved. Treat the access gap as a hypothesis the tool tests.

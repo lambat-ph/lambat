@@ -104,7 +104,7 @@ def test_paired_diff_ci_excludes_zero_for_clearly_better_predictor():
     y = RNG.normal(size=80)
     good = y + 0.2 * RNG.normal(size=80)
     bad = RNG.normal(size=80)
-    lo, hi = V.paired_diff_ci(good, bad, y, n_boot=1000)
+    lo, _hi = V.paired_diff_ci(good, bad, y, n_boot=1000)
     assert lo > 0
 
 

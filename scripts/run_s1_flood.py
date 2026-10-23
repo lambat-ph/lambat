@@ -24,7 +24,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from lambat import data, flood, sentinel1 as s1
+from lambat import data, flood
+from lambat import sentinel1 as s1
 from lambat import validation as V
 
 ROOT = Path(__file__).resolve().parents[1]

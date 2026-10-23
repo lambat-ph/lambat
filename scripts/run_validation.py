@@ -70,7 +70,7 @@ def main() -> None:
     head_cols = ["rho", "ci_lo", "ci_hi", "p", "p_holm", "partial_rho", "partial_lo", "partial_hi",
                  "partial_p", "auc_mean", "auc_lo", "auc_hi", "auc_p", "n_events"]
     summary = {
-        "n_barangays": int(len(cands)),
+        "n_barangays": len(cands),
         "n_events": int(reports.event_name.nunique()),
         "n_barangays_reported": int((outcomes.events_all > 0).sum()),
         "n_candidates_in_family": len(family),

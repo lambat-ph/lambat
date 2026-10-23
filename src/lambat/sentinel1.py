@@ -7,7 +7,7 @@ Steps for one scene (see docs/sentinel1.md):
 2. Read the sigma-nought calibration table from annotation/calibration/ and
    interpolate it bilinearly to the window: sigma0 = DN^2 / A^2.
 3. The TIFF is in radar geometry with ground control points (GCPs). Fit a local
-   affine map lon/lat -> (line, pixel) from the GCPs nearest the area, find the
+   quadratic map lon/lat -> (line, pixel) from the GCPs nearest the area, find the
    window, then resample onto a 10 m EPSG:32651 grid over the barangays.
 4. Optional median speckle filter, then dB.
 
@@ -176,7 +176,7 @@ def target_grid(bounds_wgs84, margin_m: float = 1000.0, res: float = 10.0, crs: 
     x1 = np.ceil((max(xs) + margin_m) / res) * res
     y0 = np.floor((min(ys) - margin_m) / res) * res
     y1 = np.ceil((max(ys) + margin_m) / res) * res
-    W, H = int(round((x1 - x0) / res)), int(round((y1 - y0) / res))
+    W, H = round((x1 - x0) / res), round((y1 - y0) / res)
     return Affine(res, 0, x0, 0, -res, y1), (H, W), crs
 
 

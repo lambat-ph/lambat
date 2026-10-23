@@ -207,7 +207,7 @@ def event_auc(score, membership: pd.DataFrame, min_reported: int = MIN_REPORTED_
     mem = membership.to_numpy(bool)
     keep = (mem.sum(axis=1) >= min_reported) & (mem.sum(axis=1) < mem.shape[1])
     mem = mem[keep]
-    out = {"n_events": int(len(mem)), "auc_mean": float("nan"), "auc_lo": float("nan"),
+    out = {"n_events": len(mem), "auc_mean": float("nan"), "auc_lo": float("nan"),
            "auc_hi": float("nan"), "auc_p": float("nan")}
     if len(mem) == 0:
         return out
