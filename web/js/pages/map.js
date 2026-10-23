@@ -323,15 +323,17 @@ function colorExpr(withSel) {
   S.breaks.forEach((b, i) => base.push(b, RAMP[i + 1]));
   return withSel ? ["case", ["boolean", ["feature-state", "sel"], false], COLORS.ink, base] : base;
 }
-const heightExpr = () => ["*", ["coalesce", ["get", S.metric.prop], 0], S.scaleH / S.max];
+// a low plinth under every barangay, stepped by code (3 levels), so neighbours with the same value still show an edge in 3D
+const heightExpr = () => ["+", ["*", S.scaleH * 0.015, ["+", 2, ["%", ["to-number", ["slice", ["get", "adm4_pcode"], 8], 0], 3]]], ["*", ["coalesce", ["get", S.metric.prop], 0], S.scaleH / S.max]];
 function setCityLayers(on) {
-  ["b-ext", "b-flat", "b-line", "b-sel"].forEach((id) => { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); });
+  ["b-ext", "b-flat", "b-case", "b-line", "b-sel"].forEach((id) => { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); });
   if (on) applyView();
 }
 function applyView() {
   const d3 = S.view === "3d";
   map.setLayoutProperty("b-ext", "visibility", d3 ? "visible" : "none");
   map.setLayoutProperty("b-flat", "visibility", d3 ? "none" : "visible");
+  map.setLayoutProperty("b-case", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-line", "visibility", d3 ? "none" : "visible");
   map.setLayoutProperty("b-sel", "visibility", d3 ? "none" : "visible");
   $("#ly3d").checked = d3;
@@ -354,7 +356,9 @@ function ensureCityLayers() {
   map.addSource("brgy", { type: "geojson", data: S.data.barangays, promoteId: "adm4_pcode" });
   map.addLayer({ id: "b-ext", type: "fill-extrusion", source: "brgy", layout: { visibility: "none" }, paint: { "fill-extrusion-color": RAMP[0], "fill-extrusion-height": 0, "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.94 } });
   map.addLayer({ id: "b-flat", type: "fill", source: "brgy", layout: { visibility: "none" }, paint: { "fill-color": RAMP[0], "fill-opacity": 0.88 } }, S.before);
-  map.addLayer({ id: "b-line", type: "line", source: "brgy", layout: { visibility: "none" }, paint: { "line-color": "#FFFFFF", "line-width": 1 } }, S.before);
+  // dark casing under a white line: the border reads on both the palest and the darkest fills
+  map.addLayer({ id: "b-case", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": COLORS.ink, "line-opacity": 0.45, "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 3.5] } }, S.before);
+  map.addLayer({ id: "b-line", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 1.5] } }, S.before);
   map.addLayer({ id: "b-sel", type: "line", source: "brgy", layout: { visibility: "none" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "line-color": COLORS.ink, "line-width": 3 } }, S.before);
   // Intro highlight: a dark casing under a gold line, visible in both 2D and 3D.
   const none = ["==", ["get", "adm4_pcode"], ""];
