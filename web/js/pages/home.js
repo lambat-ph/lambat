@@ -25,6 +25,24 @@ function previewSvg(city) {
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Example map of ${esc(city.meta.name)}: barangays shaded light to dark by exposed residents, with three numbered gold dose points.">${paths}${dots}</svg>`;
 }
 
+// Count each [data-to] number up once when it scrolls into view (~700ms, ease-out).
+function rollNumbers(root) {
+  const nodes = [...root.querySelectorAll("[data-to]")].filter((n) => Number.isFinite(+n.dataset.to));
+  if (!nodes.length || matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+  const run = (n) => {
+    const to = +n.dataset.to, final = n.textContent, t0 = performance.now();
+    const tick = (t) => {
+      const k = Math.min(1, (t - t0) / 700);
+      n.textContent = k < 1 ? fmt(Math.round(to * (1 - (1 - k) ** 3))) : final;
+      if (k < 1 && n.isConnected) requestAnimationFrame(tick);
+    };
+    n.textContent = fmt(0);
+    requestAnimationFrame(tick);
+  };
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { io.unobserve(e.target); run(e.target); } }), { threshold: 0.6 });
+  nodes.forEach((n) => io.observe(n));
+}
+
 export async function render(el) {
   useCss("home");
   el.innerHTML = `
@@ -66,11 +84,12 @@ export async function render(el) {
   try {
     const n = await getNational();
     const items = [
-      [`residents exposed to floodwater in a 25-year flood, across ${fmt(n.cities)} ${n.cities === 1 ? "city" : "cities"}`, fmt(n.exposed)],
-      ["doxycycline capsules needed for each week the water stays", fmt(n.weekly_capsules)],
-      ["barangays mapped and ranked by priority", fmt(n.barangays)],
+      [`residents exposed to floodwater in a 25-year flood, across ${fmt(n.cities)} ${n.cities === 1 ? "city" : "cities"}`, n.exposed],
+      ["doxycycline capsules needed for each week the water stays", n.weekly_capsules],
+      ["barangays mapped and ranked by priority", n.barangays],
     ];
-    strip.innerHTML = items.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("");
+    strip.innerHTML = items.map(([l, v]) => `<div><dt>${l}</dt><dd class="num" data-to="${v}">${fmt(v)}</dd></div>`).join("");
+    rollNumbers(strip);
   } catch { strip.hidden = true; }
   try {
     const cities = await getCities();
