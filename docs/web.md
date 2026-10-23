@@ -36,9 +36,15 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 
 ## Known issues to fix next
 
-1. GIF labels are about 4 px on phones; the "Show as diagram" version is the readable fallback.
-2. Design fork `design-apple` was not chosen (23 Oct); only its frosted glass panels were ported. Branch kept for reference.
-3. Ideas not yet built (Cult UI survey): direction-aware city tabs, progress bars and tier badges in tables, edge-fade on scroll lists, copy-citation buttons.
+1. Plan-detail fields (`reach_after_*`, `cut_off_after_*`, `serves`, `newly_reached`) exist for Dagupan only; other cities need a pipeline rerun. The map falls back gracefully.
+2. Per-city `scenario` (`25yr`/`100yr`) and `scenario_note` are read by `js/data.js` `scenarioOf()`; build_web must write them for Mandaue, Iloilo and Tacloban (no 25-year NOAH map).
+3. "Open on map" on the city page is still an outlined button; GIF labels are tiny on phones; true phone-size checks of the map card and sheet are pending.
+4. Browser caching is aggressive during development: hard refresh (Ctrl+Shift+R) or `fetch(url,{cache:'reload'})` before reloading.
+
+## Motion and brand
+
+- Sidebar wordmark: inline SVG, one `<path class="ltr" style="--i:n">` per letter (from `projects/pjdsc/logo/SVG/TEXT.svg`). Open: alternate slide-in from above/below, left to right. Close: `.nav.unweave` slides letters out right to left while the width transition runs; `glide()` in `app.js` animates the mark and arrow between layouts (FLIP). Sizes: mark 30 px, wordmark 18 px (3/5), gap 12 px.
+- Nav highlight `.nav-ind` slides between items; pages ease in (WAAPI in `app.js`). All motion respects `prefers-reduced-motion`.
 
 ## Words (one term per concept, everywhere: pages, tables, legends, popovers, URL labels shown to users)
 
