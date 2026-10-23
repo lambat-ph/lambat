@@ -22,7 +22,7 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 | `js/data.js` | `getCities()`, `getCity(code)`, `getNational()`; caches fetches; falls back to the old flat Dagupan files when `cities.json` is absent |
 | `js/app.js` | Hash router: `#/`, `#/map[/code|/all]`, `#/city/<code>[/tab]`, `#/radar`, `#/method`; lazy-imports `js/pages/<name>.js`, which export `render(el, params)` and `destroy()` |
 | `js/format.js` | `fmt`, `pct`, `compact`, `esc`, `useCss` |
-| `js/pages/map.js` | Answer-first map: headline question and answer, ranked dose-site list, More options drawer (measure, 3D, terrain, find a barangay, all cities), legend with units, guided tour (`localStorage` key `lambat.tourSeen`), national view with sized city markers. `window.__lambatMap` is exposed for debugging. A `ResizeObserver` keeps the canvas sized; `pad()` adapts to the panels |
+| `js/pages/map.js` | Map page. Desktop (900 px and up): solid left column (answer with hazard band, tour link, 3/5/8 picker, coverage line, ranked expandable site rows, dose point footnote, legend) beside the map; phones: the column is a two-height bottom sheet. On the map: controls, frosted More options button and drawer, barangay card, tour (`localStorage` key `lambat.tourSeen`). Rolling numbers, `?` popovers, branded loader removed on first `idle`, skeletons with `aria-busy`. National view lists cities in the column. `window.__lambatMap` for debugging; `ResizeObserver` keeps the canvas sized |
 | `js/pages/city.js` | Tabs: Overview, Dose points, Barangays (search, sort, CSV), Alert |
 | `js/pages/radar.js` | Radar explainer, USA and Spain example chips, "How it learned" and "How it works" GIFs, results, Egay card |
 | `js/pages/method.js` | Problem, 5-step pipeline, definitions, validation forest plot, limits, APA references, run commands |
@@ -36,13 +36,9 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 
 ## Known issues to fix next
 
-1. The "LAMBAT" wordmark in the sidebar is dark on blue and nearly invisible.
-2. No skeleton loaders while data loads.
-3. No loading screen over the map (it can take 10 to 30 s for the basemap style and data).
-4. Home: the decorative waves behind the stats row are not continuous at the right edge.
-5. Map headline and tour cards: the gold glow looks glitched and the gold top accent bends around the rounded corners. Replace it with a straight, extended, slanted gold stripe across the top.
-6. GIF labels are about 4 px on phones; the "Show as diagram" version is the readable fallback.
-7. Design fork on branch `design-apple` (worktree `../lambat-apple`, audit in its `web/DESIGN_AUDIT.md`) is pending a decision. Its dark mode flips the ramp so the worst-hit barangays read pale.
+1. GIF labels are about 4 px on phones; the "Show as diagram" version is the readable fallback.
+2. Design fork `design-apple` was not chosen (23 Oct); only its frosted glass panels were ported. Branch kept for reference.
+3. Ideas not yet built (Cult UI survey): direction-aware city tabs, progress bars and tier badges in tables, edge-fade on scroll lists, copy-citation buttons.
 
 ## Conventions
 

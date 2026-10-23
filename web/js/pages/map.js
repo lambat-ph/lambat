@@ -21,80 +21,79 @@ const SEEN_KEY = "lambat.tourSeen";
 const PLANS = ["3", "5", "8"];
 const YEARS_DEFAULT = 25;
 
+const CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 const TEMPLATE = `
 <div class="mapwrap" id="mapwrap">
-  <div id="map" role="region" aria-label="Map of flood exposure by barangay, with numbered dose points. The list on the left and the city dashboard give the same information as text."></div>
-  <div class="loading" id="loading" role="status" hidden></div>
-  <div class="loader" id="loader" role="status" aria-live="polite">
-    <div class="loader-box">
-      <img class="loader-logo" src="assets/favicon.svg" alt="" width="72" height="72">
-      <h2 class="loader-title">Loading the flood map</h2>
-      <p class="loader-step" id="loaderStep">Getting the basemap.</p>
-      <div class="loader-bar" id="loaderBar" aria-hidden="true"></div>
-    </div>
-  </div>
-
-  <header class="strip" id="strip" hidden>
-    <div class="strip-main">
+  <aside class="col closed" id="col" aria-label="The answer and the ranked sites">
+    <button class="handle" id="handle" type="button" aria-expanded="false" aria-controls="colMore" aria-label="Show more of the panel"></button>
+    <header class="col-top" id="colTop" hidden>
       <p class="eyebrow" id="eyebrow"></p>
-      <h1 class="strip-q" id="stripQ"></h1>
-      <p class="strip-a" id="answer" role="status" aria-live="polite"></p>
-    </div>
-    <div class="strip-act">
-      <button class="chip-btn" id="tourBtn" type="button" hidden>New here? Take a 30-second tour</button>
-      <button class="opt-btn" id="optBtn" type="button" aria-expanded="false" aria-controls="opts" hidden>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
-        <span>More options</span>
-      </button>
-    </div>
-  </header>
-
-  <div class="col-right" id="colRight">
-    <section class="w opts" id="opts" aria-label="More options" hidden>
-      <div class="opts-head"><h2>More options</h2><button class="x" id="optClose" type="button" aria-label="Close more options">&times;</button></div>
-      <h3 class="opts-h" id="measureH">Colour the map by</h3>
-      <div class="measures" id="measures" role="group" aria-labelledby="measureH"></div>
-      <h3 class="opts-h">View</h3>
-      <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
-      <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
-      <label class="switch"><span>Show dose points on the map</span><input type="checkbox" role="switch" id="lyDose" checked></label>
-      <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
-      <p class="map-note" id="reliefNote" hidden></p>
-      <h3 class="opts-h">Go to</h3>
-      <label class="wt" for="brgyPick">Find a barangay</label>
-      <select class="field" id="brgyPick"><option value="">Choose a barangay</option></select>
-      <p class="opts-links"><button class="linkbtn" id="pickBack" type="button">All cities</button>
-        <a id="dashLink" href="#/city">Open city dashboard</a></p>
-    </section>
-    <section class="w info desk" id="info" aria-label="Barangay details" hidden aria-live="polite"></section>
-  </div>
-
-  <div class="dock closed" id="dock">
-    <button class="sheet-handle" id="handle" type="button" aria-expanded="false" aria-label="Show more of the panel"></button>
-    <div class="col-left">
-      <section class="w info mob" id="infoM" aria-label="Barangay details" hidden aria-live="polite"></section>
-      <section class="w w-sites" id="sites" aria-labelledby="sitesH" hidden>
-        <h2 class="panel-title" id="sitesH">Where to set up first</h2>
+      <h1 class="q" id="stripQ"></h1>
+      <div class="a" id="answer" role="status" aria-live="polite"></div>
+      <button class="linkbtn" id="tourBtn" type="button" hidden>New here? Take the tour</button>
+    </header>
+    <div class="col-more" id="colMore">
+      <section class="sec sec-sites" id="sites" aria-labelledby="sitesH" hidden>
+        <div class="plan-h">
+          <h2 id="sitesH">Where to set up first</h2>
+          <div class="plan-pick" id="planPick"><div class="pseg" id="planSeg" role="radiogroup" aria-label="Number of sites to open"></div><span class="plan-u" aria-hidden="true">sites</span></div>
+        </div>
+        <p class="cov" id="planCov"></p>
         <ol class="sitelist" id="siteList"></ol>
         <p class="map-note" id="siteNote" hidden></p>
-        <div class="plan" id="planBox">
-          <div class="plan-row"><span id="planL">Show</span><div class="seg" id="planSeg" role="group" aria-labelledby="planL"></div><span>sites</span></div>
-          <p class="plan-cov" id="planCov"></p>
-        </div>
-        <p class="what"><b>What is a dose point?</b> A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline capsules for a few weeks after the flood.</p>
+        <p class="what" id="what"><b>What is a dose point?</b> A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline capsules for a few weeks after the flood.</p>
       </section>
-      <section class="w w-cities" id="cities" aria-labelledby="citiesH" hidden>
-        <h2 class="panel-title" id="citiesH">Pick a city</h2>
+      <section class="sec sec-cities" id="cities" aria-labelledby="citiesH" hidden>
+        <h2 id="citiesH">Pick a city</h2>
         <label class="sr-only" for="cityPick">Search cities</label>
         <input class="field" id="cityPick" type="search" placeholder="Search a city" autocomplete="off">
         <ul class="citylist" id="cityList"></ul>
       </section>
-      <section class="w w-legend" id="legend" aria-label="Legend"></section>
+      <section class="sec sec-legend" id="legend" aria-label="Legend"></section>
+    </div>
+  </aside>
+
+  <div class="mapside">
+    <div id="map" role="region" aria-label="Map of flood exposure by barangay, with numbered dose points. The list in the side panel and the city dashboard give the same information as text."></div>
+    <div class="loading" id="loading" role="status" hidden></div>
+    <div class="loader" id="loader" role="status" aria-live="polite">
+      <div class="loader-box">
+        <img class="loader-logo" src="assets/favicon.svg" alt="" width="72" height="72">
+        <h2 class="loader-title">Loading the flood map</h2>
+        <p class="loader-step" id="loaderStep">Getting the basemap.</p>
+        <div class="loader-bar" id="loaderBar" aria-hidden="true"></div>
+      </div>
+    </div>
+    <button class="opt-btn" id="optBtn" type="button" aria-expanded="false" aria-controls="opts" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+      <span>More options</span>
+    </button>
+    <div class="col-right" id="colRight">
+      <section class="w opts" id="opts" aria-label="More options" hidden>
+        <div class="opts-head"><h2>More options</h2><button class="x" id="optClose" type="button" aria-label="Close more options">&times;</button></div>
+        <h3 class="opts-h" id="measureH">Colour the map by</h3>
+        <div class="measures" id="measures" role="group" aria-labelledby="measureH"></div>
+        <h3 class="opts-h">View</h3>
+        <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
+        <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
+        <label class="switch"><span>Show dose points on the map</span><input type="checkbox" role="switch" id="lyDose" checked></label>
+        <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
+        <p class="map-note" id="reliefNote" hidden></p>
+        <h3 class="opts-h">Go to</h3>
+        <label class="wt" for="brgyPick">Find a barangay</label>
+        <select class="field" id="brgyPick"><option value="">Choose a barangay</option></select>
+        <p class="opts-links"><button class="linkbtn" id="pickBack" type="button">All cities</button>
+          <a id="dashLink" href="#/city">Open city dashboard</a></p>
+      </section>
+      <section class="w info" id="info" aria-label="Barangay details" hidden aria-live="polite"></section>
     </div>
   </div>
 </div>`;
 
-let map, tip, host, S, mobile, ro, ro2, onKey;
+const POP = typeof HTMLElement !== "undefined" && typeof HTMLElement.prototype.showPopover === "function";
+const SHEET_Q = "(max-width:899px)";
+
+let map, tip, host, S, mobile, ro, ro2, onKey, tipEl, onDown, onTipKey;
 let loaderOn = false, loaderT, loaderFade;
 
 /* ---------- loading screen ---------- */
@@ -125,9 +124,13 @@ const sig2 = (v) => { if (v == null) return 0; if (Math.abs(v) < 100) return Mat
 export async function render(el, params) {
   useCss("map");
   host = el;
-  mobile = window.matchMedia("(max-width:767px)");
-  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "3", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], sites: [], active: null, hover: null, cityMarkers: [], tour: null, params, dead: false };
+  mobile = window.matchMedia(SHEET_Q);
+  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "3", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], sites: [], active: null, hover: null, open: null, rollKey: null, peek: 320, cityMarkers: [], tour: null, params, dead: false };
   el.innerHTML = TEMPLATE;
+  tipEl = document.createElement("div");
+  tipEl.id = "tipPop"; tipEl.className = "tipbox"; tipEl.setAttribute("role", "note");
+  if (POP) tipEl.setAttribute("popover", "manual"); else tipEl.hidden = true;
+  $("#mapwrap").appendChild(tipEl);
   loaderOn = true; clearTimeout(loaderT); clearTimeout(loaderFade);
   loaderT = setTimeout(() => loaderStuck(), 45000);
   try { S.cities = await getCities(); } catch { S.cities = []; }
@@ -143,6 +146,9 @@ export function destroy() {
   if (host) { const l = host.querySelector("#loader"); if (l) l.remove(); }
   if (ro) { ro.disconnect(); ro = null; }
   if (ro2) { ro2.disconnect(); ro2 = null; }
+  if (mobile) mobile.removeEventListener("change", syncSheet);
+  document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onTipKey);
+  if (tipEl) { hideTip(); tipEl = null; }
   try { if (map) map.remove(); } catch {}
   map = null;
 }
@@ -188,12 +194,10 @@ async function boot() {
   // The container can still be settling when the map starts; keep the canvas in step with it.
   ro = new ResizeObserver(() => { if (map) map.resize(); });
   ro.observe($("#map"));
-  // The headline strip changes height with its text; the panels below it follow.
-  const strip = $("#strip"), wrap = $("#mapwrap");
-  const setH = () => wrap.style.setProperty("--strip-h", strip.offsetHeight + "px");
-  setH();
-  ro2 = new ResizeObserver(setH);
-  ro2.observe(strip);
+  // On phones the sheet peeks up by the height of the question and answer; keep that in step with the text.
+  ro2 = new ResizeObserver(setPeek);
+  ro2.observe($("#colTop"));
+  setPeek();
   map.on("error", (e) => console.warn("map error:", e.error && e.error.message));
   map.on("load", onLoad);
   map.once("idle", () => { const l = $("#loading"); if (l) l.hidden = true; });
@@ -270,17 +274,10 @@ function buildNational() {
     S.cityMarkers.push(new maplibregl.Marker({ element: b, anchor: "left", offset: [natRadius(c.exposed, mx) + 6, 0] }).setLngLat([c.lon, c.lat]).addTo(map));
   });
 }
+// The side column no longer covers the map on desktop, so the padding is small. On phones the sheet covers the bottom.
 function pad() {
-  const strip = $("#strip");
-  const sh = strip ? strip.offsetHeight : 120;
-  if (mobile.matches) {
-    const d = $("#dock");
-    return { top: sh + 24, left: 24, right: 24, bottom: (d ? d.offsetHeight : 260) + 24 };
-  }
-  // Leave room for the headline strip and the left panel, but never more than about 40% of the map width.
-  const w = map ? map.getContainer().clientWidth : window.innerWidth;
-  const side = Math.min(368, Math.round(w * 0.4));
-  return { top: sh + 48, bottom: 48, left: side, right: 40 };
+  if (mobile.matches) return { top: 64, left: 24, right: 24, bottom: S.peek + 24 };
+  return { top: 72, left: 40, right: 40, bottom: 48 };
 }
 function showNational(first) {
   endTour(false);
@@ -291,7 +288,7 @@ function showNational(first) {
   map.setLayoutProperty("nat-dot", "visibility", "visible");
   if (map.getLayer("s1-fill")) map.setLayoutProperty("s1-fill", "visibility", "none");
   S.cityMarkers.forEach((m) => { m.getElement().style.display = ""; });
-  clearDose();
+  clearDose(); S.rollKey = null;
   $("#sites").hidden = true; $("#cities").hidden = false; unbusy();
   closeOpts();
   $("#optBtn").hidden = true; $("#tourBtn").hidden = true;
@@ -411,7 +408,7 @@ async function selectCity(code, first) {
   if (!data || data.error || !data.barangays) {
     hideLoader(); unbusy(); $("#sites").hidden = true;
     $("#answer").removeAttribute("aria-busy"); $("#answer").textContent = "The numbers could not be loaded.";
-    const n = infoEl(); n.hidden = false; n.innerHTML = `<p class="notice">Could not load ${esc(c.name)}: ${esc((data && data.error) || "no data")}</p>`;
+    const n = $("#info"); n.hidden = false; n.innerHTML = `<p class="notice">Could not load ${esc(c.name)}: ${esc((data && data.error) || "no data")}</p>`;
     return;
   }
   loaderStep("Barangays ready. Placing dose sites.");
@@ -471,12 +468,11 @@ function loadS1() {
 }
 
 /* ---------- selection and info card ---------- */
-const infoEl = () => (mobile.matches ? $("#infoM") : $("#info"));
 function clearSel() {
   if (S.sel && map && map.getSource("brgy")) map.setFeatureState({ source: "brgy", id: S.sel }, { sel: false });
   S.sel = null;
   if (map && map.getLayer("b-sel")) map.setFilter("b-sel", ["==", ["get", "adm4_pcode"], ""]);
-  $("#info").hidden = true; $("#infoM").hidden = true;
+  $("#info").hidden = true;
   const bp = $("#brgyPick"); if (bp) bp.value = "";
 }
 function selectBrgy(code, fly) {
@@ -486,8 +482,7 @@ function selectBrgy(code, fly) {
   map.setFilter("b-sel", ["==", ["get", "adm4_pcode"], code]);
   $("#brgyPick").value = code;
   const r = S.data.rows.find((x) => x.id === code);
-  $("#info").hidden = true; $("#infoM").hidden = true;
-  const info = infoEl();
+  const info = $("#info");
   info.hidden = false;
   const said = [];
   if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents in ${esc(r.name)} live where the flood reaches.`);
@@ -535,7 +530,7 @@ function inPoly(x, y, g) {
 }
 function barangayAt(pt) {
   const f = S.data.barangays.features.find((b) => b.geometry && inPoly(pt[0], pt[1], b.geometry));
-  return f ? f.properties.adm4_en : null;
+  return f ? f.properties : null;
 }
 const planVal = (v, k) => (v != null && typeof v === "object" ? v[k] : v);
 // The sites of the current plan, in rank order, with plain-language names.
@@ -550,11 +545,12 @@ function planSites() {
   else sel = feats.filter((f) => f.properties.rank == null || f.properties.rank <= +k);
   const rankOf = (p) => { const v = planVal(p.rank_in_plan, k); const r = v != null ? +v : p.rank; return r == null ? null : +r; };
   const sites = sel.map((f) => {
-    const p = f.properties, kl = kindLabel(p.kind), where = barangayAt(f.geometry.coordinates);
+    const p = f.properties, kl = kindLabel(p.kind), bp = barangayAt(f.geometry.coordinates), where = bp ? bp.adm4_en : null;
+    const row = bp ? S.data.rows.find((r) => r.id === bp.adm4_pcode) : null;
     const named = p.name && String(p.name).trim();
     const reach = planVal(p.newly_covered, k) ?? planVal(p.exposed_newly_covered, k);
     return {
-      id: p.id, rank: rankOf(p), coords: f.geometry.coordinates, kind: kl, where,
+      id: p.id, rank: rankOf(p), coords: f.geometry.coordinates, kind: kl, where, row,
       name: named ? String(p.name).trim() : `Unnamed ${kl.toLowerCase()}${where ? " in " + where : ""}`,
       sub: named ? kl + (where ? ", " + where : "") : kl,
       reach: reach != null && !Number.isNaN(+reach) ? +reach : null,
@@ -562,7 +558,7 @@ function planSites() {
   }).sort((a, b) => (a.rank ?? 1e9) - (b.rank ?? 1e9));
   return { sites, total };
 }
-function clearDose() { S.markers.forEach((m) => m.remove()); S.markers = []; S.sites = []; }
+function clearDose() { S.markers.forEach((m) => m.remove()); S.markers = []; S.sites = []; S.open = null; }
 function drawDose() {
   clearDose();
   if (!S.data) return;
@@ -587,26 +583,40 @@ function drawDose() {
   renderSentence();
   paintMarkers();
 }
+// One row per site. The row expands in place to show what the data says about the site; nothing is estimated here.
+function siteDetail(s) {
+  const r = s.row, d = [];
+  if (s.where) d.push(["Barangay", esc(s.where)]);
+  d.push(["Type", esc(s.kind)]);
+  if (s.reach != null) d.push(["Newly reached", fmt(s.reach)]);
+  if (r && r.exposed != null) d.push(["Exposed here", fmt(r.exposed) + (r.pop ? " of " + fmt(r.pop) : "")]);
+  if (r && r.unreached != null) d.push(["No clinic in reach", fmt(r.unreached)]);
+  return `<dl>${d.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+}
 function renderSites(total) {
   $("#sites").hidden = false; unbusy();
   const ol = $("#siteList");
-  ol.innerHTML = S.sites.map((s, i) => `<li><button type="button" class="site" data-id="${esc(s.id)}">
-      <span class="badge-n" aria-hidden="true">${s.rank ?? i + 1}</span>
-      <span class="site-t"><span class="site-name">${esc(s.name)}</span><span class="site-sub">${esc(s.sub)}</span>${s.reach != null ? `<span class="site-reach">reaches ${fmt(s.reach)} more residents</span>` : ""}</span>
-    </button></li>`).join("");
-  ol.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-label", `Number ${S.sites[i].rank ?? i + 1}: ${S.sites[i].name}, ${S.sites[i].sub}${S.sites[i].reach != null ? ", reaches " + fmt(S.sites[i].reach) + " more residents" : ""}`));
+  ol.innerHTML = S.sites.map((s, i) => {
+    const n = s.rank ?? i + 1, id = esc(s.id), did = "sd-" + i;
+    return `<li class="srow"><button type="button" class="site" data-id="${id}" aria-expanded="false" aria-controls="${did}" aria-label="Number ${n}: ${esc(s.name)}, ${esc(s.sub)}${s.reach != null ? ", reaches " + fmt(s.reach) + " more residents" : ""}">
+      <span class="badge-n" aria-hidden="true">${n}</span>
+      <span class="site-t"><span class="site-name">${esc(s.name)}</span><span class="site-sub">${esc(s.sub)}</span></span>${CHEV}
+    </button><div class="sdet" id="${did}"><div>${siteDetail(s)}</div></div></li>`;
+  }).join("");
   const n = $("#siteNote");
   const missing = total - S.sites.length;
   n.hidden = missing <= 0;
-  n.textContent = missing > 0 ? `${S.sites.length} of the ${total} sites in this plan are on the map so far.` : "";
+  n.textContent = missing > 0 ? `Showing ${S.sites.length} of the ${total} sites in this plan so far.` : "";
   paintList();
 }
+function toggleOpen(id) { S.open = S.open === id ? null : id; paintList(); }
 function setHover(id) { S.hover = id; paintMarkers(); }
 function setActive(id, o = {}) {
-  S.active = id; paintMarkers();
+  S.active = id; if (o.scroll) S.open = id;
+  paintMarkers();
   const s = S.sites.find((x) => x.id === id);
   if (!s) return;
-  if (o.scroll) { const b = $(`#siteList button[data-id="${CSS.escape(id)}"]`); if (b) b.scrollIntoView({ block: "nearest" }); }
+  if (o.scroll && !(mobile.matches && $("#col").classList.contains("closed"))) { const b = $(`#siteList button[data-id="${CSS.escape(id)}"]`); if (b) b.scrollIntoView({ block: "nearest" }); }
   if (o.pan && map) map.easeTo({ center: s.coords, padding: pad(), duration: dur(700) });
 }
 function paintMarkers() {
@@ -614,26 +624,25 @@ function paintMarkers() {
   paintList();
 }
 function paintList() {
-  host.querySelectorAll("#siteList button").forEach((b) => {
+  host.querySelectorAll("#siteList button.site").forEach((b) => {
+    const open = b.dataset.id === S.open;
     b.classList.toggle("on", b.dataset.id === S.active || b.dataset.id === S.hover);
+    b.setAttribute("aria-expanded", String(open));
+    b.parentNode.classList.toggle("open", open);
     if (b.dataset.id === S.active) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
   });
 }
 function setPlan(k) {
   S.plan = k; S.active = null;
-  [...$("#planSeg").children].forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.k === k)));
+  const seg = $("#planSeg"), i = $(`#planSeg input[value="${k}"]`);
+  if (i) { i.checked = true; seg.style.setProperty("--i", [...seg.querySelectorAll("input")].indexOf(i)); }
   drawDose(); syncUrl();
 }
 function buildPlanSeg() {
-  const seg = $("#planSeg");
-  seg.innerHTML = "";
-  availPlans().forEach((k) => {
-    const b = document.createElement("button");
-    b.type = "button"; b.textContent = k; b.dataset.k = k; b.setAttribute("aria-pressed", String(k === S.plan));
-    b.setAttribute("aria-label", k + " sites");
-    b.addEventListener("click", () => setPlan(k));
-    seg.appendChild(b);
-  });
+  const seg = $("#planSeg"), av = availPlans();
+  seg.style.setProperty("--n", av.length);
+  seg.style.setProperty("--i", Math.max(0, av.indexOf(S.plan)));
+  seg.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + av.map((k) => `<label><input type="radio" name="plan" value="${k}"${k === S.plan ? " checked" : ""}><span>${k}<span class="sr-only"> sites</span></span></label>`).join("");
 }
 
 /* ---------- headline strip, answer sentence, legend ---------- */
@@ -645,25 +654,51 @@ function preStrip(params) {
   $("#stripQ").textContent = "Where should the city hand out free leptospirosis medicine?";
   const a = $("#answer");
   a.setAttribute("aria-busy", "true");
-  a.innerHTML = `<span class="sr-only">Loading the numbers.</span><span style="display:block;width:min(520px,60vw)">${skel(2)}</span>`;
-  $("#strip").hidden = false;
+  a.innerHTML = `<span class="sr-only">Loading the numbers.</span>${skel(3)}`;
+  $("#colTop").hidden = false;
   // The ranked list shows placeholder rows until the dose sites arrive.
-  $("#sites").hidden = false; $("#sites").setAttribute("aria-busy", "true"); $("#planBox").hidden = true;
+  $("#sites").hidden = false; $("#sites").setAttribute("aria-busy", "true"); busyParts(true);
   $("#siteList").innerHTML = `<li>${skel("list", { n: 3 })}</li>`;
 }
+function busyParts(on) { ["#planPick", "#planCov", "#what", "#siteNote"].forEach((s) => { const e = $(s); if (e && (on || s !== "#siteNote")) e.hidden = on; }); }
 // Placeholders in the answer and the site list give way to real content.
 function unbusy() {
-  $("#sites").removeAttribute("aria-busy"); $("#planBox").hidden = false;
+  $("#sites").removeAttribute("aria-busy"); busyParts(false);
+}
+const nb = (t) => `<span class="nb">${t}</span>`;
+const WALK = nb(`${WALK_MIN}-minute walk`);
+// A small "?" next to a term opens a one-line definition.
+const tipBtn = (k, label) => `<button class="tip-q" type="button" data-tip="${k}" aria-label="${label}" aria-expanded="false" aria-controls="tipPop">?</button>`;
+const TIPS = () => ({
+  exposed: `Exposed means the person lives where a ${years()}-year flood reaches.`,
+  dose: "A dose point is a temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline capsules for a few weeks after the flood.",
+});
+// A number that counts up once. The final value is already in the text, so reduced motion and screen readers get it at once.
+const rollNum = (v, f) => `<b class="n" aria-hidden="true" data-to="${v}" data-f="${f}">${f === "p" ? v.toFixed(0) + "%" : fmt(v)}</b><span class="sr-only">${f === "p" ? v.toFixed(0) + "%" : fmt(v)}</span>`;
+function roll(root) {
+  if (reducedMotion()) return;
+  root.querySelectorAll("[data-to]").forEach((e) => {
+    const to = +e.dataset.to, p = e.dataset.f === "p", fin = e.textContent, t0 = performance.now();
+    const step = (t) => {
+      if (S.dead || !e.isConnected) return;
+      const k = Math.min(1, (t - t0) / 600), v = to * (1 - (1 - k) ** 3);
+      e.textContent = k >= 1 ? fin : p ? Math.round(v) + "%" : fmt(v);
+      if (k < 1) requestAnimationFrame(step);
+    };
+    e.textContent = p ? "0%" : "0";
+    requestAnimationFrame(step);
+  });
 }
 function renderStrip() {
-  $("#strip").hidden = false;
+  $("#colTop").hidden = false;
   $("#answer").removeAttribute("aria-busy");
   const q = $("#stripQ"), eb = $("#eyebrow");
   if (!S.city) {
     eb.textContent = `Philippines · after a ${YEARS_DEFAULT}-year flood`;
     q.textContent = "Where does a flood put the most people at risk of leptospirosis?";
     const tot = S.cities.reduce((t, c) => t + (c.exposed || 0), 0);
-    $("#answer").innerHTML = `<b>${fmt(tot)}</b> residents in ${S.cities.length} ${S.cities.length === 1 ? "city live" : "cities live"} where a ${YEARS_DEFAULT}-year flood reaches. Pick a city to see where to hand out free medicine first.`;
+    $("#answer").innerHTML = `<p class="a-lead">${rollNum(tot, "n")} residents in ${S.cities.length} ${S.cities.length === 1 ? "city are" : "cities are"} ${nb("exposed" + tipBtn("exposed", "What does exposed mean?"))} to a ${YEARS_DEFAULT}-year flood.</p><p class="a-main">Pick a city to see where to hand out free medicine first.</p>`;
+    roll($("#answer"));
     return;
   }
   eb.textContent = `${cityName()} · after a ${years()}-year flood`;
@@ -681,24 +716,29 @@ function renderSentence() {
   const now = cov.flood != null ? cov.flood : null;
   const a = $("#answer");
   a.removeAttribute("aria-busy");
-  const lead = exposed != null ? `<b>${fmt(exposed)}</b> residents waded through floodwater.` : "";
+  const lead = exposed != null ? `<p class="a-lead">${rollNum(exposed, "n")} residents are ${nb("exposed" + tipBtn("exposed", "What does exposed mean?"))} to a ${years()}-year flood.</p>` : "";
   let html;
   if (share != null) {
-    html = `${lead} Opening <b>${S.plan}</b> temporary dose points brings <b class="big">${pct(share, 0)}</b> of them within a ${WALK_MIN}-minute walk of free doxycycline${now != null ? `<span class="now">, up from ${pct(now, 0)} now</span>` : ""}.`;
+    html = `${lead}<p class="a-main">Opening <b>${S.plan}</b> temporary ${nb("dose points" + tipBtn("dose", "What is a dose point?"))} brings ${rollNum(share * 100, "p")} of them within a ${WALK} of free doxycycline${now != null ? `<span class="now">, up from ${pct(now, 0)} now</span>` : ""}.</p>`;
   } else if (exposed != null) {
-    html = `${lead} Dose point plans are not computed for this city yet, so the map shows where the water reached.`;
+    html = `${lead}<p class="a-main">Dose point plans are not computed for this city yet, so the map shows where the water reached.</p>`;
   } else {
-    html = "Flood exposure and dose point plans are not available for this city yet.";
+    html = `<p class="a-main">Flood exposure and dose point plans are not available for this city yet.</p>`;
   }
   const next = html.trim();
-  if (a.innerHTML !== next) a.innerHTML = next;
+  if (a.innerHTML !== next) {
+    hideTip(); a.innerHTML = next;
+    const key = `${S.city}|${S.plan}`;
+    if (S.rollKey !== key) { S.rollKey = key; roll(a); }
+  }
   const pc = $("#planCov");
   if (pc) {
     pc.innerHTML = share != null
-      ? `<b>${pct(share, 0)}</b> of exposed residents within a ${WALK_MIN}-minute walk of free medicine${now != null ? ` (${pct(now, 0)} with no dose points)` : ""}.`
+      ? `<b>${pct(share, 0)}</b> of exposed residents within a ${WALK}${now != null ? `, up from ${pct(now, 0)}` : ""}.`
       : "Coverage is not computed for this plan yet.";
   }
 }
+
 function renderLegend() {
   const lg = $("#legend");
   if (!S.city) {
@@ -730,7 +770,7 @@ function tourSteps() {
   const steps = [];
   steps.push({
     title: "The question and the answer",
-    metric: "exposed", plan: null, hi: null, spot: "#strip",
+    metric: "exposed", plan: null, hi: null, spot: "#colTop",
     body: `This page answers one question: where should ${esc(name)} hand out free leptospirosis medicine after a flood? The sentence under the question gives the answer for the plan you pick.`,
   });
   const topE = topRow("exposed");
@@ -746,7 +786,12 @@ function tourSteps() {
   steps.push({
     title: "Where to set up first",
     metric: "exposed", plan: has3 ? "3" : null, top: n, hi: null, spot: "#sites",
-    body: `The list on the left ranks the sites. The gold numbers 1 to ${n} on the map match it. ${p3 && share != null ? `Opening these ${n} brings ${pct(share, 0)} of exposed residents within a ${WALK_MIN}-minute walk of free medicine. ` : ""}Point at a list item to find it on the map.`,
+    body: `The panel ranks the sites. The gold numbers 1 to ${n} on the map match it. ${p3 && share != null ? `Opening these ${n} brings ${pct(share, 0)} of exposed residents within a ${WALK_MIN}-minute walk of free medicine. ` : ""}Tap a site to see more and find it on the map.`,
+  });
+  steps.push({
+    title: "More options",
+    metric: "exposed", plan: null, hi: null, spot: "#optBtn",
+    body: "Colour the map by another measure, turn on 3D or terrain, or jump to a barangay. Everything else on this page keeps working while you explore.",
     last: true,
   });
   return steps;
@@ -764,14 +809,14 @@ function startTour(user) {
   const card = document.createElement("div");
   card.className = "tour"; card.id = "tour";
   card.setAttribute("role", "dialog"); card.setAttribute("aria-labelledby", "tourT");
-  $(".mapwrap").appendChild(card);
+  $(".mapside").appendChild(card);
   onKey = (e) => { if (e.key === "Escape" && S.tour) { e.preventDefault(); endTour(true); } };
   document.addEventListener("keydown", onKey);
   tourStep(0);
 }
 function tourSpot(sel) {
   host.querySelectorAll(".spot").forEach((e) => e.classList.remove("spot"));
-  if (sel) { const e = $(sel); if (e) e.classList.add("spot"); }
+  if (sel) { const e = $(sel); if (e) { e.classList.add("spot"); if (e.closest("#col")) e.scrollIntoView({ block: "nearest", behavior: reducedMotion() ? "auto" : "smooth" }); } }
 }
 function tourStep(i) {
   const t = S.tour; if (!t) return;
@@ -781,7 +826,7 @@ function tourStep(i) {
   if (S.metric !== k) setMetric(k);
   if (st.plan && S.plan !== st.plan) setPlan(st.plan);
   if (!$("#lyDose").checked) { $("#lyDose").checked = true; drawDose(); }
-  if (st.spot === "#sites" && mobile.matches) openSheet(true);
+  if (mobile.matches) openSheet(st.spot === "#sites");
   S.markers.forEach((m) => { const e = m.getElement(), r = +e.textContent; e.classList.toggle("hl", !!st.top && r <= st.top); e.classList.toggle("dim", !!st.top && !(r <= st.top)); });
   tourSpot(st.spot);
   tourClearHi();
@@ -849,11 +894,84 @@ function openOpts(open) {
   b.classList.toggle("on", open);
 }
 function closeOpts() { if (host && $("#opts")) openOpts(false); }
+// Phone sheet: two snap heights. closed = peek (question and answer), open = everything.
 function openSheet(open) {
-  const dock = $("#dock"), h = $("#handle");
-  dock.classList.toggle("closed", !open);
+  const col = $("#col"), h = $("#handle");
+  col.classList.toggle("closed", !open);
   h.setAttribute("aria-expanded", String(open));
   h.setAttribute("aria-label", open ? "Show less of the panel" : "Show more of the panel");
+  $("#colMore").inert = mobile.matches && !open;
+}
+function setPeek() {
+  const t = $("#colTop");
+  if (!t || !mobile.matches) return;
+  S.peek = t.offsetTop + t.offsetHeight;
+  $("#mapwrap").style.setProperty("--peek", S.peek + "px");
+}
+function syncSheet() {
+  setPeek();
+  if (!mobile.matches) { $("#colMore").inert = false; $("#col").style.transform = ""; }
+  else openSheet(!$("#col").classList.contains("closed"));
+  if (map) map.resize();
+}
+function wireSheet() {
+  const col = $("#col"), h = $("#handle");
+  mobile.addEventListener("change", syncSheet);
+  syncSheet();
+  let y0 = 0, off0 = 0, moved = false, vy = 0, ly = 0, lt = 0, on = false;
+  const maxOff = () => Math.max(0, col.offsetHeight - S.peek);
+  h.addEventListener("click", () => { if (S.suppress) return; openSheet(col.classList.contains("closed")); });
+  h.addEventListener("pointerdown", (e) => {
+    if (!mobile.matches || e.button > 0) return;
+    on = true; moved = false; vy = 0; y0 = ly = e.clientY; lt = e.timeStamp;
+    off0 = col.classList.contains("closed") ? maxOff() : 0;
+    h.setPointerCapture(e.pointerId);
+  });
+  h.addEventListener("pointermove", (e) => {
+    if (!on) return;
+    const dy = e.clientY - y0;
+    if (Math.abs(dy) > 6) { moved = true; col.classList.add("drag"); }
+    if (!moved) return;
+    const dt = e.timeStamp - lt; if (dt > 0) vy = (e.clientY - ly) / dt;
+    ly = e.clientY; lt = e.timeStamp;
+    col.style.transform = `translateY(${Math.min(maxOff(), Math.max(0, off0 + dy))}px)`;
+  });
+  const end = (e) => {
+    if (!on) return;
+    on = false;
+    if (!moved) return;
+    const off = Math.min(maxOff(), Math.max(0, off0 + e.clientY - y0));
+    col.classList.remove("drag"); col.style.transform = "";
+    openSheet(Math.abs(vy) > 0.4 ? vy < 0 : off < maxOff() / 2);
+    S.suppress = true; setTimeout(() => { S.suppress = false; }, 0);
+  };
+  h.addEventListener("pointerup", end);
+  h.addEventListener("pointercancel", end);
+}
+
+/* ---------- "?" definitions: native popover with a positioned fallback ---------- */
+function hideTip() {
+  if (!tipEl) return;
+  if (POP) { try { if (tipEl.matches(":popover-open")) tipEl.hidePopover(); } catch {} } else tipEl.hidden = true;
+  if (S && S.tipBtn) { S.tipBtn.setAttribute("aria-expanded", "false"); S.tipBtn.removeAttribute("aria-describedby"); S.tipBtn = null; }
+}
+function showTip(btn) {
+  if (S.tipBtn === btn) { hideTip(); return; }
+  hideTip();
+  tipEl.textContent = TIPS()[btn.dataset.tip] || "";
+  if (POP) tipEl.showPopover(); else tipEl.hidden = false;
+  const r = btn.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
+  const top = r.bottom + 8 + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 8) : r.bottom + 8;
+  tipEl.style.left = left + "px"; tipEl.style.top = top + "px";
+  S.tipBtn = btn; btn.setAttribute("aria-expanded", "true"); btn.setAttribute("aria-describedby", "tipPop");
+}
+function wireTips() {
+  host.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest(".tip-q"); if (b) showTip(b); });
+  onDown = (e) => { if (S.tipBtn && !(e.target.closest && (e.target.closest(".tip-q") || e.target.closest("#tipPop")))) hideTip(); };
+  onTipKey = (e) => { if (e.key === "Escape" && S.tipBtn) { const b = S.tipBtn; hideTip(); b.focus(); } };
+  document.addEventListener("pointerdown", onDown);
+  document.addEventListener("keydown", onTipKey);
 }
 
 function wire() {
@@ -872,8 +990,9 @@ function wire() {
 
   // site list: hover and focus light up the marker, click pans to it
   const sl = $("#siteList");
+  $("#planSeg").addEventListener("change", (e) => { if (e.target.name === "plan") setPlan(e.target.value); });
   const idOf = (e) => { const b = e.target.closest && e.target.closest("button.site"); return b ? b.dataset.id : null; };
-  sl.addEventListener("click", (e) => { const id = idOf(e); if (id) setActive(id, { pan: true }); });
+  sl.addEventListener("click", (e) => { const id = idOf(e); if (id) { toggleOpen(id); setActive(id, { pan: true }); } });
   sl.addEventListener("mouseover", (e) => { const id = idOf(e); if (id) setHover(id); });
   sl.addEventListener("mouseout", (e) => { if (idOf(e)) setHover(null); });
   sl.addEventListener("focusin", (e) => { const id = idOf(e); if (id) setHover(id); });
@@ -899,5 +1018,6 @@ function wire() {
   $("#lyDose").addEventListener("change", (e) => S.markers.forEach((m) => (e.target.checked ? m.addTo(map) : m.remove())));
   $("#lyRelief").addEventListener("change", (e) => { S.reliefOn = e.target.checked; applyRelief(); });
   $("#lyS1").addEventListener("change", (e) => map.setLayoutProperty("s1-fill", "visibility", e.target.checked ? "visible" : "none"));
-  $("#handle").addEventListener("click", () => openSheet($("#dock").classList.contains("closed")));
+  wireSheet();
+  wireTips();
 }
