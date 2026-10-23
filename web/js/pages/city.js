@@ -3,7 +3,7 @@
 // ({meta, barangays, dosePoints, summary, alertScores, alertSeries}) or the
 // loader shape ({meta, bar, rows, dose, summary, coverage, series, alert}).
 import * as D from "../data.js";
-import { skel } from "../format.js";
+import { skel, moreBelow, reducedMotion } from "../format.js";
 
 const TABS = [
   ["overview", "Overview"],
@@ -201,10 +201,12 @@ function overview(m) {
   </div>`;
 }
 
+// Thin share bar. v is 0..1.
+const bar = (v) => `<span class="bar" aria-hidden="true"><span class="bar-fill" style="width:${(Math.max(0, Math.min(1, +v || 0)) * 100).toFixed(1)}%"></span></span>`;
 function planRows(m) {
   return ["3", "5", "8"].filter((k) => m.plans[k]).map((k) => {
     const p = m.plans[k];
-    return `<tr><td>${k}</td><td>${p.sites ? p.sites.length : "n/a"}</td><td>${fmt(p.newly)}</td><td>${pct(p.share, 1)}</td></tr>`;
+    return `<tr><td>${k}</td><td>${p.sites ? p.sites.length : "n/a"}</td><td>${fmt(p.newly)}</td><td class="has-bar"><span class="num">${pct(p.share, 1)}</span>${isNum(p.share) ? bar(p.share) : ""}</td></tr>`;
   }).join("");
 }
 function covChart(m) {
@@ -248,19 +250,24 @@ function dosePanel(m) {
 }
 
 const COLS = [
-  { key: "priority", label: "Priority", desc: "Rank for opening dose points. 1 is the most urgent.", num: true },
+  { key: "priority", label: "Priority", desc: "Rank for opening dose points. 1 is the most urgent. The badge splits the ranking into thirds: High is the top third of barangays by rank, Medium the middle third, Low the rest.", num: true },
   { key: "name", label: "Barangay", desc: "Smallest administrative area.", text: true },
   { key: "pop", label: "Population", desc: "Residents living there.", num: true },
-  { key: "exposed", label: "Exposed", desc: "Residents living where the flood reaches.", num: true },
+  { key: "exposed", label: "Exposed", desc: "Residents living where the flood reaches. The bar shows each barangay's share of the city's largest barangay figure.", num: true },
   { key: "unreached", label: "Out of reach in flood", desc: "Exposed residents with no care within a 30-minute walk during the flood.", num: true },
   { key: "fshare", label: "Flooded share", desc: "Share of the barangay's area under water.", num: true },
   { key: "capsules", label: "Capsules/week", desc: "Capsules needed each flood week.", num: true },
 ];
-function cell(c, r) {
+function cell(c, r, ctx) {
   const v = r[c.key];
+  if (c.key === "priority") {
+    const t = ctx.n ? v / ctx.n : 1;
+    const lvl = t <= 1 / 3 ? "High" : t <= 2 / 3 ? "Medium" : "Low";
+    return `<td class="has-badge"><span class="num">${fmt(v)}</span><span class="pri pri-${lvl.toLowerCase()}">${lvl}</span></td>`;
+  }
+  if (c.key === "exposed") return `<td class="has-bar"><span class="num">${fmt(v)}</span>${bar(ctx.maxExposed > 0 ? v / ctx.maxExposed : 0)}</td>`;
   if (c.key === "name") return `<td class="l">${esc(v)}</td>`;
   if (c.key === "fshare") return `<td>${pct(v)}</td>`;
-  if (c.key === "priority") return `<td>${fmt(v)}</td>`;
   return `<td>${v == null ? '<span title="Not computed">n/a</span>' : fmt(v)}</td>`;
 }
 function barangayPanel(m, panel, code) {
@@ -274,6 +281,9 @@ function barangayPanel(m, panel, code) {
     <ul class="col-key">${COLS.map((c) => `<li><strong>${esc(c.label)}.</strong> ${esc(c.desc)}</li>`).join("")}</ul></div>`;
   const tbody = panel.querySelector("tbody"), q = panel.querySelector("#brgy-q"), count = panel.querySelector("#brgy-count");
   let sortKey = "priority", dir = 1;
+  const ctx = { n: m.rows.length, maxExposed: Math.max(0, ...m.rows.map((r) => r.exposed || 0)) };
+  const box = panel.querySelector(".table-wrap");
+  cleanup.push(moreBelow(box));
   const view = () => {
     const term = q.value.trim().toLowerCase();
     const list = m.rows.filter((r) => !term || r.name.toLowerCase().includes(term));
@@ -288,7 +298,7 @@ function barangayPanel(m, panel, code) {
   };
   const draw = () => {
     const list = view();
-    tbody.innerHTML = list.length ? list.map((r) => `<tr>${COLS.map((c) => cell(c, r)).join("")}</tr>`).join("") : `<tr><td colspan="${COLS.length}" class="empty">No barangay matches.</td></tr>`;
+    tbody.innerHTML = list.length ? list.map((r) => `<tr>${COLS.map((c) => cell(c, r, ctx)).join("")}</tr>`).join("") : `<tr><td colspan="${COLS.length}" class="empty">No barangay matches.</td></tr>`;
     count.textContent = `Showing ${list.length} of ${m.rows.length} barangays.`;
     panel.querySelectorAll("th[data-k]").forEach((th) => th.setAttribute("aria-sort", th.dataset.k === sortKey ? (dir === 1 ? "ascending" : "descending") : "none"));
   };
@@ -390,7 +400,7 @@ export async function render(el, params = {}) {
         <a class="btn ghost sm" href="#/map/${esc(c.code)}">Open on map</a>
       </div>
     </header>
-    <div class="tabs" role="tablist" aria-label="City sections">${TABS.map(([id, label]) => `<button type="button" role="tab" id="tab-${id}" aria-controls="panel-${id}" aria-selected="false" tabindex="-1" data-tab="${id}">${label}</button>`).join("")}</div>
+    <div class="tabs" role="tablist" aria-label="City sections"><span class="tab-ind" aria-hidden="true"></span>${TABS.map(([id, label]) => `<button type="button" role="tab" id="tab-${id}" aria-controls="panel-${id}" aria-selected="false" tabindex="-1" data-tab="${id}">${label}</button>`).join("")}</div>
     ${TABS.map(([id]) => `<section role="tabpanel" id="panel-${id}" aria-labelledby="tab-${id}" tabindex="0" hidden></section>`).join("")}
   </div>`;
 
@@ -405,10 +415,40 @@ export async function render(el, params = {}) {
   el.querySelector("#city-sel").addEventListener("change", (e) => { location.hash = "#/city/" + e.target.value; });
 
   const tabEls = [...el.querySelectorAll('[role="tab"]')];
-  const show = (id, focus) => {
-    tabEls.forEach((t) => { const on = t.dataset.tab === id; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; if (on && focus) t.focus(); });
-    TABS.forEach(([pid]) => { el.querySelector("#panel-" + pid).hidden = pid !== id; });
+  const ind = el.querySelector(".tab-ind");
+  const tabsBox = el.querySelector(".tabs");
+  let cur = null;
+  const placeInd = (animate) => {
+    const t = tabEls.find((x) => x.dataset.tab === cur);
+    if (!t || !t.offsetWidth) return;
+    const instant = !animate || reducedMotion();
+    if (instant) ind.style.transition = "none";
+    ind.style.width = t.offsetWidth + "px";
+    ind.style.transform = `translateX(${t.offsetLeft}px)`;
+    if (instant) { void ind.offsetWidth; ind.style.transition = ""; }
   };
+  const show = (id, focus) => {
+    const prev = cur ? TABS.findIndex(([x]) => x === cur) : -1;
+    const next = TABS.findIndex(([x]) => x === id);
+    cur = id;
+    tabEls.forEach((t) => { const on = t.dataset.tab === id; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; if (on && focus) t.focus(); });
+    TABS.forEach(([pid]) => {
+      const p = el.querySelector("#panel-" + pid);
+      p.classList.remove("slide-r", "slide-l");
+      p.hidden = pid !== id;
+      if (pid === id && prev !== -1 && prev !== next && !reducedMotion()) {
+        void p.offsetWidth;
+        p.classList.add(next > prev ? "slide-r" : "slide-l");
+      }
+    });
+    placeInd(prev !== -1);
+    const act = tabEls.find((t) => t.dataset.tab === id);
+    if (act && tabsBox.scrollWidth > tabsBox.clientWidth) act.scrollIntoView({ inline: "nearest", block: "nearest" });
+  };
+  const onResize = () => placeInd(false);
+  window.addEventListener("resize", onResize);
+  cleanup.push(() => window.removeEventListener("resize", onResize));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => placeInd(false));
   tabEls.forEach((t, i) => {
     t.addEventListener("click", () => {
       show(t.dataset.tab);

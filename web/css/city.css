@@ -63,3 +63,25 @@
 }
 .city .table th,.city .table td{padding:var(--s1) 12px}
 .city .table th.l{text-align:left}
+
+/* tabs: sliding indicator + direction-aware panels */
+.city .tabs{position:relative}
+.city .tabs [role="tab"][aria-selected="true"]{border-bottom-color:transparent}
+.tab-ind{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--gold);border-radius:2px 2px 0 0;transition:transform .22s ease,width .22s ease;pointer-events:none}
+@keyframes city-in-r{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes city-in-l{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.city [role="tabpanel"].slide-r{animation:city-in-r .22s ease-out}
+.city [role="tabpanel"].slide-l{animation:city-in-l .22s ease-out}
+.city{overflow-x:clip}
+@media (prefers-reduced-motion:reduce){.tab-ind{transition:none}.city [role="tabpanel"]{animation:none!important}}
+/* share bars and priority badges */
+.table td.has-bar{min-width:96px}
+.table td.has-bar .num{display:block}
+.bar{display:block;height:4px;border-radius:2px;background:var(--blue-tint);margin-top:4px;overflow:hidden}
+.bar-fill{display:block;height:100%;border-radius:2px;background:var(--blue)}
+.table td.has-badge{white-space:nowrap}
+.table td.has-badge .num{display:inline-block;min-width:2.2em}
+.pri{display:inline-block;margin-left:var(--s1);padding:2px 8px;border-radius:6px;font:600 var(--t-xs) var(--f-text);line-height:1.4}
+.pri-high{background:var(--blue);color:#fff}
+.pri-medium{background:var(--blue-tint);color:var(--blue-dark)}
+.pri-low{background:var(--bg);color:var(--muted)}
