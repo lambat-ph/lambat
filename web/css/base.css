@@ -65,16 +65,16 @@ html[data-nav="closed"] .nav{width:var(--nav-w-closed)}
 .nav-brand>img{width:auto;height:30px;flex:none}
 .nav-brand>span{flex:none}.nav-brand .nav-word{display:block;height:18px;width:98px;flex:none} /* 3/5 of the 30px mark */
 /* wordmark letters are separate paths: when the sidebar opens they rise into place one after another */
-/* opening: each letter is drawn along its own strokes, alternating up and down like threads passing over and under in a net */
-.nav-word .ltr{animation:ltr-up .26s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(40ms + var(--i)*35ms)}
-.nav-word .ltr:nth-child(odd){animation-name:ltr-down}
-@keyframes ltr-up{from{clip-path:inset(100% 0% 0% 0%)}to{clip-path:inset(0% 0% 0% 0%)}}
-@keyframes ltr-down{from{clip-path:inset(0% 0% 100% 0%)}to{clip-path:inset(0% 0% 0% 0%)}}
-/* closing: the same threads pull back out, last letter first */
-.nav.unweave .nav-word .ltr{animation:ltr-up-out .12s cubic-bezier(.4,0,1,1) both;animation-delay:calc((5 - var(--i))*20ms)}
-.nav.unweave .nav-word .ltr:nth-child(odd){animation-name:ltr-down-out}
-@keyframes ltr-up-out{from{clip-path:inset(0% 0% 0% 0%)}to{clip-path:inset(0% 0% 100% 0%)}}
-@keyframes ltr-down-out{from{clip-path:inset(0% 0% 0% 0%)}to{clip-path:inset(100% 0% 0% 0%)}}
+/* opening: letters slide in alternately from above and below, like threads passing over and under in a net, left to right */
+.nav-word .ltr{transform-box:fill-box;transform-origin:50% 50%;animation:ltr-in-up .28s cubic-bezier(.2,.9,.25,1) backwards;animation-delay:calc(30ms + var(--i)*32ms)}
+.nav-word .ltr:nth-child(odd){animation-name:ltr-in-down}
+@keyframes ltr-in-up{from{opacity:0;transform:translateY(90%)}to{opacity:1;transform:none}}
+@keyframes ltr-in-down{from{opacity:0;transform:translateY(-90%)}to{opacity:1;transform:none}}
+/* closing: the threads pull back out the way they came, right to left, while the sidebar narrows */
+.nav.unweave .nav-word .ltr{animation:ltr-out-down .15s cubic-bezier(.25,.6,.35,1) forwards;animation-delay:calc((5 - var(--i))*14ms)}
+.nav.unweave .nav-word .ltr:nth-child(odd){animation-name:ltr-out-up}
+@keyframes ltr-out-down{from{opacity:1;transform:none}to{opacity:0;transform:translateY(90%)}}
+@keyframes ltr-out-up{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-90%)}}
 @media (prefers-reduced-motion:reduce){.nav-word .ltr,.nav.unweave .nav-word .ltr{animation:none}}
 .nav-toggle{margin-left:auto;flex:none;width:32px;height:32px;border:0;border-radius:var(--radius-sm);background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center}
 .nav-toggle:hover,.nav a.item:hover{background:rgba(255,255,255,.14)}

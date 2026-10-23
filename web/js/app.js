@@ -81,7 +81,7 @@ function mountNav() {
     // The sidebar starts narrowing at once; the letters leave right to left as its edge passes them.
     nav.classList.add("unweave");
     set("closed");
-    setTimeout(() => nav.classList.remove("unweave"), 230);
+    setTimeout(() => nav.classList.remove("unweave"), 260);
   });
 }
 
