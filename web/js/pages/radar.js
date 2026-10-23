@@ -116,7 +116,10 @@ function resultsHTML() {
     <div class="card stat"><div class="stat-value">0.21</div><div class="stat-label">Otsu threshold, same chips</div></div>
     <div class="card stat"><div class="stat-value">67 of 82</div><div class="stat-label">chips with water where the U-Net scored higher</div></div>
   </div>
-  <div class="rd-def"><p><b>What is IoU?</b> The overlap between the predicted water and the hand-drawn water, divided by their union. 1 is perfect. 0 means no overlap at all.</p></div>
+  <div class="rd-def">
+    <p><b>What is IoU?</b> The overlap between the predicted water and the hand-drawn water, divided by their union. 1 is perfect. 0 means no overlap at all.</p>
+    <p><b>What the scores say.</b> 0.64 against 0.21 means the U-Net found about three times as much of the true flood overlap as the simple threshold. A typical single image scores 0.33, lower than the pooled 0.64. The test images are floods in other countries. The model has not been tested on Dagupan yet.</p>
+  </div>
   <div class="rd-two">
     <div class="card"><h3 class="card-title">Pooled IoU, higher is better</h3>${CHART}</div>
     <div class="card"><h3 class="card-title">Scores on the test chips</h3>
@@ -175,8 +178,22 @@ export async function render(root) {
   root.innerHTML = `<div class="rd">
   <header class="rd-hero">
     <span class="eyebrow">Flood from space</span>
-    <h1>Seeing flood water from orbit</h1>
+    <h1>Seeing flood water from orbit <span class="badge badge-neutral">Experimental</span></h1>
     <p>After a typhoon, clouds can hide the flood from ordinary satellite photos. Radar satellites can see through them. Here is how that works and how well our model reads it.</p>
+    <aside class="rd-feeds" aria-labelledby="rd-feeds-t">
+      <h2 id="rd-feeds-t">How this feeds the map</h2>
+      <p>Today the map uses the UP NOAH 25-year flood hazard map. Radar flood maps are the next step, so the tool can map a real flood within days.</p>
+      <a class="btn btn-primary sm" href="#/map">Back to the map</a>
+    </aside>
+    <nav class="rd-toc" aria-label="On this page">
+      <span class="eyebrow">On this page</span>
+      <ol>
+        <li><a href="#rd-h1">Why radar</a></li>
+        <li><a href="#rd-h2">The model</a></li>
+        <li><a href="#rd-h3">How well it works</a></li>
+        <li><a href="#rd-h4">Typhoon Egay case study</a></li>
+      </ol>
+    </nav>
   </header>
 
   <section class="rd-sec" aria-labelledby="rd-h1">
@@ -201,14 +218,18 @@ export async function render(root) {
 
   <section class="rd-sec" aria-labelledby="rd-h2">
     <h2 id="rd-h2">2. The model</h2>
-    <p class="lead">A threshold only looks at how dark each pixel is. A U-Net also looks at the shapes around it, so a dark farm field and a dark lake can be told apart. It reads two radar bands, VV and VH, which respond differently to water and land.</p>
+    <p class="lead">A threshold only looks at how dark each pixel is. A U-Net also looks at the shapes around it, so a dark farm field and a dark lake can be told apart. It reads the radar signal in two ways at once, which helps it tell water from land.</p>
+    <details class="rd-details rd-tech"><summary>Technical detail: VV and VH bands</summary>
+      <p>The satellite sends and receives the signal in two orientations. VV means sent and received vertically. VH means sent vertically and received horizontally. Water and land respond differently in each, so the U-Net takes both as input.</p></details>
     <div class="card">${TRAIN}${FLOW}
       <details class="rd-details"><summary>Show as diagram</summary>${DIAGRAM}</details></div>
   </section>
 
   <section class="rd-sec" aria-labelledby="rd-h3">
     <h2 id="rd-h3">3. How well it works</h2>
-    <p class="lead">We compared the U-Net with the simplest alternative: pick one brightness cut-off for each image (the Otsu method). Both were scored against hand-drawn water on 90 chips the model had never seen.</p>
+    <p class="lead">We compared the U-Net with the simplest alternative: pick one brightness cut-off for each image. Both were scored against hand-drawn water on 90 chips the model had never seen.</p>
+    <details class="rd-details rd-tech"><summary>Technical detail: the Otsu threshold</summary>
+      <p>Otsu is a standard method that looks at the histogram of pixel brightness in one image and picks the cut-off that best splits dark pixels from bright ones. Everything darker is called water. It uses one band and no before picture, so it is a weak comparison.</p></details>
     ${resultsHTML()}
   </section>
 
@@ -221,6 +242,12 @@ export async function render(root) {
   <p class="rd-foot">Source for the training and test data: Bonafilia, D., Tellman, B., Anderson, T., Issenberg, E. (2020). Sen1Floods11: a georeferenced dataset to train and test deep learning flood algorithms for Sentinel-1. CVPR Workshops. Scores come from one full training run.</p>
   </div>`;
 
+  // The router uses the URL hash, so contents links scroll instead of changing it.
+  root.querySelectorAll(".rd-toc a").forEach((a) => a.addEventListener("click", (e) => {
+    e.preventDefault();
+    const t = root.querySelector(a.getAttribute("href"));
+    if (t) { t.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); t.setAttribute("tabindex", "-1"); t.focus({ preventScroll: true }); }
+  }));
   const picsEl = root.querySelector("#rd-pics");
   const btns = [...root.querySelectorAll(".rd-seg button")];
   btns.forEach((b) => b.addEventListener("click", () => {

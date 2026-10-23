@@ -1,5 +1,5 @@
 import { getNational, getCities, getCity } from "../data.js";
-import { RAMP } from "../config.js";
+import { RAMP, FLAT_CITY } from "../config.js";
 import { fmt, esc, useCss } from "../format.js";
 
 // Static mini choropleth of the first city: equirectangular projection into an SVG box.
@@ -21,30 +21,45 @@ function previewSvg(city) {
   }).join("");
   const dots = city.dosePoints.features.filter((f) => f.properties.rank != null && f.properties.rank <= 3)
     .sort((a, b) => a.properties.rank - b.properties.rank)
-    .map((f) => { const [lon, lat] = f.geometry.coordinates; return `<g transform="translate(${X(lon)} ${Y(lat)})"><circle r="13" fill="var(--gold)" stroke="#fff" stroke-width="2.5"/><text y="5" text-anchor="middle" font-family="Space Grotesk,system-ui,sans-serif" font-weight="700" font-size="14" fill="var(--ink)">${f.properties.rank}</text></g>`; }).join("");
+    .map((f) => { const [lon, lat] = f.geometry.coordinates; return `<g transform="translate(${X(lon)} ${Y(lat)})"><circle r="13" fill="var(--gold)" stroke="#fff" stroke-width="2.5"/><text y="5" text-anchor="middle" font-family="Space Grotesk,system-ui,sans-serif" font-weight="700" font-size="15" fill="var(--ink)">${f.properties.rank}</text></g>`; }).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Example map of ${esc(city.meta.name)}: barangays shaded light to dark by exposed residents, with three numbered gold dose points.">${paths}${dots}</svg>`;
 }
 
-// Count each [data-to] number up once when it scrolls into view (~700ms, ease-out).
+// Rolling numbers. The real value always stays in the DOM: the animated copy is aria-hidden,
+// a screen-reader-only copy holds the final value, and the animated copy is reset to the final
+// value if the animation is cut short (page change, tab hidden, timeout).
+let live = [];
+function settle(n) { n.textContent = n.dataset.final; }
 function rollNumbers(root) {
   const nodes = [...root.querySelectorAll("[data-to]")].filter((n) => Number.isFinite(+n.dataset.to));
   if (!nodes.length || matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
   const run = (n) => {
-    const to = +n.dataset.to, final = n.textContent, t0 = performance.now();
+    const to = +n.dataset.to, t0 = performance.now();
+    live.push(n);
+    const done = () => { settle(n); live = live.filter((x) => x !== n); };
     const tick = (t) => {
+      if (!n.isConnected) return done();
       const k = Math.min(1, (t - t0) / 700);
-      n.textContent = k < 1 ? fmt(Math.round(to * (1 - (1 - k) ** 3))) : final;
-      if (k < 1 && n.isConnected) requestAnimationFrame(tick);
+      if (k >= 1) return done();
+      n.textContent = fmt(Math.round(to * (1 - (1 - k) ** 3)));
+      requestAnimationFrame(tick);
     };
     n.textContent = fmt(0);
     requestAnimationFrame(tick);
+    setTimeout(done, 1000);
   };
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { io.unobserve(e.target); run(e.target); } }), { threshold: 0.6 });
   nodes.forEach((n) => io.observe(n));
 }
+const onHide = () => { if (document.hidden) live.slice().forEach(settle); };
+
+const ARROW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const FLOOD = '<abbr title="A flood big enough that it has about a 4% chance of happening in any year (UP NOAH hazard map)">25-year flood</abbr>';
+const stat = (l, v) => `<div><dt>${l}</dt><dd><span class="num" aria-hidden="true" data-to="${v}" data-final="${fmt(v)}">${fmt(v)}</span><span class="sr-only">${fmt(v)}</span></dd></div>`;
 
 export async function render(el) {
   useCss("home");
+  document.addEventListener("visibilitychange", onHide);
   el.innerHTML = `
   <div class="home">
     <div class="home-bg" aria-hidden="true">
@@ -54,49 +69,74 @@ export async function render(el) {
     </div>
     <div class="home-inner">
       <div class="brand-line"><img src="assets/favicon.svg" alt="" width="32" height="32">LAMBAT</div>
-      <h1>Get the capsule to the other side of the water.</h1>
-      <p class="lede">After a flood, LAMBAT shows a city health office who was exposed to floodwater, who can still walk to care, and where to open temporary doxycycline dose points.</p>
-      <a class="btn btn-primary" href="#/map">Open the map
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <p class="eyebrow tagline">Get the capsule to the other side of the water</p>
+      <h1 id="answer" aria-busy="true"><span class="skel sk-h" aria-hidden="true"></span><span class="skel sk-h s2" aria-hidden="true"></span></h1>
+      <p class="def" id="def">A 25-year flood has about a 4% chance of happening in any year. Dose points are temporary spots where a nurse hands out free doxycycline.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#/map">Open the map ${ARROW}</a>
+        <a class="cities-link" id="cities" href="#/map/all" hidden></a>
+      </div>
+      <dl class="stats-strip" id="strip" aria-label="Totals for a 25-year flood"><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div></dl>
+      <p class="lede">After a flood, LAMBAT shows a city health office who was exposed, who is cut off from care, and where to open dose points.</p>
       <div class="how" id="how">
-        <figure class="preview" id="preview" hidden>
+        <a class="preview" id="preview" href="#/map" hidden>
           <div class="pv-map" id="pvMap"></div>
-          <figcaption>What a health officer sees: who was exposed, and where to set up dose points.</figcaption>
-          <div class="pv-key" aria-hidden="true"><span>Fewer exposed</span><i style="background:${RAMP[0]}"></i><i style="background:${RAMP[1]}"></i><i style="background:${RAMP[2]}"></i><i style="background:${RAMP[3]}"></i><i style="background:${RAMP[4]}"></i><span>More exposed</span></div>
-        </figure>
+          <span class="pv-cap">Open the full map ${ARROW}</span>
+          <p class="pv-legend"><span class="dot" aria-hidden="true">1</span>Gold numbers: where to set up dose points, 1 first.</p>
+          <span class="pv-key" aria-hidden="true"><span>Fewer exposed</span><i style="background:${RAMP[0]}"></i><i style="background:${RAMP[1]}"></i><i style="background:${RAMP[2]}"></i><i style="background:${RAMP[3]}"></i><i style="background:${RAMP[4]}"></i><span>More exposed</span></span>
+        </a>
         <div class="steps">
           <h2>How it works</h2>
           <ol>
-            <li><span class="n" aria-hidden="true">1</span><div><b>Map the flood.</b> We outline the area a 25-year flood covers, barangay by barangay.</div></li>
-            <li><span class="n" aria-hidden="true">2</span><div><b>Count who was in it and who cannot reach care.</b> We count residents in the water and those cut off from a clinic.</div></li>
-            <li><span class="n" aria-hidden="true">3</span><div><b>Choose where to put dose points.</b> We rank sites so the first few help the most people.</div></li>
+            <li><span class="n" aria-hidden="true">1</span><div><b>Map the flood.</b> We outline where a 25-year flood reaches, barangay by barangay.</div></li>
+            <li><span class="n" aria-hidden="true">2</span><div><b>Count exposed residents and who is cut off from care.</b> We count people who live where the flood reaches, and those more than a <span class="nb">30-minute</span> walk from a clinic while it is on.</div></li>
+            <li><span class="n" aria-hidden="true">3</span><div><b>Choose dose points.</b> We put them in order, 1 opens first, so the first few reach the most cut-off residents.</div></li>
           </ol>
         </div>
       </div>
-      <dl class="stats-strip" id="strip" aria-label="National totals for a 25-year flood"><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div><div><dt class="skel sk-t"></dt><dd class="skel sk-n"></dd></div></dl>
       <blockquote class="quote">
         <p>The capsule that could have protected Rosa was free. But it was on the other side of the water.</p>
         <cite>Rosa is a composite; the numbers are not.</cite>
       </blockquote>
     </div>
   </div>`;
-  const strip = el.querySelector("#strip");
+  const h1 = el.querySelector("#answer"), strip = el.querySelector("#strip");
+  let cities = [];
+  try { cities = await getCities(); } catch { /* handled below */ }
+  const pilot = cities.find((c) => c.code === FLAT_CITY.code) || cities[0];
+  if (pilot && pilot.exposed != null) {
+    const cov = pilot.coverage_after && pilot.coverage_after[3];
+    h1.innerHTML = `After a ${FLOOD}, ${fmt(pilot.exposed)} people in ${esc(pilot.name)} live in the water's path.` +
+      (cov != null ? ` <span class="h1-2">3 dose points put ${Math.round(cov * 100)}% of them within a <span class="nb">30-minute</span> walk of free medicine.</span>` : "");
+  } else {
+    h1.innerHTML = `After a ${FLOOD}, thousands of people live in the water's path. LAMBAT shows where to put dose points.`;
+  }
+  h1.removeAttribute("aria-busy");
+  if (cities.length > 1) {
+    const a = el.querySelector("#cities");
+    a.textContent = `${fmt(cities.length)} cities covered. See the national map`;
+    a.hidden = false;
+  }
   try {
     const n = await getNational();
-    const items = [
-      [`residents exposed to floodwater in a 25-year flood, across ${fmt(n.cities)} ${n.cities === 1 ? "city" : "cities"}`, n.exposed],
-      ["doxycycline capsules needed for each week the water stays", n.weekly_capsules],
-      ["barangays mapped and ranked by priority", n.barangays],
-    ];
-    strip.innerHTML = items.map(([l, v]) => `<div><dt>${l}</dt><dd class="num" data-to="${v}">${fmt(v)}</dd></div>`).join("");
+    strip.innerHTML = [
+      stat(`residents exposed in a 25-year flood${n.cities > 1 ? `, ${fmt(n.cities)} cities` : ""}`, n.exposed),
+      stat("capsules needed for each week the water stays", n.weekly_capsules),
+      stat("barangays ranked by priority", n.barangays),
+    ].join("");
     rollNumbers(strip);
   } catch { strip.hidden = true; }
   try {
-    const cities = await getCities();
-    const city = cities[0] && (await getCity(cities[0].code));
+    const city = pilot && (await getCity(pilot.code));
     if (city && city.barangays && city.bbox && el.isConnected) {
       el.querySelector("#pvMap").innerHTML = previewSvg(city);
       el.querySelector("#preview").hidden = false;
     }
   } catch { /* the preview is optional */ }
+}
+
+export function destroy() {
+  document.removeEventListener("visibilitychange", onHide);
+  live.slice().forEach(settle);
+  live = [];
 }
