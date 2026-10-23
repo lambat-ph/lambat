@@ -222,3 +222,33 @@ export async function getCity(code) { return loadCityFull(code); }
 // Route helpers
 export const cityHref = (code, tab) => `#/city/${encodeURIComponent(code)}${tab ? "/" + tab : ""}`;
 export const mapHref = (code) => `#/map/${encodeURIComponent(code)}`;
+export const barangayHref = (id) => `#/barangay/${encodeURIComponent(id)}`;
+
+// Priority groups by rank, in quarters, so a health officer reads words before numbers.
+// The rank itself comes from the pipeline: most exposed residents cut off from care first.
+const TIERS = [
+  { key: "t1", label: "Highest priority", short: "Highest" },
+  { key: "t2", label: "High priority", short: "High" },
+  { key: "t3", label: "Moderate priority", short: "Moderate" },
+  { key: "t4", label: "Lower priority", short: "Lower" },
+];
+export function tierOf(priority, n) {
+  if (priority == null || !n) return null;
+  return TIERS[Math.min(3, Math.floor(((priority - 1) / n) * 4))];
+}
+export const tiers = () => TIERS;
+
+// Every barangay in every city, for search. Small: one city has 31.
+let indexP;
+export function barangayIndex() {
+  if (!indexP) indexP = (async () => {
+    const out = [];
+    for (const c of await getCities()) {
+      const d = await getCity(c.code).catch(() => null);
+      if (!d || !d.rows) continue;
+      d.rows.forEach((r) => out.push({ id: r.id, name: r.name, city: c.name, cityCode: c.code, priority: r.priority, n: d.rows.length }));
+    }
+    return out;
+  })();
+  return indexP;
+}

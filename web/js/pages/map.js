@@ -1,63 +1,58 @@
-import { getCities, getCity, cityHref } from "../data.js";
-import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
+import { getCities, getCity, cityHref, barangayHref, tierOf } from "../data.js";
+import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, SATELLITE, SATELLITE_ATTR, COLORS, RAMP, RISK, WALK_MIN } from "../config.js";
 import { fmt, pct, compact, esc, reducedMotion, useCss } from "../format.js";
+import { mountSearch } from "../search.js";
 
 const METRICS = [
-  { key: "exposed", prop: "exposed", short: "Exposed", label: "Exposed residents", unit: "residents", f: fmt },
-  { key: "unreached", prop: "exposed_unreached_flood", short: "Cut off", label: "Out of reach in a flood", unit: "residents", f: fmt },
-  { key: "share", prop: "flooded_share", short: "Flooded", label: "Share of area flooded", unit: "of area", f: (v) => pct(v, 0) },
+  { key: "exposed", prop: "exposed", short: "Exposed", label: "Exposed residents", unit: "residents", f: fmt, ramp: RISK },
+  { key: "unreached", prop: "exposed_unreached_flood", short: "Cut off", label: "Out of reach in a flood", unit: "residents", f: fmt, ramp: RISK },
+  { key: "share", prop: "flooded_share", short: "Flooded", label: "Share of area flooded", unit: "of area", f: (v) => pct(v, 0), ramp: RAMP },
 ];
 const SEEN_KEY = "lambat.tourSeen";
 
 const TEMPLATE = `
 <div class="mapwrap">
-  <div id="map" role="region" aria-label="Map of flood exposure by barangay. The city dashboard shows the same data as tables."></div>
+  <div id="map" role="region" aria-label="Map of flood exposure by barangay. The dashboard shows the same data as tables."></div>
   <div class="loading" id="loading" role="status">Loading the map</div>
-  <div class="dock closed" id="dock">
+  <p class="scenario map-scn" id="scn">Model estimate, screening tool</p>
+  <aside class="panel closed" id="dock" aria-label="Map controls">
     <button class="sheet-handle" id="handle" type="button" aria-expanded="false" aria-label="Show map controls"></button>
-    <section class="w w-legend" id="legend" aria-label="Legend"></section>
-    <div class="col-left">
-      <section class="w w-caption" id="caption" aria-label="What this map shows" aria-live="polite">
-        <p class="cap-text" id="capText"></p>
-        <button class="linkbtn" id="tourBtn" type="button" hidden>How to read this map</button>
-      </section>
-      <section class="w w-picker" id="picker" aria-label="City">
-        <div class="head"><strong id="pickTitle">Choose a city</strong><button class="linkbtn" id="pickBack" type="button" hidden>All cities</button></div>
-        <div id="pickList">
-          <label class="sr-only" for="cityPick">Search cities</label>
-          <input class="field" id="cityPick" type="search" placeholder="Search a city" autocomplete="off">
-          <ul class="citylist" id="cityList" style="margin-top:8px"></ul>
-        </div>
-        <div id="pickCity" hidden>
-          <label class="wt" for="brgyPick" style="display:block">Find a barangay</label>
-          <select class="field" id="brgyPick"><option value="">Choose a barangay</option></select>
-          <p style="margin:8px 0 0"><a id="dashLink" href="#/city">Open city dashboard</a> <span class="muted xs">(the same data as a table)</span></p>
-        </div>
-      </section>
-    </div>
-    <div class="col-right">
-      <section class="w w-metric opt" id="wMetric" aria-label="Measure" hidden>
-        <h2 id="metricH">Show</h2>
-        <div class="seg" id="metricSeg" role="group" aria-labelledby="metricH"></div>
-      </section>
-      <section class="w w-view opt" id="wView" aria-label="View" hidden>
-        <div class="w-row">
-          <div><h2 id="planH">Dose points</h2>
-            <div class="seg" id="planSeg" role="group" aria-labelledby="planH"></div>
-            <p class="map-note" id="planNote" style="margin-top:8px" aria-live="polite"></p></div>
-          <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
-        </div>
-      </section>
-      <section class="w w-layers opt" id="wLayers" aria-label="Layers" hidden>
-        <h2>Layers</h2>
-        <label class="switch"><span>Dose points</span><input type="checkbox" role="switch" id="lyDose" checked></label>
-        <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
-        <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
-        <p class="map-note" id="reliefNote" hidden></p>
-      </section>
-      <section class="w info" id="info" aria-label="Barangay details" hidden aria-live="polite"></section>
-    </div>
-  </div>
+    <section class="p-sec p-head" id="caption" aria-live="polite">
+      <div class="p-title"><h1 id="pickTitle">Choose a city</h1><button class="linkbtn" id="pickBack" type="button" hidden>All cities</button></div>
+      <p class="cap-text" id="capText"></p>
+      <button class="linkbtn" id="tourBtn" type="button" hidden>How to read this map</button>
+    </section>
+    <section class="p-sec" id="picker" aria-label="Find a place">
+      <div id="pickList">
+        <label class="sr-only" for="cityPick">Search cities</label>
+        <input class="field" id="cityPick" type="search" placeholder="Search a city" autocomplete="off">
+        <ul class="citylist" id="cityList" style="margin-top:8px"></ul>
+      </div>
+      <div id="pickCity" hidden><div id="brgySearch"></div></div>
+    </section>
+    <section class="p-sec info" id="info" aria-label="Barangay details" hidden aria-live="polite"></section>
+    <section class="p-sec" id="wMetric" aria-label="Colour barangays by" hidden>
+      <h2 id="metricH">Colour barangays by</h2>
+      <div class="seg" id="metricSeg" role="group" aria-labelledby="metricH"></div>
+      <div class="w-legend" id="legend" aria-label="Legend"></div>
+    </section>
+    <section class="p-sec opt" id="wView" aria-label="Dose points" hidden>
+      <h2 id="planH">Temporary dose points</h2>
+      <div class="seg" id="planSeg" role="group" aria-labelledby="planH"></div>
+      <p class="map-note" id="planNote" style="margin-top:8px" aria-live="polite"></p>
+    </section>
+    <section class="p-sec opt" id="wLayers" aria-label="Layers" hidden>
+      <h2>Layers</h2>
+      <label class="switch"><span>Dose points</span><input type="checkbox" role="switch" id="lyDose" checked></label>
+      <label class="range"><span>Shading opacity</span><input type="range" id="lyOp" min="20" max="100" value="85"></label>
+      <label class="switch"><span>Satellite imagery</span><input type="checkbox" role="switch" id="lySat"></label>
+      <label class="switch"><span>3D columns</span><input type="checkbox" role="switch" id="ly3d"></label>
+      <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
+      <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
+      <p class="map-note" id="reliefNote" hidden></p>
+    </section>
+    <p class="p-sec p-foot opt"><a id="dashLink" href="#/city">Same data as a table</a> · <a href="#/method">How it works</a></p>
+  </aside>
 </div>`;
 
 let map, tip, host, S, mobile, ro, onKey;
@@ -70,7 +65,7 @@ export async function render(el, params) {
   useCss("map");
   host = el;
   mobile = window.matchMedia("(max-width:767px)");
-  S = { cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "8", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], cityMarkers: [], tour: null, params, dead: false };
+  S = { opacity: 0.85, cities: [], city: null, data: null, metric: METRICS[0], view: "2d", plan: "8", sel: null, reliefOn: false, reliefOK: null, breaks: [], min: 0, max: 1, scaleH: 1000, markers: [], cityMarkers: [], tour: null, params, dead: false };
   el.innerHTML = TEMPLATE;
   try { S.cities = await getCities(); } catch { S.cities = []; }
   if (!S.cities.length) { $("#loading").textContent = "No city data found."; return; }
@@ -91,6 +86,7 @@ function syncUrl() {
   if (S.city) {
     const p = new URLSearchParams({ metric: S.metric.key, plan: S.plan });
     if (S.view === "3d") p.set("view", "3d");
+    if (S.sel) p.set("b", S.sel);
     h = "#/map/" + encodeURIComponent(S.city) + "?" + p;
   }
   history.replaceState(null, "", h);
@@ -136,6 +132,8 @@ async function onLoad() {
   const sym = map.getStyle().layers.find((l) => l.type === "symbol");
   S.before = sym ? sym.id : undefined;
   map.addSource("dem", { type: "raster-dem", tiles: [TERRARIUM], encoding: "terrarium", tileSize: 256, maxzoom: 15, attribution: "Terrain: Mapzen, AWS Open Data" });
+  map.addSource("sat", { type: "raster", tiles: [SATELLITE], tileSize: 256, maxzoom: 18, attribution: SATELLITE_ATTR });
+  map.addLayer({ id: "sat", type: "raster", source: "sat", layout: { visibility: "none" } }, S.before);
   map.addLayer({ id: "hill", type: "hillshade", source: "dem", layout: { visibility: "none" }, paint: { "hillshade-exaggeration": 0.5, "hillshade-shadow-color": "#3B4A78", "hillshade-highlight-color": "#FFFFFF", "hillshade-accent-color": "#6F7FB0" } }, S.before);
   buildNational();
   const code = S.params.code;
@@ -148,7 +146,8 @@ async function onLoad() {
     showNational(true);
   } else if (code && S.cities.some((c) => c.code === code)) {
     await selectCity(code, true);
-    maybeTour();
+    if (q.get("b") && S.data && S.data.rows.some((r) => r.id === q.get("b"))) selectBrgy(q.get("b"), true);
+    else maybeTour();
   } else {
     // No city in the address: open the biggest city straight in its barangay map.
     await selectCity(S.cities[0].code, true);
@@ -177,11 +176,10 @@ function buildNational() {
   });
 }
 function pad() {
-  if (mobile.matches) return { top: 40, left: 24, right: 24, bottom: 330 };
-  // Leave room for the floating widgets, but never more than about half the map width.
-  const w = map ? map.getContainer().clientWidth : window.innerWidth;
-  const side = Math.min(320, Math.round(w * 0.22));
-  return { top: 72, bottom: 72, left: side, right: side };
+  if (mobile.matches) return { top: 56, left: 24, right: 24, bottom: 200 };
+  // Leave room for the side panel on the left.
+  const pw = host.querySelector("#dock").offsetWidth || 0;
+  return { top: 64, bottom: 48, left: pw + 40, right: 64 };
 }
 function showNational(first) {
   endTour(false);
@@ -224,8 +222,9 @@ function breaksFor(m, feats) {
   return { breaks: out, min: v[0], max: v[v.length - 1] || 1 };
 }
 function colorExpr(withSel) {
-  const base = ["step", ["coalesce", ["get", S.metric.prop], 0], RAMP[0]];
-  S.breaks.forEach((b, i) => base.push(b, RAMP[i + 1]));
+  const R = S.metric.ramp;
+  const base = ["step", ["coalesce", ["get", S.metric.prop], 0], R[0]];
+  S.breaks.forEach((b, i) => base.push(b, R[i + 1]));
   return withSel ? ["case", ["boolean", ["feature-state", "sel"], false], COLORS.ink, base] : base;
 }
 const heightExpr = () => ["*", ["coalesce", ["get", S.metric.prop], 0], S.scaleH / S.max];
@@ -259,13 +258,13 @@ function ensureCityLayers() {
   if (map.getSource("brgy")) { map.getSource("brgy").setData(S.data.barangays); return; }
   map.addSource("brgy", { type: "geojson", data: S.data.barangays, promoteId: "adm4_pcode" });
   map.addLayer({ id: "b-ext", type: "fill-extrusion", source: "brgy", layout: { visibility: "none" }, paint: { "fill-extrusion-color": RAMP[0], "fill-extrusion-height": 0, "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.94 } });
-  map.addLayer({ id: "b-flat", type: "fill", source: "brgy", layout: { visibility: "none" }, paint: { "fill-color": RAMP[0], "fill-opacity": 0.88 } }, S.before);
-  map.addLayer({ id: "b-line", type: "line", source: "brgy", layout: { visibility: "none" }, paint: { "line-color": "#FFFFFF", "line-width": 1 } }, S.before);
+  map.addLayer({ id: "b-flat", type: "fill", source: "brgy", layout: { visibility: "none" }, paint: { "fill-color": RAMP[0], "fill-opacity": S.opacity } }, S.before);
+  map.addLayer({ id: "b-line", type: "line", source: "brgy", layout: { visibility: "none" }, paint: { "line-color": "#FFFFFF", "line-width": 1.2 } }, S.before);
   map.addLayer({ id: "b-sel", type: "line", source: "brgy", layout: { visibility: "none" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "line-color": COLORS.ink, "line-width": 3 } }, S.before);
   // Intro highlight: a dark casing under a gold line, visible in both 2D and 3D.
   const none = ["==", ["get", "adm4_pcode"], ""];
-  map.addLayer({ id: "b-tour-c", type: "line", source: "brgy", filter: none, paint: { "line-color": COLORS.ink, "line-width": 7 } }, S.before);
-  map.addLayer({ id: "b-tour", type: "line", source: "brgy", filter: none, paint: { "line-color": COLORS.gold, "line-width": 3.5 } }, S.before);
+  map.addLayer({ id: "b-tour-c", type: "line", source: "brgy", filter: none, paint: { "line-color": "#FFFFFF", "line-width": 8 } }, S.before);
+  map.addLayer({ id: "b-tour", type: "line", source: "brgy", filter: none, paint: { "line-color": COLORS.blue, "line-width": 4 } }, S.before);
   const pick = (e) => { const f = map.queryRenderedFeatures(e.point, { layers: [S.view === "3d" ? "b-ext" : "b-flat"] })[0]; return f ? f.properties.adm4_pcode : null; };
   map.on("click", (e) => {
     if (!S.city) return;
@@ -333,8 +332,8 @@ async function selectCity(code, first) {
   $("#pickTitle").textContent = c.name;
   $("#pickBack").hidden = false; $("#pickList").hidden = true; $("#pickCity").hidden = false;
   $("#tourBtn").hidden = false;
-  $("#dashLink").href = cityHref(code);
-  $("#brgyPick").innerHTML = '<option value="">Choose a barangay</option>' + [...data.rows].sort((a, b) => a.name.localeCompare(b.name)).map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
+  $("#dashLink").href = cityHref(code, "barangays");
+  $("#scn").textContent = `${years()}-year flood scenario · model estimate, not a case forecast`;
   ["#wMetric", "#wView", "#wLayers"].forEach((s) => { $(s).hidden = false; });
   buildPlanSeg();
   drawDose();
@@ -373,31 +372,34 @@ function clearSel() {
   S.sel = null;
   if (map && map.getLayer("b-sel")) map.setFilter("b-sel", ["==", ["get", "adm4_pcode"], ""]);
   $("#info").hidden = true;
-  const bp = $("#brgyPick"); if (bp) bp.value = "";
+  syncUrl();
 }
 function selectBrgy(code, fly) {
   if (S.sel) map.setFeatureState({ source: "brgy", id: S.sel }, { sel: false });
   S.sel = code;
   map.setFeatureState({ source: "brgy", id: code }, { sel: true });
   map.setFilter("b-sel", ["==", ["get", "adm4_pcode"], code]);
-  $("#brgyPick").value = code;
   const r = S.data.rows.find((x) => x.id === code);
   const info = $("#info");
   info.hidden = false;
+  const t = tierOf(r.priority, S.data.rows.length);
   const said = [];
-  if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents in ${esc(r.name)} live where the flood reaches.`);
-  else said.push(`${fmt(r.exposed)} residents in ${esc(r.name)} live where the flood reaches.`);
+  if (r.pop) said.push(`${fmt(r.exposed)} of ${fmt(r.pop)} residents (${pct(r.exposed / r.pop, 0)}) live where the flood reaches.`);
+  else said.push(`${fmt(r.exposed)} residents live where the flood reaches.`);
   if (r.unreached != null && r.exposed) said.push(`${fmt(r.unreached)} of them cannot walk to a clinic within ${WALK_MIN} minutes while the flood is on.`);
-  if (r.share != null) said.push(`${pct(r.share, 0)} of the barangay's area is under water.`);
   info.innerHTML = `<button class="close" type="button" aria-label="Close details">&times;</button>
-    <h2>${esc(r.name)}</h2><p class="said">${said.join(" ")}</p>
-    <p class="muted xs" style="margin:0">Dose point priority ${r.priority} of ${S.data.rows.length} (1 is first).</p>
-    <dl><dt>Residents</dt><dd>${fmt(r.pop)}</dd>
-    <dt>Exposed</dt><dd>${fmt(r.exposed)}${r.pop ? " (" + pct(r.exposed / r.pop, 0) + ")" : ""}</dd>
-    ${r.unreached != null ? `<dt>Cut off from care in a flood</dt><dd>${fmt(r.unreached)}</dd>` : ""}
-    <dt>Area flooded</dt><dd>${pct(r.share, 0)}</dd>
+    <p class="eyebrow" style="margin:0">Barangay</p>
+    <h2>${esc(r.name)}</h2>
+    <p class="info-tier">${t ? `<span class="tier ${t.key}">${t.label}</span>` : ""}<span>Rank ${r.priority} of ${S.data.rows.length}</span></p>
+    <p class="said">${said.join(" ")}</p>
+    <dl><dt>Exposed</dt><dd>${fmt(r.exposed)}</dd>
+    ${r.unreached != null ? `<dt>Cut off in a flood</dt><dd>${fmt(r.unreached)}</dd>` : ""}
+    <dt>Area under water</dt><dd>${pct(r.share, 0)}</dd>
     <dt>Capsules per flood week</dt><dd>${fmt(r.capsules)}</dd></dl>
-    <a href="${cityHref(S.city, "barangays")}">Open city dashboard</a>`;
+    <a class="btn sm" href="${barangayHref(r.id)}">Open barangay report</a>`;
+  if (mobile.matches) openSheet(true);
+  info.scrollIntoView({ block: "nearest" });
+  syncUrl();
   info.querySelector(".close").addEventListener("click", clearSel);
   if (fly) {
     const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === code);
@@ -465,25 +467,23 @@ function captionText() {
   const k = S.metric.key;
   if (k === "unreached") return `${lead} Darker barangays have more exposed residents who cannot walk to a clinic within ${WALK_MIN} minutes during the flood.`;
   if (k === "share") return `${lead} Darker barangays had more of their area under water in the flood map.`;
-  return `${lead} Darker barangays have more residents who waded through floodwater. Gold numbers show where to open temporary dose points first (1 = most people helped).`;
+  return `${lead} Darker barangays have more residents who waded through floodwater. Blue numbers show where to open temporary dose points first (1 = most people helped).`;
 }
 function updateCaption() { $("#capText").innerHTML = captionText(); }
 function renderLegend() {
   const lg = $("#legend");
   if (!S.city) {
-    lg.innerHTML = `<div class="metric-name">Circle size: exposed residents</div><p class="map-note" style="margin:0">Bigger circle = more residents exposed to floodwater in a ${years()}-year flood. Click a city to open its barangay map.</p>`;
+    lg.innerHTML = `<p class="map-note" style="margin:0">Bigger circle = more residents exposed to floodwater in a ${years()}-year flood.</p>`;
     return;
   }
   const m = S.metric, edges = [S.min, ...S.breaks, S.max], n = Math.max(1, S.breaks.length + 1);
   const ticks = edges.map((v, i) => `<span style="left:${(i / n) * 100}%">${m.key === "share" ? pct(v, 0) : compact(v)}</span>`).join("");
-  const what = m.key === "share" ? "less of the area flooded" : "fewer residents";
-  const more = m.key === "share" ? "more of the area flooded" : "more residents";
-  lg.innerHTML = `<div class="metric-name">${m.label}</div>
-    <div class="ramp" aria-hidden="true">${RAMP.slice(0, n).map((c) => `<i style="background:${c}"></i>`).join("")}</div>
+  const lo = m.key === "share" ? "Little flooded" : "Fewer residents", hi = m.key === "share" ? "Mostly flooded" : "More residents";
+  lg.innerHTML = `<div class="ramp" aria-hidden="true">${m.ramp.slice(0, n).map((c) => `<i style="background:${c}"></i>`).join("")}</div>
     <div class="ticks" aria-hidden="true">${ticks}</div>
-    <div class="lg-words"><span>Light: ${what}</span><span>Dark: ${more}</span></div>
+    <div class="lg-words"><span>${lo}</span><span>${hi}</span></div>
     <p class="sr-only">${m.label}, from ${m.f(S.min)} to ${m.f(S.max)} ${m.unit}, darker is higher.</p>
-    <div class="key"><span class="dot-gold"></span>Gold number: a dose point. 1 helps the most people.${S.view === "3d" ? " Column height follows the colour." : ""}</div>`;
+    <div class="key"><span class="dot-dose">1</span>Dose point. 1 helps the most people.${S.view === "3d" ? " Column height follows the colour." : ""}</div>`;
 }
 function highlightList(code) {
   host.querySelectorAll("#cityList button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.c === code)));
@@ -520,7 +520,7 @@ function tourSteps() {
   steps.push({
     title: "Where to set up dose points",
     metric: "exposed", plan: onMap ? "3" : "8", top: n3, hi: null,
-    body: `Gold numbers 1 to ${n3} are the first dose points to open. A plan of 3 dose points brings ${more}${share != null ? `, so ${pct(share, 0)} of exposed residents are within reach` : ""}.`,
+    body: `Blue numbers 1 to ${n3} are the first dose points to open. A plan of 3 dose points brings ${more}${share != null ? `, so ${pct(share, 0)} of exposed residents are within reach` : ""}.`,
     last: true,
   });
   return steps;
@@ -566,7 +566,7 @@ function tourStep(i) {
     <p id="tourB">${st.body}</p>
     <div class="tour-foot"><span class="dots" aria-hidden="true">${dots}</span>
     <span class="tour-btns">${st.last
-      ? `<button class="btn sm" type="button" data-a="done">Explore the map</button><a class="btn sm ghost" href="${cityHref(S.city)}" data-a="dash">Open the city dashboard</a>`
+      ? `<button class="btn sm" type="button" data-a="done">Explore the map</button><a class="btn sm ghost" href="${cityHref(S.city, "barangays")}" data-a="dash">See the priority list</a>`
       : `${i > 0 ? '<button class="btn sm ghost" type="button" data-a="back">Back</button>' : ""}<button class="btn sm" type="button" data-a="next">Next</button>`}</span></div>`;
   card.setAttribute("aria-describedby", "tourB");
   card.onclick = (e) => {
@@ -618,7 +618,7 @@ function wire() {
   $("#cityPick").addEventListener("input", (e) => draw(e.target.value));
   list.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) selectCity(b.dataset.c); });
   $("#pickBack").addEventListener("click", () => showNational(false));
-  $("#brgyPick").addEventListener("change", (e) => { if (e.target.value) selectBrgy(e.target.value, true); else clearSel(); });
+  mountSearch($("#brgySearch"), { onPick: (it) => { if (it.cityCode !== S.city) selectCity(it.cityCode).then(() => selectBrgy(it.id, true)); else selectBrgy(it.id, true); } });
   $("#tourBtn").addEventListener("click", () => startTour(true));
 
   const seg = $("#metricSeg");
@@ -636,10 +636,17 @@ function wire() {
   $("#lyDose").addEventListener("change", (e) => S.markers.forEach((m) => (e.target.checked ? m.addTo(map) : m.remove())));
   $("#lyRelief").addEventListener("change", (e) => { S.reliefOn = e.target.checked; applyRelief(); });
   $("#lyS1").addEventListener("change", (e) => map.setLayoutProperty("s1-fill", "visibility", e.target.checked ? "visible" : "none"));
-  const dock = $("#dock"), h = $("#handle");
-  h.addEventListener("click", () => {
-    const closed = dock.classList.toggle("closed");
-    h.setAttribute("aria-expanded", String(!closed));
-    h.setAttribute("aria-label", closed ? "Show map controls" : "Hide map controls");
+  $("#lyOp").addEventListener("input", (e) => {
+    S.opacity = +e.target.value / 100;
+    if (map.getLayer("b-flat")) map.setPaintProperty("b-flat", "fill-opacity", S.opacity);
+    if (map.getLayer("b-ext")) map.setPaintProperty("b-ext", "fill-extrusion-opacity", Math.max(0.3, S.opacity));
   });
+  $("#lySat").addEventListener("change", (e) => map.setLayoutProperty("sat", "visibility", e.target.checked ? "visible" : "none"));
+  $("#handle").addEventListener("click", () => openSheet($("#dock").classList.contains("closed")));
+}
+function openSheet(open) {
+  const dock = $("#dock"), h = $("#handle");
+  dock.classList.toggle("closed", !open);
+  h.setAttribute("aria-expanded", String(open));
+  h.setAttribute("aria-label", open ? "Hide map controls" : "Show map controls");
 }

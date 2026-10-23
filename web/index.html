@@ -11,14 +11,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="css/base.css">
-<script>try{document.documentElement.dataset.nav=localStorage.getItem("lambat.nav")||(/^#\/map/.test(location.hash)?"closed":"open")}catch(e){document.documentElement.dataset.nav="open"}</script>
 </head>
 <body>
 <a class="skip" href="#view" id="skip">Skip to content</a>
-<div class="app">
-  <nav class="nav" id="nav"></nav>
-  <main id="view" tabindex="-1"></main>
-</div>
+<header class="topbar" id="topbar"></header>
+<main id="view" tabindex="-1"></main>
+<footer class="foot" id="foot"></footer>
 <noscript><p style="padding:24px">LAMBAT needs JavaScript to draw its maps and charts.</p></noscript>
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script type="module" src="js/app.js"></script>

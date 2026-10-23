@@ -6,11 +6,10 @@ import * as D from "../data.js";
 
 const TABS = [
   ["overview", "Overview"],
+  ["barangays", "Priority list"],
   ["dose-points", "Dose points"],
-  ["barangays", "Barangays"],
-  ["alert", "Alert"],
 ];
-const TAB_ALIAS = { dose: "dose-points", doses: "dose-points", dosepoints: "dose-points", barangay: "barangays" };
+const TAB_ALIAS = { dose: "dose-points", doses: "dose-points", dosepoints: "dose-points", barangay: "barangays", priority: "barangays" };
 
 let cleanup = [];
 
@@ -31,14 +30,14 @@ function ensureCss() {
   document.head.appendChild(l);
 }
 
-async function loadAny(code) {
+export async function loadAny(code) {
   const fn = D.getCity || D.loadCity;
   if (!fn) throw new Error("data.js has no city loader");
   return fn(code);
 }
 
 // Normalise whichever shape data.js returns into one model.
-function model(raw) {
+export function model(raw) {
   const meta = raw.meta || {};
   const gj = raw.barangays || raw.bar || { features: [] };
   const dose = raw.dosePoints || raw.dose || { features: [] };
@@ -145,9 +144,9 @@ function locator(m) {
   feats.forEach((f, i) => {
     const d = ringsOf(f.geometry).map((poly) => poly.map((r) => "M" + r.map(([x, y]) => X(x) + " " + Y(y)).join("L") + "Z").join("")).join("");
     const p = f.properties || {};
-    paths += `<path d="${d}" style="fill:var(--ramp-${cls(sh[i])})" fill-rule="evenodd"><title>${esc(p.adm4_en)}: ${pct(sh[i])} of residents exposed</title></path>`;
+    paths += `<a href="${D.barangayHref(p.adm4_pcode)}"><path d="${d}" style="fill:var(--risk-${cls(sh[i])})" fill-rule="evenodd"><title>${esc(p.adm4_en)}: ${pct(sh[i])} of residents exposed</title></path></a>`;
   });
-  const legend = [1, 2, 3, 4, 5].map((c) => `<li><span class="sw" style="background:var(--ramp-${c})"></span>${pct(lo[c - 1])} to ${pct(hi[c - 1])}</li>`).join("");
+  const legend = [1, 2, 3, 4, 5].map((c) => `<li><span class="sw" style="background:var(--risk-${c})"></span>${pct(lo[c - 1])} to ${pct(hi[c - 1])}</li>`).join("");
   const desc = `Outline map of ${feats.length} barangays shaded by the share of residents exposed to floodwater, from ${pct(sorted[0])} to ${pct(sorted[sorted.length - 1])}.`;
   return `<svg class="locator" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${paths}</svg>
     <ul class="legend" aria-label="Share of residents exposed, by shade">${legend}</ul>`;
@@ -173,7 +172,7 @@ function overview(m) {
   }
   const cases = isNum(c.lepto_cases_2008_2022)
     ? statCard("Leptospirosis cases", fmt(c.lepto_cases_2008_2022), "Reported cases, 2008 to 2022.")
-    : statCard("Leptospirosis cases", "n/a", "No case history for this city.");
+    : "";
   return `<div class="city-split">
     <div class="city-grid two">
       ${statCard("Exposed residents", fmt(c.exposed), `${pct(exposedShare)} of ${fmt(c.population)} residents live where a 25-year flood reaches.`)}
@@ -182,8 +181,14 @@ function overview(m) {
       ${cov}
       ${cases}
     </div>
-    <div class="card"><h2 class="card-title">Where the exposure is</h2>
-      <p class="caption">Each shape is a barangay, shaded by the share of its residents exposed.</p>${locator(m)}</div>
+    <div class="city-side">
+      <div class="card"><h2 class="card-title">Act first in these barangays</h2>
+        <p class="caption">Most exposed residents cut off from care in a flood.</p>
+        <ol class="top5">${[...m.rows].sort((a, b) => a.priority - b.priority).slice(0, 5).map((r) => { const t = D.tierOf(r.priority, m.rows.length); return `<li><a href="${D.barangayHref(r.id)}"><span class="rk">${r.priority}</span><span class="nm">${esc(r.name)}<small>${fmt(r.unreached)} cut off · ${fmt(r.exposed)} exposed</small></span><span class="tier ${t.key}">${t.short}</span></a></li>`; }).join("")}</ol>
+        <button type="button" class="linkbtn" data-goto="barangays">See all ${m.rows.length} barangays</button></div>
+      <div class="card"><h2 class="card-title">Where the exposure is</h2>
+        <p class="caption">Each shape is a barangay, shaded by the share of its residents exposed. Click one for its report.</p>${locator(m)}</div>
+    </div>
   </div>`;
 }
 
@@ -244,14 +249,16 @@ const COLS = [
 ];
 function cell(c, r) {
   const v = r[c.key];
-  if (c.key === "name") return `<td class="l">${esc(v)}</td>`;
+  if (c.key === "name") return `<td class="l"><a href="${D.barangayHref(r.id)}">${esc(v)}</a></td>`;
   if (c.key === "fshare") return `<td>${pct(v)}</td>`;
-  if (c.key === "priority") return `<td>${fmt(v)}</td>`;
+  if (c.key === "priority") { const t = D.tierOf(v, nRows); return `<td class="l"><span class="pr">${fmt(v)}</span>${t ? `<span class="tier ${t.key}">${t.short}</span>` : ""}</td>`; }
   return `<td>${v == null ? '<span title="Not computed">n/a</span>' : fmt(v)}</td>`;
 }
+let nRows = 0;
 function barangayPanel(m, panel, code) {
+  nRows = m.rows.length;
   panel.innerHTML = `<div class="card"><h2 class="card-title">Barangays by priority</h2>
-    <p class="caption">Sort any column. Search by barangay name.</p>
+    <p class="caption">Ranked by exposed residents cut off from care in a flood, then by all exposed residents. Sort any column; click a name for its printable report.</p>
     <div class="table-tools"><div style="flex:1;min-width:200px"><label class="sr-only" for="brgy-q">Search barangays</label><input id="brgy-q" class="field" type="search" placeholder="Search barangays" autocomplete="off"></div>
     <button type="button" class="btn btn-primary sm" id="brgy-csv">Download CSV</button></div>
     <div class="table-wrap" tabindex="0" role="region" aria-label="Barangay table, scrolls sideways on small screens"><table class="table" id="brgy-t"><caption class="sr-only">Barangays by priority</caption>
@@ -315,7 +322,7 @@ function lineChart(series, years) {
   const desc = `Weekly leptospirosis cases from ${series[0].week} to ${series[n - 1].week}. Actual cases total ${tot}, peaking at ${peak.actual} in the week of ${peak.week}.`;
   return { desc, svg: `<svg class="chart-city" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${s}</svg>` };
 }
-function alertPanel(m) {
+export function alertPanel(m) {
   const a = m.alert, c = m.meta;
   if (a.status !== "evaluated") {
     const n = c.lepto_cases_2008_2022;
@@ -370,10 +377,10 @@ export async function render(el, params = {}) {
 
   el.innerHTML = `<div class="city">
     <header class="city-head">
-      <div><p class="eyebrow">City dashboard</p><h1>${esc(c.name)}</h1><p class="sub">${esc(place)}</p></div>
+      <div><p class="eyebrow">Dashboard</p><h1>${esc(c.name)}</h1><p class="sub">${esc(place)}</p><p class="scenario" style="margin-top:12px">25-year flood scenario · model estimate, not a case forecast</p></div>
       <div class="city-tools">
         <div class="city-switch"><label for="city-sel">Switch city</label><select id="city-sel" class="field">${opts}</select></div>
-        <a class="btn ghost sm" href="#/map/${esc(c.code)}">Open on map</a>
+        <a class="btn sm" href="#/map/${esc(c.code)}">Open on map</a>
       </div>
     </header>
     <div class="tabs" role="tablist" aria-label="City sections">${TABS.map(([id, label]) => `<button type="button" role="tab" id="tab-${id}" aria-controls="panel-${id}" aria-selected="false" tabindex="-1" data-tab="${id}">${label}</button>`).join("")}</div>
@@ -383,12 +390,12 @@ export async function render(el, params = {}) {
   const panels = {
     overview: overview(m),
     "dose-points": dosePanel(m),
-    alert: alertPanel(m),
   };
   Object.entries(panels).forEach(([id, html]) => { el.querySelector("#panel-" + id).innerHTML = html; });
   barangayPanel(m, el.querySelector("#panel-barangays"), c.code);
 
   el.querySelector("#city-sel").addEventListener("change", (e) => { location.hash = "#/city/" + e.target.value; });
+  if (cities.length < 2) el.querySelector(".city-switch").hidden = true;
 
   const tabEls = [...el.querySelectorAll('[role="tab"]')];
   const show = (id, focus) => {
@@ -410,6 +417,7 @@ export async function render(el, params = {}) {
     });
   });
   show(tab);
+  el.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", () => { const t = el.querySelector("#tab-" + b.dataset.goto); t.click(); t.focus(); }));
 }
 
 export function destroy() {

@@ -1,0 +1,19 @@
+/* ---------- about and rain alert ---------- */
+.about{display:flex;flex-direction:column;gap:var(--s2)}
+.about .page-head{margin-bottom:var(--s1)}
+.about .card p{max-width:68ch;line-height:1.6}
+.about .card p:last-child{margin-bottom:0}
+.who2{margin:0 0 var(--s2);display:grid;gap:var(--s1)}
+.who2 div{border-left:4px solid var(--gold);padding:4px 0 4px var(--s2)}
+.who2 dt{font-weight:700}
+.who2 dd{margin:0;color:var(--muted);font-size:var(--t-sm)}
+.notice-card{background:var(--warn-bg);border-color:#F2CDB8}
+.notice-card .card-title{color:var(--warn-ink)}
+.plain{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px;line-height:1.55;font-size:var(--t-sm)}
+.data{list-style:none;margin:0 0 var(--s2);padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.data li{display:flex;flex-direction:column;gap:2px;font-size:var(--t-sm)}
+.data small{color:var(--muted)}
+.team{list-style:none;margin:0 0 var(--s2);padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--s1)}
+.team li{display:flex;align-items:center;gap:12px;font-weight:600;font-size:var(--t-sm)}
+.av{flex:none;width:40px;height:40px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font:700 var(--t-sm) var(--f-display)}
+@media (max-width:600px){.data{grid-template-columns:1fr}}
