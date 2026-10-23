@@ -73,7 +73,7 @@ const TEMPLATE = `
     </button>
     <div class="loader" id="loader" role="status" aria-live="polite">
       <div class="loader-box">
-        <img class="loader-logo" src="assets/favicon.svg" alt="" width="72" height="72">
+        <img class="loader-logo" src="assets/logo-mark.svg" alt="" width="72" height="72">
         <h2 class="loader-title">Loading the flood map</h2>
         <p class="loader-step" id="loaderStep"></p>
         <div class="loader-bar" id="loaderBar" aria-hidden="true"></div>
