@@ -66,6 +66,18 @@ function mountNav() {
     btn.setAttribute("aria-label", open ? "Collapse the sidebar" : "Expand the sidebar");
   };
   sync();
+  // The mark and the arrow glide between side by side (open) and stacked (closed) instead of jumping.
+  const glide = (change) => {
+    const els = [nav.querySelector(".nav-brand>img"), btn];
+    const before = els.map((e) => e.getBoundingClientRect());
+    change();
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    els.forEach((e, k) => {
+      const a = before[k], b = e.getBoundingClientRect();
+      const dx = a.left - b.left, dy = a.top - b.top;
+      if (dx || dy) e.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }], { duration: 240, easing: "cubic-bezier(.3,.9,.3,1)" });
+    });
+  };
   const set = (state) => {
     root.dataset.nav = state;
     try { localStorage.setItem("lambat.nav", state); } catch {}
@@ -75,13 +87,13 @@ function mountNav() {
   };
   btn.addEventListener("click", () => {
     if (nav.classList.contains("unweave")) return;
-    if (root.dataset.nav === "closed") return set("open");
+    if (root.dataset.nav === "closed") return glide(() => set("open"));
     // Closing: the letters unweave back to bare strands, last letter first, then the sidebar folds.
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return set("closed");
     // The sidebar starts narrowing at once; the letters leave right to left as its edge passes them.
     nav.classList.add("unweave");
     set("closed");
-    setTimeout(() => nav.classList.remove("unweave"), 260);
+    setTimeout(() => glide(() => nav.classList.remove("unweave")), 260);
   });
 }
 
