@@ -1,3 +1,5 @@
+<img src="web/assets/lockup.svg" alt="LAMBAT" height="56">
+
 # LAMBAT
 
 [![CI](https://github.com/bih-science/lambat/actions/workflows/ci.yml/badge.svg)](https://github.com/bih-science/lambat/actions/workflows/ci.yml)
