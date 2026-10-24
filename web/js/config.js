@@ -14,6 +14,9 @@ export const TERRARIUM = "https://s3.amazonaws.com/elevation-tiles-prod/terrariu
 // Light vector basemap (OpenFreeMap, no key). Falls back to OSM raster tiles.
 export const BASE_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 export const BASEMAP = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+// Satellite imagery for the optional "Satellite view" switch (Esri World Imagery, no key, attribution required).
+export const SATELLITE = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+export const SATELLITE_ATTR = "Imagery: Esri, Maxar, Earthstar Geographics";
 export const BASEMAP_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 // Read a design token from CSS (optional helper).

@@ -1,5 +1,5 @@
 import { getCities, getCity, cityHref, scenarioOf } from "../data.js";
-import { TERRARIUM, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
+import { TERRARIUM, SATELLITE, SATELLITE_ATTR, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
 import { fmt, pct, esc, reducedMotion, useCss, skel, moreBelow } from "../format.js";
 
 const METRICS = [
@@ -97,6 +97,7 @@ const TEMPLATE = `
         <p class="map-note mdesc" id="measureDesc"></p>
         <h3 class="opts-h">View</h3>
         <label class="switch"><span>3D view</span><input type="checkbox" role="switch" id="ly3d"></label>
+        <label class="switch"><span>Satellite view</span><input type="checkbox" role="switch" id="lySat"></label>
         <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
         <label class="switch"><span>Show dose points on the map</span><input type="checkbox" role="switch" id="lyDose" checked></label>
         <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
@@ -284,6 +285,8 @@ async function onLoad() {
   const sym = map.getStyle().layers.find((l) => l.type === "symbol" && (!l.layout || l.layout.visibility !== "none"));
   S.before = sym ? sym.id : undefined;
   map.addSource("dem", { type: "raster-dem", tiles: [TERRARIUM], encoding: "terrarium", tileSize: 256, maxzoom: 15, attribution: "Terrain: Mapzen, AWS Open Data" });
+  map.addSource("sat", { type: "raster", tiles: [SATELLITE], tileSize: 256, maxzoom: 19, attribution: SATELLITE_ATTR });
+  map.addLayer({ id: "sat", type: "raster", source: "sat", layout: { visibility: "none" }, paint: { "raster-saturation": -0.25 } }, S.before);
   map.addLayer({ id: "hill", type: "hillshade", source: "dem", layout: { visibility: "none" }, paint: { "hillshade-exaggeration": 0.5, "hillshade-shadow-color": "#3B4A78", "hillshade-highlight-color": "#FFFFFF", "hillshade-accent-color": "#6F7FB0" } }, S.before);
   buildNational();
   const code = S.params.code;
@@ -341,8 +344,50 @@ function buildNational() {
     if (c100) b.classList.add("p100");
     b.addEventListener("click", () => selectCity(c.code));
     b.style.display = "none";
-    S.cityMarkers.push(new maplibregl.Marker({ element: b, anchor: "left", offset: [natRadius(c.exposed, mx) + 6, 0] }).setLngLat([c.lon, c.lat]).addTo(map));
+    const m = new maplibregl.Marker({ element: b, anchor: "left", offset: [natRadius(c.exposed, mx) + 6, 0] }).setLngLat([c.lon, c.lat]).addTo(map);
+    m._lam = { code: c.code, exposed: c.exposed || 0, r: natRadius(c.exposed, mx) };
+    S.cityMarkers.push(m);
   });
+  map.on("resize", () => { if (S && S.natOn) declutter(); });
+  map.on("move", () => { if (S && S.natOn && !S.declT) S.declT = requestAnimationFrame(() => { S.declT = null; declutter(); }); });
+  NAT_IDS.forEach((id) => {
+    map.on("mouseenter", id, (e) => { S.natHover = e.features[0].properties.code; declutter(); });
+    map.on("mouseleave", id, () => { S.natHover = null; declutter(); });
+  });
+}
+// Place city labels without overlap: biggest city first; each label tries right, left, below, then above its
+// circle, avoiding labels already placed and every circle. A label with no free spot hides until its circle is
+// hovered or the map zooms in. The city list in the side column keeps every city reachable.
+function declutter() {
+  if (!S || !S.natOn || !S.cityMarkers.length) return;
+  const G = 4, boxes = [];
+  const circles = S.cityMarkers.map((m) => { const p = map.project(m.getLngLat()); return { x: p.x, y: p.y, r: m._lam.r }; });
+  const hitsBox = (a) => boxes.some((b) => a.x < b.x + b.w + G && a.x + a.w + G > b.x && a.y < b.y + b.h + G && a.y + a.h + G > b.y);
+  // Free area: inside the map, right of the side card, below the status island, clear of the zoom controls.
+  const cv = map.getContainer().getBoundingClientRect(), rel = (sel) => { const e = document.querySelector(sel); return e && e.offsetParent ? e.getBoundingClientRect() : null; };
+  const col = !mobile.matches && !S.colHidden ? rel("#col") : null, isl = rel(".island .isl") || rel(".isl"), ctl = rel(".maplibregl-ctrl-bottom-right .maplibregl-ctrl-group");
+  const L = col ? col.right - cv.left + 8 : 8, T = 8, R = cv.width - 8, B = cv.height - 28;
+  const keepOut = [ctl, isl].filter(Boolean).map((r) => ({ x: r.left - cv.left - 4, y: r.top - cv.top - 4, w: r.width + 8, h: r.height + 8 }));
+  const outside = (a) => a.x < L || a.y < T || a.x + a.w > R || a.y + a.h > B ||
+    keepOut.some((k) => a.x < k.x + k.w && a.x + a.w > k.x && a.y < k.y + k.h && a.y + a.h > k.y);
+  const hitsCircle = (a, own) => circles.some((c, i) => i !== own && c.x + c.r > a.x && c.x - c.r < a.x + a.w && c.y + c.r > a.y && c.y - c.r < a.y + a.h);
+  const order = S.cityMarkers.map((m, i) => i).sort((i, j) => {
+    const hi = S.cityMarkers[i]._lam.code === S.natHover, hj = S.cityMarkers[j]._lam.code === S.natHover;
+    return hi !== hj ? (hi ? -1 : 1) : S.cityMarkers[j]._lam.exposed - S.cityMarkers[i]._lam.exposed;
+  });
+  for (const i of order) {
+    const m = S.cityMarkers[i], el = m.getElement(), { x, y, r } = circles[i];
+    el.style.display = ""; el.style.visibility = "hidden";
+    const w = el.offsetWidth, h = el.offsetHeight, d = r + 6;
+    const tries = [[d, 0, x + d, y - h / 2], [-d - w, 0, x - d - w, y - h / 2], [-w / 2, d + h / 2, x - w / 2, y + d], [-w / 2, -d - h / 2, x - w / 2, y - d - h]];
+    const hover = m._lam.code === S.natHover;
+    let spot = tries.find((t) => { const a = { x: t[2], y: t[3], w, h }; return !outside(a) && !hitsBox(a) && !hitsCircle(a, i); });
+    if (!spot && hover) spot = tries[0];
+    if (spot) {
+      m.setOffset([spot[0], spot[1]]); boxes.push({ x: spot[2], y: spot[3], w, h });
+      el.style.visibility = ""; el.style.zIndex = hover ? "3" : "";
+    } else el.style.display = "none";
+  }
 }
 // The side column no longer covers the map on desktop, so the padding is small. On phones the sheet covers the bottom.
 function pad() {
@@ -373,7 +418,7 @@ function showNational(first) {
   map.setLayoutProperty("hill", "visibility", "none");
   setNat(true);
   if (map.getLayer("s1-fill")) map.setLayoutProperty("s1-fill", "visibility", "none");
-  S.cityMarkers.forEach((m) => { m.getElement().style.display = ""; });
+  S.natOn = true; declutter();
   clearDose(); S.rollKey = null;
   $("#sites").hidden = true; $("#cities").hidden = false; unbusy();
   closeOpts();
@@ -387,7 +432,7 @@ function showNational(first) {
   } else {
     const pts = S.cities.map((c) => [c.lon, c.lat]);
     const b = pts.reduce((bb, p) => bb.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
-    map.fitBounds(b, { padding: pad(), maxZoom: 7.5, pitch: 0, bearing: 0, duration: first ? 0 : dur(1400) });
+    map.fitBounds(b, { padding: { ...pad(), top: pad().top + 48 }, maxZoom: 7.5, pitch: 0, bearing: 0, duration: first ? 0 : dur(1400) });
   }
   highlightList(null);
   syncUrl();
@@ -480,7 +525,7 @@ function ensureCityLayers() {
   if (map.getSource("brgy")) { map.getSource("brgy").setData(S.data.barangays); return; }
   map.addSource("brgy", { type: "geojson", data: S.data.barangays, promoteId: "adm4_pcode" });
   map.addLayer({ id: "b-ext", type: "fill-extrusion", source: "brgy", layout: { visibility: "none" }, paint: { "fill-extrusion-color": RAMP[0], "fill-extrusion-height": 0, "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.94 } });
-  map.addLayer({ id: "b-flat", type: "fill", source: "brgy", layout: { visibility: "none" }, paint: { "fill-color": RAMP[0], "fill-opacity": 0.88 } }, S.before);
+  map.addLayer({ id: "b-flat", type: "fill", source: "brgy", layout: { visibility: "none" }, paint: { "fill-color": RAMP[0], "fill-opacity": S.satOn ? 0.55 : 0.88 } }, S.before);
   map.addLayer({ id: "b-zero", type: "fill", source: "brgy", layout: { visibility: "none" }, filter: ["==", ["get", "adm4_pcode"], ""], paint: { "fill-pattern": "zero-hatch" } }, S.before);
   // dark casing under a white line: the border reads on both the palest and the darkest fills
   map.addLayer({ id: "b-case", type: "line", source: "brgy", layout: { visibility: "none", "line-join": "round" }, paint: { "line-color": COLORS.ink, "line-opacity": 0.6, "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 4] } }, S.before);
@@ -529,6 +574,13 @@ async function probeTerrain(c) {
   } catch { S.reliefOK = false; }
   return S.reliefOK;
 }
+// Satellite view: photo imagery under the barangay colours; the colours turn more see-through so the ground shows.
+function applySat(on) {
+  S.satOn = on;
+  if (!map.getLayer("sat")) return;
+  map.setLayoutProperty("sat", "visibility", on ? "visible" : "none");
+  if (map.getLayer("b-flat")) map.setPaintProperty("b-flat", "fill-opacity", on ? 0.55 : 0.88);
+}
 function applyRelief() {
   if (!map) return;
   const on = S.reliefOn && S.reliefOK;
@@ -564,6 +616,7 @@ async function selectCity(code, first) {
   const diag = Math.hypot((bb[2] - bb[0]) * 111.32 * Math.cos((c.lat * Math.PI) / 180), (bb[3] - bb[1]) * 110.57) * 1000;
   S.scaleH = Math.max(300, diag * 0.06);
   ensureCityLayers();
+  S.natOn = false;
   S.cityMarkers.forEach((m) => { m.getElement().style.display = "none"; });
   setNat(false);
   // Pick a plan this city actually has.
@@ -1376,6 +1429,7 @@ function setCollapsed(on, focus) {
   if (focus) (on ? $("#showPanel") : $("#colCollapse")).focus({ preventScroll: true });
   // the map stays where it is: panels slide over it, the camera does not follow
   if (S.sel && S.data) { const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === S.sel); if (f) setTimeout(() => placeInfo(f), dur(520)); }
+  if (S.natOn) setTimeout(declutter, dur(520));
 }
 
 /* ---------- share and download ---------- */
@@ -1599,6 +1653,7 @@ function wire() {
     syncUrl();
   });
   $("#lyDose").addEventListener("change", (e) => S.markers.forEach((m) => (e.target.checked ? m.addTo(map) : m.remove())));
+  $("#lySat").addEventListener("change", (e) => applySat(e.target.checked));
   $("#lyRelief").addEventListener("change", (e) => { S.reliefOn = e.target.checked; applyRelief(); });
   $("#lyS1").addEventListener("change", (e) => map.setLayoutProperty("s1-fill", "visibility", e.target.checked ? "visible" : "none"));
   wireSheet();
