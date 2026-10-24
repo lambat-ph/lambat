@@ -144,7 +144,6 @@ async function go() {
     if (my !== seq) return;
     console.warn(e);
     view.removeAttribute("aria-busy");
-  if (my === seq) bootDone();
     return message("This page is not ready yet", "The page " + r.page + " could not be loaded.");
   }
   if (my !== seq) return;
@@ -159,6 +158,7 @@ async function go() {
     message("Something went wrong", "This page could not be drawn: " + e.message);
   }
   view.removeAttribute("aria-busy");
+  if (my === seq) bootDone();
   if (my === seq && p.key !== "map") window.scrollTo(0, 0);
 }
 
