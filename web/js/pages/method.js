@@ -78,7 +78,7 @@ const TOC = [
   ["m-defs", "Words we use"],
   ["m-val", "How we checked it"],
   ["m-limits", "Limits"],
-  ["m-notyet", "Not included yet"],
+  ["m-notyet", "100-year cities"],
   ["m-refs", "Data and references"],
   ["m-run", "Reproduce it"],
 ];
@@ -187,12 +187,8 @@ const html = () => `
   </section>
 
   <section class="card" aria-labelledby="m-notyet">
-    <h2 class="card-title" id="m-notyet">Not included yet, and why</h2>
-    <p>Four cities are not on the map. Every one is waiting on the same step: downloading the whole-city OpenStreetMap road network, which has not finished because the Overpass service is overloaded. Without roads, we cannot work out who can walk to care.</p>
-    <ul class="limits">
-      <li><strong>Mandaue and Iloilo.</strong> Only a 100-year flood map exists for them, and the road download is incomplete.</li>
-      <li><strong>Navotas and Muntinlupa.</strong> A 25-year flood map exists, but the road download is incomplete.</li>
-    </ul>
+    <h2 class="card-title" id="m-notyet">Three cities use a bigger flood</h2>
+    <p>Project CCHAIN has no 25-year flood map for Iloilo, Mandaue and Tacloban, only the 100-year one. We run them on the 100-year flood, label them on every page, and never add them to the national total, because a bigger flood exposes more people.</p>
   </section>
 
   <section class="card fold-card" aria-labelledby="m-refs">

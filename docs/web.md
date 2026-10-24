@@ -36,8 +36,8 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 
 ## Known issues to fix next
 
-1. Plan-detail fields (`reach_after_*`, `cut_off_after_*`, `serves`, `newly_reached`) exist for Dagupan only; other cities need a pipeline rerun. The map falls back gracefully.
-2. Per-city `scenario` (`25yr`/`100yr`) and `scenario_note` are read by `js/data.js` `scenarioOf()`; build_web must write them for Mandaue, Iloilo and Tacloban (no 25-year NOAH map).
+1. All 12 cities have the plan-detail fields (`reach_after_*`, `cut_off_after_*`, `serves`, `newly_reached`); the map still falls back gracefully if a city lacks them.
+2. Per-city `scenario` (`25yr`/`100yr`) and `scenario_note` are read by `js/data.js` `scenarioOf()`; build_web writes `100yr` for Mandaue, Iloilo and Tacloban (no 25-year NOAH map) and leaves them out of the national total.
 3. "Open on map" on the city page is still an outlined button; GIF labels are tiny on phones; true phone-size checks of the map card and sheet are pending.
 4. Browser caching is aggressive during development: hard refresh (Ctrl+Shift+R) or `fetch(url,{cache:'reload'})` before reloading.
 

@@ -19,7 +19,7 @@ uv run python scripts/run_s1_flood.py     # Sentinel-1 Egay flood map (scenes in
 uv run python scripts/build_web.py        # publish results into web/data/ (cities.json, national.json, <code>/...)
 ```
 
-Raw data is not committed. `data/raw/cchain/` needs these six Project CCHAIN tables (download commands in `data/README.md`): `disease_pidsr_totals`, `climate_atmosphere`, `location`, `brgy_geography`, `project_noah_hazards`, `worldpop_population`. OSM and elevation tiles cache themselves in `data/raw/osm_cache` and `data/raw/dem_cache` on first run (Overpass can take ~65 s per query and sometimes returns 502; the code retries and falls back to mirrors).
+Raw data is not committed. `data/raw/cchain/` needs these six Project CCHAIN tables (download commands in `data/README.md`): `disease_pidsr_totals`, `climate_atmosphere`, `location`, `brgy_geography`, `project_noah_hazards`, `worldpop_population`. OSM and elevation tiles cache themselves in `data/raw/osm_cache` and `data/raw/dem_cache` on first run (Overpass can take ~65 s per query and sometimes returns 502; the code retries and falls back to mirrors; when overpass-api.de is down, set `LAMBAT_OVERPASS=https://maps.mail.ru/osm/tools/overpass/api` to try that mirror first).
 
 ## Modules (`src/lambat/`)
 

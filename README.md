@@ -66,22 +66,24 @@ Barangay table, GeoJSON maps and a JSON summary land in `results/`.
 
 ## Cities
 
-The pipeline has been run for 8 cities. Dagupan is the pilot and the only one checked against news reports.
+The pipeline has been run for all 12 Project CCHAIN cities. Dagupan is the pilot and the only one checked against news reports.
 
 | City | Flood map | Population | Exposed | Coverage after 3 / 5 / 8 dose points |
 |---|---|---|---|---|
 | Dagupan | 25-year | 208,322 | 71,868 | 92% / 95% / 97% |
 | Palayan | 25-year | 55,563 | 17,576 | 48% / 55% / 59% |
 | Legazpi | 25-year | 198,162 | 34,154 | 98% / 99% / 99% |
-| Tacloban | 100-year | 200,382 | 54,888 | 79% / 79% / 79% |
 | Zamboanga | 25-year | 860,500 | 191,991 | 61% / 65% / 70% |
 | Cagayan de Oro | 25-year | 752,065 | 285,533 | 61% / 63% / 65% |
 | Davao | 25-year | 1,706,762 | 346,421 | 67% / 67% / 67% |
 | Mandaluyong | 25-year | 411,208 | 135,447 | 90% / 90% / 90% |
+| Navotas | 25-year | 287,226 | 155,149 | 92% / 92% / 92% |
+| Muntinlupa | 25-year | 478,644 | 117,029 | 84% / 84% / 85% |
+| Iloilo | 100-year | 424,837 | 176,430 | 74% / 76% / 80% |
+| Mandaue | 100-year | 356,165 | 142,030 | 87% / 88% / 89% |
+| Tacloban | 100-year | 200,382 | 54,888 | 79% / 79% / 79% |
 
-The national total counts only the 25-year cities: 1,082,990 exposed residents across 7 cities (`web/data/national.json`). Tacloban has no 25-year map, so it is shown on the larger 100-year map and is not added to the total.
-
-Not included yet: Mandaue and Iloilo (only a 100-year map exists, and their whole-city OpenStreetMap road download has not completed because the Overpass service is overloaded), and Navotas and Muntinlupa (a 25-year map exists, but the same road download problem).
+The national total counts only the 25-year cities: 1,355,168 exposed residents across 9 cities (`web/data/national.json`). Iloilo, Mandaue and Tacloban have no 25-year map in Project CCHAIN, so they are shown on the larger 100-year map and are not added to the total.
 
 ## Seeing the water from orbit
 
@@ -95,7 +97,7 @@ Clouds hide floods from ordinary satellites; radar sees through them, and still 
 | Flood mapping (threshold vs U-Net on Sen1Floods11) | Trained and scored (pooled IoU 0.64 vs 0.21) |
 | Validation against news reports | Done, with confidence intervals; no detectable agreement |
 | Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Code tested; running on the downloaded scenes |
-| Dashboard (`web/`, MapLibre) | Multi-city map (8 cities, with a national summary), priority table, dose points, alert chart; deploys to GitHub Pages once public |
+| Dashboard (`web/`, MapLibre) | Multi-city map (12 cities, with a national summary), priority table, dose points, alert chart; deploys to GitHub Pages once public |
 
 ## Run it
 
