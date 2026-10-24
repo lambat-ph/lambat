@@ -120,6 +120,86 @@
     }
   },
   {
+    "code": "PH063022000",
+    "name": "Iloilo City",
+    "region": "Region VI",
+    "province": "Iloilo",
+    "lon": 122.55518,
+    "lat": 10.72353,
+    "bbox": [
+      122.49478,
+      10.67923,
+      122.60062,
+      10.7832
+    ],
+    "barangays": 180,
+    "population": 424837,
+    "exposed": 176430,
+    "exposed_share": 0.4153,
+    "weekly_capsules": 352860,
+    "lepto_cases_2008_2022": 3948,
+    "access_gap": 35523,
+    "coverage_after": {
+      "3": 0.7364741811253717,
+      "5": 0.760730937506038,
+      "8": 0.7951886231106329
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.6091699219634711,
+      "caught": 0.7,
+      "false_alerts": 0.05442176870748299,
+      "baseline_correlation": 0.5319366308030368
+    },
+    "scenario": "100yr",
+    "scenario_note": "No 25-year flood map for this city. Showing the 100-year flood, which is larger.",
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH072230000",
+    "name": "Mandaue City",
+    "region": "Region VII",
+    "province": "Cebu",
+    "lon": 123.94086,
+    "lat": 10.34539,
+    "bbox": [
+      123.91293,
+      10.311,
+      123.97613,
+      10.38981
+    ],
+    "barangays": 27,
+    "population": 356165,
+    "exposed": 142030,
+    "exposed_share": 0.3988,
+    "weekly_capsules": 284059,
+    "lepto_cases_2008_2022": 39,
+    "access_gap": 23304,
+    "coverage_after": {
+      "3": 0.8727654510001915,
+      "5": 0.8787385528286017,
+      "8": 0.8858690778041634
+    },
+    "alert": {
+      "status": "too_few_cases",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "100yr",
+    "scenario_note": "No 25-year flood map for this city. Showing the 100-year flood, which is larger.",
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
     "code": "PH083747000",
     "name": "Tacloban City",
     "region": "Region VIII",
@@ -310,6 +390,86 @@
       "caught": 0.21052631578947367,
       "false_alerts": 0.04201680672268908,
       "baseline_correlation": 0.49371542101847016
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137503000",
+    "name": "City of Navotas",
+    "region": "National Capital Region",
+    "province": "NCR, Third District",
+    "lon": 120.93578,
+    "lat": 14.67526,
+    "bbox": [
+      120.9064,
+      14.63391,
+      120.96908,
+      14.71296
+    ],
+    "barangays": 14,
+    "population": 287226,
+    "exposed": 155149,
+    "exposed_share": 0.5402,
+    "weekly_capsules": 310298,
+    "lepto_cases_2008_2022": 471,
+    "access_gap": 120,
+    "coverage_after": {
+      "3": 0.9178141440585574,
+      "5": 0.9178141440585574,
+      "8": 0.9178141440585574
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.38528926535161045,
+      "caught": 0.25,
+      "false_alerts": 0.06015037593984962,
+      "baseline_correlation": 0.4274955238740496
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137603000",
+    "name": "City of Muntinlupa",
+    "region": "National Capital Region",
+    "province": "NCR, Fourth District",
+    "lon": 121.0336,
+    "lat": 14.4023,
+    "bbox": [
+      121.0066,
+      14.35173,
+      121.05802,
+      14.46793
+    ],
+    "barangays": 9,
+    "population": 478644,
+    "exposed": 117029,
+    "exposed_share": 0.2445,
+    "weekly_capsules": 234059,
+    "lepto_cases_2008_2022": 222,
+    "access_gap": 37044,
+    "coverage_after": {
+      "3": 0.836057126189395,
+      "5": 0.8444734863315446,
+      "8": 0.8479364739899765
+    },
+    "alert": {
+      "status": "evaluated",
+      "correlation": 0.31305971133004695,
+      "caught": 0.09090909090909091,
+      "false_alerts": 0.0410958904109589,
+      "baseline_correlation": 0.22968940275174493
     },
     "scenario": "25yr",
     "scenario_note": null,

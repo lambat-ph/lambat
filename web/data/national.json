@@ -1,6 +1,6 @@
 {
   "scenario": "25yr",
-  "cities": 7,
+  "cities": 9,
   "city_codes": [
     "PH015518000",
     "PH034919000",
@@ -8,31 +8,35 @@
     "PH097332000",
     "PH104305000",
     "PH112402000",
-    "PH137401000"
+    "PH137401000",
+    "PH137503000",
+    "PH137603000"
   ],
-  "barangays": 511,
-  "population": 4192582,
-  "exposed": 1082990,
-  "weekly_capsules": 2165977,
-  "lepto_cases_2008_2022": 3232,
-  "cities_with_access": 7,
-  "access_gap": 249889,
-  "alert_cities_evaluated": 5,
+  "barangays": 534,
+  "population": 4958452,
+  "exposed": 1355168,
+  "weekly_capsules": 2710334,
+  "lepto_cases_2008_2022": 3925,
+  "cities_with_access": 9,
+  "access_gap": 287053,
+  "alert_cities_evaluated": 7,
   "cities_100yr": {
     "scenario": "100yr",
     "note": "No 25-year flood map for this city. Showing the 100-year flood, which is larger.",
-    "cities": 1,
+    "cities": 3,
     "city_codes": [
+      "PH063022000",
+      "PH072230000",
       "PH083747000"
     ],
-    "barangays": 138,
-    "population": 200382,
-    "exposed": 54888,
-    "weekly_capsules": 109775,
-    "lepto_cases_2008_2022": 122,
-    "cities_with_access": 1,
-    "access_gap": 570,
-    "alert_cities_evaluated": 1
+    "barangays": 345,
+    "population": 981384,
+    "exposed": 373348,
+    "weekly_capsules": 746694,
+    "lepto_cases_2008_2022": 4109,
+    "cities_with_access": 3,
+    "access_gap": 59397,
+    "alert_cities_evaluated": 2
   },
   "pooled_alert": {
     "horizon_weeks": 2,

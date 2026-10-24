@@ -1,0 +1,58 @@
+{
+  "city": "PH137503000",
+  "city_name": "City of Navotas",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 287225.7550048828,
+  "barangays": 14,
+  "barangays_flooded": 14,
+  "exposed": 155149.0668730713,
+  "weekly_capsules": 310298.1337461426,
+  "health_facilities": 10,
+  "facilities_closed_by_flood": 1,
+  "candidate_sites_usable": 47,
+  "exposed_on_road_network": 156255.9013129827,
+  "exposed_within_reach_dry": 141051.6753747225,
+  "exposed_within_reach_flood": 140931.5537155087,
+  "exposed_access_gap": 120.12165921381032,
+  "exposed_unreached_in_flood": 15324.34759747401,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w801736179"
+      ],
+      "exposed_newly_covered": 2482.3226021649307,
+      "exposed_within_reach_after": 143413.87631767362,
+      "share_of_exposed_within_reach_after": 0.9178141440585574
+    },
+    "5": {
+      "sites": [
+        "w801736179"
+      ],
+      "exposed_newly_covered": 2482.3226021649307,
+      "exposed_within_reach_after": 143413.87631767362,
+      "share_of_exposed_within_reach_after": 0.9178141440585574
+    },
+    "8": {
+      "sites": [
+        "w623502739",
+        "w801736179",
+        "w801738590",
+        "w801743307"
+      ],
+      "exposed_newly_covered": 2482.3226021649307,
+      "exposed_within_reach_after": 143413.87631767362,
+      "share_of_exposed_within_reach_after": 0.9178141440585574
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 2599.3
+}

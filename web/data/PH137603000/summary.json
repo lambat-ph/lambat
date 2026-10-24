@@ -1,0 +1,69 @@
+{
+  "city": "PH137603000",
+  "city_name": "City of Muntinlupa",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 478644.119140625,
+  "barangays": 9,
+  "barangays_flooded": 9,
+  "exposed": 117029.47269057228,
+  "weekly_capsules": 234058.94538114456,
+  "health_facilities": 47,
+  "facilities_closed_by_flood": 2,
+  "candidate_sites_usable": 108,
+  "exposed_on_road_network": 116932.18466837949,
+  "exposed_within_reach_dry": 113293.01225744355,
+  "exposed_within_reach_flood": 76248.62569661732,
+  "exposed_access_gap": 37044.38656082625,
+  "exposed_unreached_in_flood": 40683.55897176218,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w288397160",
+        "w469396687",
+        "w831262695"
+      ],
+      "exposed_newly_covered": 21513.360576275663,
+      "exposed_within_reach_after": 97761.98627289299,
+      "share_of_exposed_within_reach_after": 0.836057126189395
+    },
+    "5": {
+      "sites": [
+        "w275482701",
+        "w288397160",
+        "w469396687",
+        "w516547429",
+        "w574888693"
+      ],
+      "exposed_newly_covered": 22497.503954653093,
+      "exposed_within_reach_after": 98746.12965127041,
+      "share_of_exposed_within_reach_after": 0.8444734863315446
+    },
+    "8": {
+      "sites": [
+        "w23379402",
+        "w25068483",
+        "w275482701",
+        "w288397160",
+        "w441815009",
+        "w469396687",
+        "w574888693",
+        "w1029318820"
+      ],
+      "exposed_newly_covered": 22902.43866703317,
+      "exposed_within_reach_after": 99151.0643636505,
+      "share_of_exposed_within_reach_after": 0.8479364739899765
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 2066.6,
+  "scenario_note": null
+}

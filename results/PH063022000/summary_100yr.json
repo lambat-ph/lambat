@@ -1,0 +1,68 @@
+{
+  "city": "PH063022000",
+  "city_name": "Iloilo City",
+  "scenario": "100yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 424837.2094116211,
+  "barangays": 180,
+  "barangays_flooded": 162,
+  "exposed": 176429.9372497737,
+  "weekly_capsules": 352859.8744995474,
+  "health_facilities": 61,
+  "facilities_closed_by_flood": 1,
+  "candidate_sites_usable": 186,
+  "exposed_on_road_network": 175021.53943539158,
+  "exposed_within_reach_dry": 146342.8670516407,
+  "exposed_within_reach_flood": 110820.27568355593,
+  "exposed_access_gap": 35522.59136808476,
+  "exposed_unreached_in_flood": 64201.263751835664,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n5292732322",
+        "w675593707",
+        "w1189920733"
+      ],
+      "exposed_newly_covered": 18078.569251426037,
+      "exposed_within_reach_after": 128898.84493498196,
+      "share_of_exposed_within_reach_after": 0.7364741811253717
+    },
+    "5": {
+      "sites": [
+        "n5292732322",
+        "w646760892",
+        "w653292954",
+        "w675593707",
+        "w1189920733"
+      ],
+      "exposed_newly_covered": 22324.02409487952,
+      "exposed_within_reach_after": 133144.29977843544,
+      "share_of_exposed_within_reach_after": 0.760730937506038
+    },
+    "8": {
+      "sites": [
+        "n5292732322",
+        "w562354420",
+        "w646760892",
+        "w653292954",
+        "w675593707",
+        "w778894201",
+        "w1160622881",
+        "w1189920733"
+      ],
+      "exposed_newly_covered": 28354.861274776435,
+      "exposed_within_reach_after": 139175.13695833235,
+      "share_of_exposed_within_reach_after": 0.7951886231106329
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 421.6
+}

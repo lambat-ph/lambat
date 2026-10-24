@@ -1,0 +1,68 @@
+{
+  "city": "PH072230000",
+  "city_name": "Mandaue City",
+  "scenario": "100yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 356164.89697265625,
+  "barangays": 27,
+  "barangays_flooded": 27,
+  "exposed": 142029.52181788208,
+  "weekly_capsules": 284059.04363576416,
+  "health_facilities": 32,
+  "facilities_closed_by_flood": 0,
+  "candidate_sites_usable": 84,
+  "exposed_on_road_network": 142063.49782235653,
+  "exposed_within_reach_dry": 141916.27411978954,
+  "exposed_within_reach_flood": 118611.97251087178,
+  "exposed_access_gap": 23304.301608917733,
+  "exposed_unreached_in_flood": 23451.5253114847,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w620906001",
+        "w820842750",
+        "w820864421"
+      ],
+      "exposed_newly_covered": 5376.140236721936,
+      "exposed_within_reach_after": 123988.11274759372,
+      "share_of_exposed_within_reach_after": 0.8727654510001915
+    },
+    "5": {
+      "sites": [
+        "w620906001",
+        "w626778811",
+        "w820842750",
+        "w820864421",
+        "w1164955373"
+      ],
+      "exposed_newly_covered": 6224.699975315,
+      "exposed_within_reach_after": 124836.67248618678,
+      "share_of_exposed_within_reach_after": 0.8787385528286017
+    },
+    "8": {
+      "sites": [
+        "r13344297",
+        "w620906001",
+        "w626778811",
+        "w820842750",
+        "w820864421",
+        "w935192312",
+        "w1164955373",
+        "w1416927031"
+      ],
+      "exposed_newly_covered": 7237.687294652969,
+      "exposed_within_reach_after": 125849.65980552475,
+      "share_of_exposed_within_reach_after": 0.8858690778041634
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 1913.1
+}

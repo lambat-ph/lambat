@@ -1,7 +1,7 @@
 {
   "city": "PH063022000",
   "city_name": "Iloilo City",
-  "scenario": "25yr",
+  "scenario": "100yr",
   "walk_limit_min": 30,
   "steps": {
     "exposure": true,
@@ -12,50 +12,58 @@
   "access_scope": "full",
   "population": 424837.2094116211,
   "barangays": 180,
-  "barangays_flooded": 5,
-  "exposed": 2642.1774211315915,
-  "weekly_capsules": 5284.354842263183,
+  "barangays_flooded": 162,
+  "exposed": 176429.9372497737,
+  "weekly_capsules": 352859.8744995474,
   "health_facilities": 61,
-  "facilities_closed_by_flood": 0,
-  "candidate_sites_usable": 188,
-  "exposed_on_road_network": 2590.8054374305457,
-  "exposed_within_reach_dry": 2453.91239718222,
-  "exposed_within_reach_flood": 2453.91239718222,
-  "exposed_access_gap": 0.0,
-  "exposed_unreached_in_flood": 136.8930402483259,
+  "facilities_closed_by_flood": 1,
+  "candidate_sites_usable": 186,
+  "exposed_on_road_network": 175021.53943539158,
+  "exposed_within_reach_dry": 146342.8670516407,
+  "exposed_within_reach_flood": 110820.27568355593,
+  "exposed_access_gap": 35522.59136808476,
+  "exposed_unreached_in_flood": 64201.263751835664,
   "dose_point_plans": {
     "3": {
       "sites": [
-        "r20630170",
-        "w247734102",
-        "w562354420"
+        "n5292732322",
+        "w675593707",
+        "w1189920733"
       ],
-      "exposed_newly_covered": 136.8930402483259,
-      "exposed_within_reach_after": 2590.805437430546,
-      "share_of_exposed_within_reach_after": 1.0000000000000002
+      "exposed_newly_covered": 18078.569251426037,
+      "exposed_within_reach_after": 128898.84493498196,
+      "share_of_exposed_within_reach_after": 0.7364741811253717
     },
     "5": {
       "sites": [
-        "r20630170",
-        "w247734102",
-        "w562354420"
+        "n5292732322",
+        "w646760892",
+        "w653292954",
+        "w675593707",
+        "w1189920733"
       ],
-      "exposed_newly_covered": 136.8930402483259,
-      "exposed_within_reach_after": 2590.805437430546,
-      "share_of_exposed_within_reach_after": 1.0000000000000002
+      "exposed_newly_covered": 22324.02409487952,
+      "exposed_within_reach_after": 133144.29977843544,
+      "share_of_exposed_within_reach_after": 0.760730937506038
     },
     "8": {
       "sites": [
-        "r20630170",
-        "w247734102",
-        "w562354420"
+        "n5292732322",
+        "w562354420",
+        "w646760892",
+        "w653292954",
+        "w675593707",
+        "w778894201",
+        "w1160622881",
+        "w1189920733"
       ],
-      "exposed_newly_covered": 136.8930402483259,
-      "exposed_within_reach_after": 2590.805437430546,
-      "share_of_exposed_within_reach_after": 1.0000000000000002
+      "exposed_newly_covered": 28354.861274776435,
+      "exposed_within_reach_after": 139175.13695833235,
+      "share_of_exposed_within_reach_after": 0.7951886231106329
     }
   },
   "validation": null,
   "validation_note": "News-report validation exists for Dagupan only.",
-  "runtime_s": 2333.5
+  "runtime_s": 421.6,
+  "scenario_note": "No 25-year flood map for this city. Showing the 100-year flood, which is larger."
 }

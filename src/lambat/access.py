@@ -33,6 +33,7 @@ Severity codes: 0 dry, 1 low (<0.5 m), 2 med (0.5-1.5 m), 3 high (>1.5 m).
 
 from __future__ import annotations
 
+import os
 import time
 
 import geopandas as gpd
@@ -50,6 +51,7 @@ OVERPASS_MIRRORS = [
     None,  # osmnx default (overpass-api.de)
     "https://overpass.kumi.systems/api",
     "https://maps.mail.ru/osm/tools/overpass/api",
+    "https://overpass.private.coffee/api",
 ]
 
 CANDIDATE_TAGS = {"amenity": ["townhall", "community_centre", "school"]}
@@ -89,6 +91,9 @@ def _with_retries(fn, attempts_per_mirror: int = 3):
     requests.post = _offline
     requests.get = _offline
     order = sorted(OVERPASS_MIRRORS, key=lambda m: m != _LAST_MIRROR[0])  # last mirror that worked first
+    first = os.environ.get("LAMBAT_OVERPASS")  # put a known-good mirror first when the default is down
+    if first:
+        order = [first] + [m for m in order if m != first]
     try:
         for mirror in order:
             ox.settings.overpass_url = mirror or default_url
