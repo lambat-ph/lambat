@@ -96,3 +96,26 @@
 .rd-egay-fig figcaption{font-size:var(--t-xs);color:var(--muted);margin-top:var(--s0)}
 .rd-list{margin:var(--s1) 0;padding-left:1.2em}
 .rd-list li{margin:var(--s0) 0}
+/* Typhoon Egay story */
+.rd-egay>h2{font:700 var(--t-lg) var(--f-display);margin:0 0 var(--s1)}
+.rd-lede{max-width:62ch;margin:0 0 var(--s2)}
+.rd-trio-tall img{aspect-ratio:auto}
+.rd-trio figcaption{font-size:var(--t-xs);color:var(--muted)}
+.rd-find{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2);margin:var(--s3) 0}
+.rd-find-item{background:var(--blue-wash);border-radius:var(--radius);padding:var(--s2) var(--s3)}
+.rd-find-item h3{font:700 var(--t-md)/1.3 var(--f-display);margin:var(--s1) 0 var(--s0)}
+.rd-find-item p{font-size:var(--t-sm);margin:0 0 var(--s1)}
+.rd-scatter-fig{margin:0 0 var(--s3);max-width:560px}
+.rd-scatter-fig figcaption{font-size:var(--t-sm);color:var(--muted);margin-top:var(--s1)}
+.rd-scatter{display:block;width:100%;height:auto}
+.rd-scatter .g{stroke:var(--line);stroke-width:1}
+.rd-scatter text{font-size:13px;fill:var(--muted)}
+.rd-scatter .ax{font-size:13px;fill:var(--ink)}
+.rd-scatter circle{fill:var(--blue);fill-opacity:.75;stroke:#fff;stroke-width:1.5}
+.rd-verdict{background:var(--ink);color:#fff;border-radius:var(--radius);padding:var(--s3);max-width:72ch}
+.rd-verdict h3{font:700 var(--t-lg) var(--f-display);margin:0 0 var(--s1);color:#fff}
+.rd-verdict p{margin:0 0 var(--s1)}
+.rd-verdict .caption{color:#C9CEDC}
+@media (max-width:900px){.rd-find{grid-template-columns:1fr}}
+@media (max-width:720px){.rd-trio-tall figure{grid-template-columns:140px minmax(0,1fr)}}
+.rd-find .badge-neutral{background:var(--line);color:var(--ink)}

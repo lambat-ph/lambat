@@ -168,6 +168,51 @@ function egayHTML(gj, sum) {
   <p class="caption" style="margin-top:var(--s1)">One radar pass. Water may already have drained, and radar misses floods between buildings (flooded streets look brighter, not darker), so the city shares are probably too low downtown. Full numbers: docs/sentinel1.md.</p></div>`;
 }
 
+function scatterSVG(feats) {
+  const pts = feats.map((f) => f.properties).filter((p) => Number.isFinite(+p.s1_threshold_share) && Number.isFinite(+p.noah_100yr_share));
+  const W = 560, H = 300, L = 52, R = 24, T = 12, B = 48;
+  const ymax = Math.max(0.12, ...pts.map((p) => +p.s1_threshold_share));
+  const X = (v) => L + (W - L - R) * v, Y = (v) => T + (H - T - B) * (1 - v / ymax);
+  let s = "";
+  for (const v of [0, 0.5, 1]) s += `<line x1="${X(v)}" x2="${X(v)}" y1="${T}" y2="${H - B}" class="g"/><text x="${X(v)}" y="${H - B + 18}" text-anchor="middle">${v * 100}%</text>`;
+  for (const v of [0, 0.05, 0.1]) s += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" class="g"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+  s += pts.map((p) => `<circle cx="${X(+p.noah_100yr_share).toFixed(1)}" cy="${Y(+p.s1_threshold_share).toFixed(1)}" r="5"><title>${esc(p.adm4_en)}: NOAH ${(p.noah_100yr_share * 100).toFixed(0)}%, radar ${(p.s1_threshold_share * 100).toFixed(1)}%</title></circle>`).join("");
+  s += `<text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle" class="ax">NOAH 100-year map: share of barangay at risk</text>`;
+  s += `<text transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle" class="ax">Radar: new water seen</text>`;
+  return `<svg class="rd-scatter" viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter plot of ${pts.length} barangays. Barangays NOAH rates more at risk in a 100-year flood tend to show more new water on radar, but most show very little.">${s}</svg>`;
+}
+
+function egayStory(gj, sum) {
+  const st = sum?.stats?.threshold, m = sum?.methods?.threshold;
+  const r100 = st?.vs_noah?.["100yr"], r25 = st?.vs_noah?.["25yr"], auc = st?.vs_reports?.auc;
+  if (!st || !m) return "";
+  const n = (v) => v.toFixed(2);
+  return `<p class="rd-big">Only about <b>${(m.flooded_share_of_city_land * 100).toFixed(0)}%</b> of the city showed open water. Most new water was in the fields east and south.</p>
+  <div class="rd-find">
+    <div class="rd-find-item">
+      <span class="badge">Agrees</span>
+      <h3>Lines up with NOAH's 100-year flood map</h3>
+      <p>Barangays NOAH rates more at risk showed more new water (correlation ${n(r100.rho)}, 95% range ${n(r100.lo)} to ${n(r100.hi)}).</p>
+    </div>
+    <div class="rd-find-item">
+      <span class="badge badge-neutral">Not clear</span>
+      <h3>Does not clearly match the 25-year map LAMBAT uses</h3>
+      <p>Correlation ${n(r25.rho)}, and the 95% range (${n(r25.lo)} to ${n(r25.hi)}) includes zero. Not a contradiction, just not a confirmation.</p>
+    </div>
+    <div class="rd-find-item">
+      <span class="badge badge-neutral">Can't judge</span>
+      <h3>News reports cannot tell good from bad here</h3>
+      <p>They name ${auc.n_reported} of ${auc.n} barangays as flooded, almost the whole city, so a good map and a bad map score about the same.</p>
+    </div>
+  </div>
+  <figure class="rd-scatter-fig">${scatterSVG(gj.features || [])}<figcaption>Each dot is a barangay; hover for its name. Most show very little new water. The few that show more tend to be the ones NOAH rates more at risk.</figcaption></figure>
+  <div class="rd-verdict">
+    <h3>So is the model good?</h3>
+    <p><b>On labelled test floods, yes:</b> it found three times as much water as a simple rule. <b>On Dagupan, we cannot grade it yet.</b> Nobody has drawn where Egay's water actually went, so this run is a consistency check, not a test score. It points the same way as NOAH's flood maps.</p>
+    <p class="caption" style="margin:0">Why so little water? Radar misses flooded streets between buildings (they look brighter, not darker), and some water had likely drained in two days. Next step: check against a Philippine flood with hand-drawn water.</p>
+  </div>`;
+}
+
 export async function render(root) {
   if (!document.querySelector('link[href="css/radar.css"]')) {
     const l = document.createElement("link");
@@ -202,9 +247,16 @@ export async function render(root) {
     <p class="caption">IoU 0.64 vs 0.21. IoU is overlap with the real flood: 0 is none, 1 is perfect.</p>
   </section>
 
-  <section class="rd-story rd-next" aria-labelledby="rd-next-h">
-    <h2 id="rd-next-h" class="sr-only">Next</h2>
-    <p class="rd-big"><b>Then:</b> we mapped a real flood from radar, Typhoon Egay over Dagupan (July 2023). Results below.</p>
+  <section class="rd-story rd-egay" aria-labelledby="rd-egay-h">
+    <h2 id="rd-egay-h">Then we tried it on a real flood: Typhoon Egay over Dagupan</h2>
+    <p class="rd-lede">A radar satellite passed over on 28 July 2023, two days after landfall. We compared it with a dry day, 11 April, seen from the same angle.</p>
+    <div class="rd-trio rd-trio-tall">
+      <figure><img src="assets/radar/egay_before.jpg" width="1057" height="1372" loading="lazy" alt="Radar image of Dagupan on 11 April 2023, a dry day, in greyscale. The sea is dark at top left and fishponds show as dark patches. Barangay borders are yellow lines."><figcaption><b>Before: 11 April 2023</b>A dry day</figcaption></figure>
+      <figure><img src="assets/radar/egay_after.jpg" width="1057" height="1372" loading="lazy" alt="Radar image of Dagupan on 28 July 2023, two days after Typhoon Egay, in greyscale. Some fields east and south of the city are darker than in April."><figcaption><b>After: 28 July 2023</b>Two days after landfall</figcaption></figure>
+      <figure><img src="assets/radar/egay_water.jpg" width="1057" height="1372" loading="lazy" alt="The 28 July radar image with new water marked in light blue and permanent water such as the sea and fishponds in navy. Most light blue patches lie in fields east and south of the city; few are inside the barangay borders."><figcaption><b>New water found</b>Light blue is new water. Navy is always water: sea, rivers, fishponds.</figcaption></figure>
+    </div>
+    <p class="caption">Yellow lines are barangay borders. Sentinel-1 radar, Copernicus.</p>
+    <div id="rd-egay-story"></div>
   </section>
 
   <details class="rd-details rd-tech-all"><summary>Technical details</summary>
@@ -256,7 +308,12 @@ export async function render(root) {
   let card = COMING;
   try {
     const [r, s] = await Promise.all([fetch("data/PH015518000/s1_flood.geojson"), fetch("data/PH015518000/s1_summary.json")]);
-    if (r.ok) card = egayHTML(await r.json(), s.ok ? await s.json() : null);
+    if (r.ok) {
+      const gj = await r.json(), sum = s.ok ? await s.json() : null;
+      card = egayHTML(gj, sum);
+      const story = root.querySelector("#rd-egay-story");
+      if (story) story.innerHTML = egayStory(gj, sum);
+    }
   } catch (e) { /* keep placeholder */ }
   if (slot.isConnected) { slot.innerHTML = card; slot.removeAttribute("aria-busy"); }
 }

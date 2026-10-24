@@ -59,6 +59,8 @@ function mountNav() {
     <div class="nav-foot"><a class="item" href="${REPO_URL}" title="Source code on GitHub" rel="noopener">${ICON.code}<span>Source code</span></a></div>`;
   const labels = () => nav.querySelectorAll("ul a.item").forEach((a, i) => { a.querySelector(".lbl").textContent = mq.matches ? NAV[i].tab : NAV[i].label; });
   labels(); mq.addEventListener("change", () => { labels(); placeInd(); });
+  // A scrollbar appearing or the sidebar collapsing resizes the list without a window resize event
+  if ("ResizeObserver" in window) new ResizeObserver(() => placeInd()).observe(nav.querySelector("ul"));
   const btn = nav.querySelector(".nav-toggle");
   const sync = () => {
     const open = root.dataset.nav !== "closed";
