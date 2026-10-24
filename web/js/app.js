@@ -104,7 +104,17 @@ function parse() {
   return { key: seg[0] || "home", code: seg[1] || null, tab: seg[2] || null, query: new URLSearchParams(qs || ""), segments: seg };
 }
 
+// The boot loader in index.html covers the blank page until the first page has drawn.
+function bootDone() {
+  const b = document.getElementById("boot");
+  if (!b || b.dataset.done) return;
+  b.dataset.done = "1"; b.classList.add("gone");
+  setTimeout(() => b.remove(), 400);
+}
+setTimeout(bootDone, 12000);
+
 function message(title, text) {
+  bootDone();
   view.innerHTML = `<div style="padding:48px 24px;max-width:560px"><h1 class="num" style="font-size:var(--t-lg)">${title}</h1><p class="muted" style="margin:8px 0 16px">${text}</p><a class="btn" href="#/">Back to home</a></div>`;
 }
 
@@ -134,6 +144,7 @@ async function go() {
     if (my !== seq) return;
     console.warn(e);
     view.removeAttribute("aria-busy");
+  if (my === seq) bootDone();
     return message("This page is not ready yet", "The page " + r.page + " could not be loaded.");
   }
   if (my !== seq) return;
