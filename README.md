@@ -111,6 +111,8 @@ uv run python scripts/run_pipeline.py --scenario 25yr
 uv sync --extra cv        # optional: PyTorch for the U-Net
 ```
 
+The trained U-Net (94 MB) is kept out of git. Download `unet_sen1floods11.pt` from the [unet-v1 release](https://github.com/lambat-ph/lambat/releases/tag/unet-v1) into `checkpoints/`, or retrain it with `scripts/train_unet.py`.
+
 ## Limits
 
 Case data is weekly, city-level and ends in 2022. The rain alert cannot see tidal flooding. Access is modelled from maps, not checked on the ground. Each dose point assumes a prescriber. The tool counts places, not patients: pregnant and lactating women are flagged for referral, and the undiagnosed do not appear.

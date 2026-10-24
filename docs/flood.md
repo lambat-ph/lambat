@@ -26,7 +26,7 @@ uv run --extra cv python scripts/train_unet.py --epochs 15 --pretrained   # full
 uv run --extra cv python scripts/train_unet.py --epochs 8 --limit 40 --test-limit 15   # quick check
 ```
 
-Loss is BCE plus Dice with no-data pixels masked out. Training uses random 256 px crops, batch size 4, Adam at 1e-3, seed 0, and an ImageNet-pretrained resnet34 encoder. The checkpoint goes to `checkpoints/` (git-ignored). Each epoch is scored on the valid split and the best epoch's weights are kept. Then the script scores the test split for the U-Net and for a per-chip Otsu threshold on VV.
+Loss is BCE plus Dice with no-data pixels masked out. Training uses random 256 px crops, batch size 4, Adam at 1e-3, seed 0, and an ImageNet-pretrained resnet34 encoder. The checkpoint goes to `checkpoints/` (git-ignored); the trained one is attached to the [unet-v1 release](https://github.com/lambat-ph/lambat/releases/tag/unet-v1). Each epoch is scored on the valid split and the best epoch's weights are kept. Then the script scores the test split for the U-Net and for a per-chip Otsu threshold on VV.
 
 ## Results (full run, Oct 23 2026)
 
