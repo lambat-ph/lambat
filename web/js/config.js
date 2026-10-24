@@ -1,5 +1,5 @@
 // Shared constants. Colours here mirror the tokens in css/base.css.
-export const REPO_URL = "https://github.com/bih-science/lambat";
+export const REPO_URL = "https://github.com/lambat-ph/lambat";
 export const DATA = "data";
 export const COLORS = {
   blue: "#0038BD", blueDark: "#00267F", gold: "#EFBE01", bg: "#EEEEEE", card: "#FFFFFF",

@@ -2,7 +2,7 @@
 
 # LAMBAT
 
-[![CI](https://github.com/bih-science/lambat/actions/workflows/ci.yml/badge.svg)](https://github.com/bih-science/lambat/actions/workflows/ci.yml)
+[![CI](https://github.com/lambat-ph/lambat/actions/workflows/ci.yml/badge.svg)](https://github.com/lambat-ph/lambat/actions/workflows/ci.yml)
 
 **Leptospirosis Alert, Mapping and Barangay Allocation Tool.** *Lambat* is Filipino for *net*, and a net is only as good as where you cast it.
 
