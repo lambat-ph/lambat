@@ -42,7 +42,30 @@ Both are relative orbit (track) 32, descending, so the viewing angle is the same
 
 ## Results
 
-Pending the run on the real scenes. So far the code has been tested on synthetic scenes only: a synthetic SAFE folder with GCPs goes through the whole script, and the calibration, GCP window and grid logic are unit tested. After `scripts/run_s1_flood.py` runs, the numbers here come from `results/s1_egay_summary.json`.
+Run on 24 Oct 2026 on the two real scenes (`results/s1_egay_summary.json`). The GCP fit error is 1.4 px on both dates. All 31 barangays have valid pixels (the lowest has 68% of its area valid). Permanent water (fishponds, rivers, the coast) is 12.7% of the city and is left out.
+
+| Method | Newly flooded inside the city | Share of city land |
+|---|---|---|
+| **Change detection (main result)** | **0.46 km2** | **1.2%** |
+| U-Net on the flood image | 0.36 km2 | 0.9% |
+| Otsu on the flood image | 9.64 km2 | 25.5% |
+
+Otsu marks anything dark on 28 July, so it also picks up fishponds and wet fields the permanent-water mask did not catch; it is not a flood estimate. The two methods that look for new water agree that little open water was visible inside the city two days after landfall. Most of the new water in the scene lies in the fields east and south of the city boundary (see the quicklook).
+
+Agreement per barangay (Spearman, 31 barangays, 95% bootstrap CI):
+
+| Change-detection share vs | rho | 95% CI | p |
+|---|---|---|---|
+| NOAH 5-year hazard share | -0.17 | -0.55 to 0.23 | 0.35 |
+| NOAH 25-year hazard share (the pipeline's map) | 0.23 | -0.17 to 0.56 | 0.22 |
+| NOAH 100-year hazard share | **0.54** | **0.18 to 0.80** | **0.002** |
+| News reports (AUC, 26 reported vs 5 not) | AUC 0.38 | 0.12 to 0.71 | 0.43 |
+
+What this means:
+- Where the radar did see new water, it lines up with NOAH's 100-year map, but not clearly with the 25-year map the pipeline uses. Read it as a weak, partial check on NOAH, not a confirmation.
+- The radar does not agree with the news list. That list covers 26 of 31 barangays, so it has almost nothing to separate.
+- The barangay with the largest share was flooded on 10.6% of its land; every other barangay was under 4%. Downtown shows almost no detected water, which fits the double-bounce caveat below: flooded streets look brighter to radar, not darker.
+- The U-Net agrees with NOAH less well (100-year rho 0.25, CI -0.16 to 0.61) and with the reports slightly better (AUC 0.63, CI 0.39 to 0.84); neither difference is significant.
 
 ## Caveats
 

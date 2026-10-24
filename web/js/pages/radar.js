@@ -151,18 +151,21 @@ const COMING = `<div class="card"><span class="badge">Coming next</span>
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-function egayHTML(gj) {
+function egayHTML(gj, sum) {
   const feats = gj.features || [];
-  const keys = feats.length ? Object.keys(feats[0].properties || {}) : [];
-  const key = keys.find((k) => /s1.*(share|frac)|flood.*(share|frac)/i.test(k));
-  const nameKey = keys.find((k) => /name/i.test(k));
-  let body = `<p>${feats.length} barangay areas in the result file.</p>`;
-  if (key && nameKey) {
-    const rows = feats.map((f) => [f.properties[nameKey], +f.properties[key]]).filter((r) => Number.isFinite(r[1])).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    body += `<div class="table-wrap"><table class="table"><caption class="sr-only">Barangays with the largest flooded share</caption><thead><tr><th scope="col">Barangay</th><th scope="col">Flooded share</th></tr></thead><tbody>${rows.map((r) => `<tr><th scope="row" class="l">${esc(r[0])}</th><td>${(r[1] * 100).toFixed(1)}%</td></tr>`).join("")}</tbody></table></div>`;
-  }
-  return `<div class="card"><span class="badge">Result</span><h3 class="card-title" style="margin-top:var(--s1)">Typhoon Egay over Dagupan</h3>${body}
-  <p class="caption" style="margin-top:var(--s1)">One radar pass, two days after landfall. Radar can miss floods between buildings, so downtown shares are probably too low.</p></div>`;
+  const rows = feats.map((f) => f.properties).filter((p) => Number.isFinite(+p.s1_threshold_share))
+    .sort((a, b) => b.s1_threshold_share - a.s1_threshold_share).slice(0, 6);
+  const pct = (v, d = 1) => `${(v * 100).toFixed(d)}%`;
+  const m = sum?.methods?.threshold, st = sum?.stats?.threshold;
+  const r100 = st?.vs_noah?.["100yr"], r25 = st?.vs_noah?.["25yr"], auc = st?.vs_reports?.auc;
+  const head = m ? `<p>The radar pass on 28 July 2023, two days after landfall, found <b>${m.flooded_km2.toFixed(2)} km&sup2;</b> of new open water inside the city, about <b>${pct(m.flooded_share_of_city_land)}</b> of its land. Most of the new water in the scene lies in the fields east and south of the city.</p>` : "";
+  const agree = r100 && r25 && auc ? `<ul class="rd-list">
+    <li>Matches NOAH's 100-year flood map (correlation ${r100.rho.toFixed(2)}, 95% CI ${r100.lo.toFixed(2)} to ${r100.hi.toFixed(2)}), but not clearly the 25-year map LAMBAT uses (correlation ${r25.rho.toFixed(2)}, CI ${r25.lo.toFixed(2)} to ${r25.hi.toFixed(2)}).</li>
+    <li>No agreement with the news reports (AUC ${auc.auc.toFixed(2)}). They name 26 of 31 barangays, so they separate almost nothing.</li></ul>` : "";
+  const table = rows.length ? `<div class="table-wrap"><table class="table"><caption class="sr-only">Barangays with the largest share of new water seen by radar</caption><thead><tr><th scope="col">Barangay</th><th scope="col">New water seen</th><th scope="col">In the news</th></tr></thead><tbody>${rows.map((p) => `<tr><th scope="row" class="l">${esc(p.adm4_en)}</th><td>${pct(+p.s1_threshold_share)}</td><td>${p.egay_reported === true || p.egay_reported === "True" ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table></div>` : "";
+  const pic = `<figure class="rd-egay-fig"><img src="data/PH015518000/s1_quicklook.png" alt="Three radar views of Dagupan with barangay lines in yellow: the 28 July 2023 image, the change since April (blue is darker, red is brighter), and the flood mask with new water in light blue and permanent water such as fishponds and the sea in navy." loading="lazy"><figcaption>Left: radar on 28 July. Middle: change since 11 April, blue is darker. Right: new water in light blue, permanent water in navy.</figcaption></figure>`;
+  return `<div class="card"><span class="badge">Result</span><h3 class="card-title" style="margin-top:var(--s1)">Typhoon Egay over Dagupan</h3>${head}${agree}${pic}${table}
+  <p class="caption" style="margin-top:var(--s1)">One radar pass. Water may already have drained, and radar misses floods between buildings (flooded streets look brighter, not darker), so the city shares are probably too low downtown. Full numbers: docs/sentinel1.md.</p></div>`;
 }
 
 export async function render(root) {
@@ -201,7 +204,7 @@ export async function render(root) {
 
   <section class="rd-story rd-next" aria-labelledby="rd-next-h">
     <h2 id="rd-next-h" class="sr-only">Next</h2>
-    <p class="rd-big"><b>Next:</b> run it on Typhoon Egay over Dagupan (July 2023).</p>
+    <p class="rd-big"><b>Then:</b> we mapped a real flood from radar, Typhoon Egay over Dagupan (July 2023). Results below.</p>
   </section>
 
   <details class="rd-details rd-tech-all"><summary>Technical details</summary>
@@ -252,8 +255,8 @@ export async function render(root) {
   const slot = root.querySelector("#rd-egay");
   let card = COMING;
   try {
-    const r = await fetch("data/PH015518000/s1_flood.geojson");
-    if (r.ok) card = egayHTML(await r.json());
+    const [r, s] = await Promise.all([fetch("data/PH015518000/s1_flood.geojson"), fetch("data/PH015518000/s1_summary.json")]);
+    if (r.ok) card = egayHTML(await r.json(), s.ok ? await s.json() : null);
   } catch (e) { /* keep placeholder */ }
   if (slot.isConnected) { slot.innerHTML = card; slot.removeAttribute("aria-busy"); }
 }

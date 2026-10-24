@@ -91,3 +91,8 @@
   .rd-trio{grid-template-columns:1fr}
   .rd-trio figure{display:grid;grid-template-columns:120px minmax(0,1fr);gap:var(--s2);align-items:center}
 }
+.rd-egay-fig{margin:var(--s2) 0}
+.rd-egay-fig img{display:block;width:100%;height:auto;border-radius:var(--radius-sm)}
+.rd-egay-fig figcaption{font-size:var(--t-xs);color:var(--muted);margin-top:var(--s0)}
+.rd-list{margin:var(--s1) 0;padding-left:1.2em}
+.rd-list li{margin:var(--s0) 0}

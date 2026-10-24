@@ -55,12 +55,12 @@ Written by `scripts/run_pipeline.py`, passed through by `scripts/build_web.py`. 
 
 ## Known weaknesses and next steps
 
-1. **Ranking cannot be confirmed by reports.** No detectable agreement; news reports track population density. Coastal distance and elevation did not help (see `docs/validation.md`). Next: the Sentinel-1 Egay extent (`scripts/run_s1_flood.py`, `docs/sentinel1.md`) as an independent check.
+1. **Ranking cannot be confirmed by reports.** No detectable agreement; news reports track population density. Coastal distance and elevation did not help (see `docs/validation.md`). The Sentinel-1 Egay extent (`docs/sentinel1.md`) was added as an independent check: it agrees with NOAH 100-year but does not separate the reported barangays either.
 2. **OSM gaps.** Five barangays (PH015518010, 011, 016, 027, 028) have no walk-graph nodes; their residents snap to the nearest node (median 933 m). Access figures there are weak.
 3. **Coarse elevation.** Terrarium is ~30 m SRTM-class; Dagupan spans a few metres.
 4. **U-Net is only tested globally.** Full run done (pooled test IoU 0.64 vs 0.21 for Otsu, median per-chip 0.33 vs 0.05, 90 Sen1Floods11 test chips, CPU, 12 min; see `docs/flood.md`). Not yet checked on Dagupan; single seed. The mean/82-chip rows in `docs/flood.md` come from a one-off script.
 5. **Dashboard.** `web/index.html` is a static MapLibre page: barangay map, priority table, dose points and alert chart. It reads `web/data/`, which `scripts/build_web.py` fills from `results/`. The Pages workflow deploys `web/` once the repo is public and Pages is set to build from GitHub Actions.
-6. **Sentinel-1 Egay run.** Code is tested on synthetic scenes; the real run needs the two scenes in `data/raw/s1/` (see `docs/sentinel1.md`).
+6. **Sentinel-1 Egay run.** Done 24 Oct on both real scenes: little open water seen inside the city on 28 Jul (0.46 km2); agrees with NOAH 100-year (rho 0.54) but not the 25-year map or the news list. Urban double bounce means downtown is likely undercounted (see `docs/sentinel1.md`).
 
 ## Conventions
 

@@ -96,7 +96,7 @@ Clouds hide floods from ordinary satellites; radar sees through them, and still 
 | Data, alert, exposure, access, siting, end-to-end script | Working, tested, in CI |
 | Flood mapping (threshold vs U-Net on Sen1Floods11) | Trained and scored (pooled IoU 0.64 vs 0.21) |
 | Validation against news reports | Done, with confidence intervals; no detectable agreement |
-| Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Code tested; running on the downloaded scenes |
+| Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Run: 0.46 km2 of new water inside the city two days after landfall; matches NOAH 100-year map (rho 0.54), not the 25-year map or news reports ([docs/sentinel1.md](docs/sentinel1.md)) |
 | Dashboard (`web/`, MapLibre) | Multi-city map (12 cities, with a national summary), priority table, dose points, alert chart; deploys to GitHub Pages once public |
 
 ## Run it

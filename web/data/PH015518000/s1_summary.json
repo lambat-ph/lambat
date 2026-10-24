@@ -1,0 +1,248 @@
+{
+ "flood_scene": {
+  "product": "S1A_IW_GRDH_1SDV_20230728T214651_20230728T214716_049629_05F7C6_F885_COG.SAFE",
+  "date": "20230728",
+  "speckle_median": 5,
+  "vv": {
+   "shape": [
+    16802,
+    25491
+   ],
+   "window": [
+    7033,
+    8860,
+    21784,
+    23370
+   ],
+   "gcp_fit_rmse_px": 1.38,
+   "geometry": "gcp"
+  },
+  "vh": {
+   "shape": [
+    16802,
+    25491
+   ],
+   "window": [
+    7033,
+    8860,
+    21784,
+    23370
+   ],
+   "gcp_fit_rmse_px": 1.38,
+   "geometry": "gcp"
+  },
+  "margin_m": 1000.0
+ },
+ "dry_scene": {
+  "product": "S1A_IW_GRDH_1SDV_20230411T214646_20230411T214711_048054_05C6CB_2E74_COG.SAFE",
+  "date": "20230411",
+  "speckle_median": 5,
+  "vv": {
+   "shape": [
+    16803,
+    25488
+   ],
+   "window": [
+    7034,
+    8861,
+    21780,
+    23366
+   ],
+   "gcp_fit_rmse_px": 1.38,
+   "geometry": "gcp"
+  },
+  "vh": {
+   "shape": [
+    16803,
+    25488
+   ],
+   "window": [
+    7034,
+    8861,
+    21780,
+    23366
+   ],
+   "gcp_fit_rmse_px": 1.38,
+   "geometry": "gcp"
+  },
+  "margin_m": 1000.0
+ },
+ "grid": {
+  "crs": "EPSG:32651",
+  "res_m": 10.0,
+  "shape": [
+   1372,
+   1057
+  ],
+  "origin": [
+   210870.0,
+   1784360.0
+  ]
+ },
+ "params": {
+  "drop_db": 3.0,
+  "water_db": -18.0,
+  "speckle_median": 5
+ },
+ "city_land_pixels_valid": 377689,
+ "permanent_water_share_of_city": 0.1266,
+ "coverage": {
+  "barangays_with_valid_pixels": 31,
+  "min_valid_share_of_barangay": 0.6788
+ },
+ "methods": {
+  "threshold": {
+   "flooded_km2": 0.4593,
+   "flooded_share_of_city_land": 0.0122
+  },
+  "otsu": {
+   "flooded_km2": 9.6375,
+   "flooded_share_of_city_land": 0.2552,
+   "threshold_db": -11.8385
+  },
+  "unet": {
+   "flooded_km2": 0.3589,
+   "flooded_share_of_city_land": 0.0095
+  }
+ },
+ "unet_note": null,
+ "reports": {
+  "event": "Typhoon Egay / habagat 2023",
+  "n_names": 26,
+  "n_matched": 26,
+  "unmatched_names": []
+ },
+ "stats": {
+  "threshold": {
+   "vs_noah": {
+    "5yr": {
+     "n": 31,
+     "rho": -0.1724,
+     "lo": -0.5544,
+     "hi": 0.2292,
+     "p": 0.3545
+    },
+    "25yr": {
+     "n": 31,
+     "rho": 0.231,
+     "lo": -0.1735,
+     "hi": 0.5595,
+     "p": 0.2162
+    },
+    "100yr": {
+     "n": 31,
+     "rho": 0.5395,
+     "lo": 0.1773,
+     "hi": 0.798,
+     "p": 0.0021
+    }
+   },
+   "vs_reports": {
+    "auc": {
+     "n": 31,
+     "n_reported": 26,
+     "auc": 0.3846,
+     "lo": 0.12,
+     "hi": 0.7143,
+     "p": 0.4278
+    },
+    "spearman": {
+     "n": 31,
+     "rho": -0.1505,
+     "lo": -0.4696,
+     "hi": 0.2227,
+     "p": 0.442
+    }
+   }
+  },
+  "otsu": {
+   "vs_noah": {
+    "5yr": {
+     "n": 31,
+     "rho": -0.4389,
+     "lo": -0.7109,
+     "hi": -0.0586,
+     "p": 0.0144
+    },
+    "25yr": {
+     "n": 31,
+     "rho": 0.1529,
+     "lo": -0.2549,
+     "hi": 0.516,
+     "p": 0.4124
+    },
+    "100yr": {
+     "n": 31,
+     "rho": 0.6745,
+     "lo": 0.3915,
+     "hi": 0.8557,
+     "p": 0.0003
+    }
+   },
+   "vs_reports": {
+    "auc": {
+     "n": 31,
+     "n_reported": 26,
+     "auc": 0.4077,
+     "lo": 0.1724,
+     "hi": 0.6462,
+     "p": 0.5373
+    },
+    "spearman": {
+     "n": 31,
+     "rho": -0.1177,
+     "lo": -0.3887,
+     "hi": 0.1647,
+     "p": 0.548
+    }
+   }
+  },
+  "unet": {
+   "vs_noah": {
+    "5yr": {
+     "n": 31,
+     "rho": -0.4603,
+     "lo": -0.7635,
+     "hi": -0.0628,
+     "p": 0.0091
+    },
+    "25yr": {
+     "n": 31,
+     "rho": -0.0351,
+     "lo": -0.4213,
+     "hi": 0.3545,
+     "p": 0.8601
+    },
+    "100yr": {
+     "n": 31,
+     "rho": 0.2516,
+     "lo": -0.1577,
+     "hi": 0.6053,
+     "p": 0.1649
+    }
+   },
+   "vs_reports": {
+    "auc": {
+     "n": 31,
+     "n_reported": 26,
+     "auc": 0.6308,
+     "lo": 0.3885,
+     "hi": 0.843,
+     "p": 0.3691
+    },
+    "spearman": {
+     "n": 31,
+     "rho": 0.1705,
+     "lo": -0.1297,
+     "hi": 0.4371,
+     "p": 0.3786
+    }
+   }
+  }
+ },
+ "results_files": [
+  "s1_egay_barangays.csv",
+  "s1_egay_flood.geojson",
+  "s1_egay_quicklook.png"
+ ]
+}

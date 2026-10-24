@@ -65,6 +65,9 @@ def build_city(code: str, loc: pd.DataFrame) -> dict | None:
             out / "alert_predictions.csv", index=False)
     if code == data.DAGUPAN and (RESULTS / "s1_egay_flood.geojson").exists():
         shutil.copyfile(RESULTS / "s1_egay_flood.geojson", out / "s1_flood.geojson")
+        for name, dest in (("s1_egay_summary.json", "s1_summary.json"), ("s1_egay_quicklook.png", "s1_quicklook.png")):
+            if (RESULTS / name).exists():
+                shutil.copyfile(RESULTS / name, out / dest)
 
     lon, lat, bbox = cities.centroid_bbox(data.barangays(code))
     row = loc[loc.adm3_pcode == code].iloc[0]
