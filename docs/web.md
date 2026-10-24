@@ -15,12 +15,12 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 
 | File | Role |
 |---|---|
-| `index.html` | Shell: sidebar (bottom tab bar under 768 px), skip link, `<main id="view">`, fonts, MapLibre 4.7.1 |
+| `index.html` | Shell: sidebar (bottom tab bar under 768 px), skip link, `<main id="view">`, fonts, MapLibre 4.7.1, Open Graph tags (`assets/og.png`), and the boot loading screen (`#boot`: inline SVG lockup with a looping animation and inline CSS, so it paints before anything loads) |
 | `css/base.css` | All design tokens (colours, ramp, spacing, type, radii, shadows) and shared components (`.card`, `.seg`, `.tabs`, `.stat`, `.table`, `.btn`, `.switch`) |
 | `css/<page>.css` | Page styles, linked by each page module through `useCss()` |
 | `js/config.js` | `REPO_URL` (the only place the repo link lives), `COLORS`, `RAMP`, basemap and terrain URLs |
 | `js/data.js` | `getCities()`, `getCity(code)`, `getNational()`; caches fetches; falls back to the old flat Dagupan files when `cities.json` is absent |
-| `js/app.js` | Hash router: `#/`, `#/map[/code|/all]`, `#/city/<code>[/tab]`, `#/radar`, `#/method`; lazy-imports `js/pages/<name>.js`, which export `render(el, params)` and `destroy()` |
+| `js/app.js` | Hash router (loads a page's CSS with `pageCss()` before drawing it, shows a `.page-skel` placeholder while the page module loads, and calls `bootDone()` to fade out the boot screen after the first page draws): `#/`, `#/map[/code|/all]`, `#/city/<code>[/tab]`, `#/radar`, `#/method`; lazy-imports `js/pages/<name>.js`, which export `render(el, params)` and `destroy()` |
 | `js/format.js` | `fmt`, `pct`, `compact`, `esc`, `useCss` |
 | `js/pages/map.js` | Map page. 600 px and up: floating frosted cards on the left over a full-size map (answer with hazard band, tour link, 3/5/8 picker, coverage line, ranked expandable site rows, dose point footnote, legend) beside the map; under 600 px: the column is a two-height bottom sheet. On the map: controls, frosted More options button and drawer, barangay card, tour (`localStorage` key `lambat.tourSeen`). Rolling numbers, `?` popovers, branded loader removed on first `idle`, skeletons with `aria-busy`. National view lists cities in the column. `window.__lambatMap` for debugging; `ResizeObserver` keeps the canvas sized |
 | `js/pages/city.js` | Tabs: Overview, Dose points, Barangays (search, sort, CSV), Alert |
@@ -36,6 +36,7 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 
 ## Known issues to fix next
 
+0. Live at https://lambat-ph.github.io/lambat/ (GitHub Pages via `.github/workflows/pages.yml`, deploys on push to main). GitHub Pages lets browsers cache files for about 10 minutes, so test changes with a hard refresh.
 1. All 12 cities have the plan-detail fields (`reach_after_*`, `cut_off_after_*`, `serves`, `newly_reached`); the map still falls back gracefully if a city lacks them.
 2. Per-city `scenario` (`25yr`/`100yr`) and `scenario_note` are read by `js/data.js` `scenarioOf()`; build_web writes `100yr` for Mandaue, Iloilo and Tacloban (no 25-year NOAH map) and leaves them out of the national total.
 3. "Open on map" on the city page is still an outlined button; GIF labels are tiny on phones; true phone-size checks of the map card and sheet are pending.
