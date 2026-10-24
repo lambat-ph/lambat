@@ -293,7 +293,7 @@ function wire(el) {
 
 export async function render(el, params) {
   let ready = Promise.resolve();
-  if (!document.getElementById(CSS_ID)) {
+  if (!document.getElementById(CSS_ID) && !document.querySelector('link[href="css/method.css"]')) {
     const l = document.createElement("link");
     l.id = CSS_ID;
     l.rel = "stylesheet";

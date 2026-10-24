@@ -15,7 +15,7 @@ const ICON = {
 };
 
 const ROUTES = {
-  home: { page: "home", nav: "home", title: "LAMBAT: get the capsule across the water" },
+  home: { page: "home", nav: "home", title: "LAMBAT: Cast the net where the people are" },
   map: { page: "map", nav: "map", title: "Map: LAMBAT" },
   city: { page: "city", nav: "city", title: "City dashboard: LAMBAT" },
   radar: { page: "radar", nav: "radar", title: "Satellite flood maps: LAMBAT" },
@@ -104,6 +104,22 @@ function parse() {
   return { key: seg[0] || "home", code: seg[1] || null, tab: seg[2] || null, query: new URLSearchParams(qs || ""), segments: seg };
 }
 
+// Each page's stylesheet is loaded before the page draws, so it never shows unstyled for a frame.
+function pageCss(name) {
+  let l = document.querySelector(`link[href="css/${name}.css"]`);
+  if (l && l.sheet) return Promise.resolve();
+  if (!l) {
+    l = document.createElement("link");
+    l.rel = "stylesheet"; l.href = `css/${name}.css`; l.dataset.css = name;
+    document.head.appendChild(l);
+  }
+  return new Promise((res) => {
+    l.addEventListener("load", res, { once: true });
+    l.addEventListener("error", res, { once: true });
+    setTimeout(res, 4000);
+  });
+}
+
 // The boot loader in index.html covers the blank page until the first page has drawn.
 function bootDone() {
   const b = document.getElementById("boot");
@@ -137,9 +153,11 @@ async function go() {
   placeInd();
   if (!r) return message("Page not found", "That address does not match a LAMBAT page.");
   view.setAttribute("aria-busy", "true");
+  // Placeholder while the page's code and stylesheet download; the page replaces it when it draws.
+  if (p.key !== "map") view.innerHTML = `<div class="page-skel" aria-hidden="true"><span class="skel skel-line" style="--w:18%"></span><span class="skel skel-big" style="--w:62%"></span><div class="skel-lines"><span class="skel skel-line" style="--w:100%"></span><span class="skel skel-line" style="--w:72%"></span></div><div class="page-skel-row"><div class="card stat skel-card"><span class="skel skel-line" style="--w:45%"></span><span class="skel skel-big"></span></div><div class="card stat skel-card"><span class="skel skel-line" style="--w:45%"></span><span class="skel skel-big"></span></div><div class="card stat skel-card"><span class="skel skel-line" style="--w:45%"></span><span class="skel skel-big"></span></div></div></div>`;
   let mod;
   try {
-    mod = await import(`./pages/${r.page}.js`);
+    [mod] = await Promise.all([import(`./pages/${r.page}.js`), pageCss(r.page)]);
   } catch (e) {
     if (my !== seq) return;
     console.warn(e);
