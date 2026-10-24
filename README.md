@@ -12,7 +12,11 @@
 
 *Darker barangays had more residents in the water. Gold numbers are where to set up dose points first.*
 
-**See it:** run `uv run python scripts/build_web.py`, then `uv run python -m http.server 8000 -d web` and open http://localhost:8000. The map opens with a three-step guided tour.
+**See it live: [lambat-ph.github.io/lambat](https://lambat-ph.github.io/lambat/).** The map opens with a three-step guided tour. To run the site locally: `uv run python scripts/build_web.py`, then `uv run python -m http.server 8000 -d web` and open http://localhost:8000.
+
+| Home | City dashboard |
+|---|---|
+| ![LAMBAT home page: after a 25-year flood, 71,868 people in Dagupan live in the water's path; 3 dose points put 92% of them within a 30-minute walk](docs/img/home.jpg) | ![Dagupan city dashboard: the three dose points to open first, 71,868 exposed residents, 2,485 who lose access in the flood, and coverage of 92%, 95% and 97% after 3, 5 and 8 dose points](docs/img/dashboard.jpg) |
 
 | Folder | What is in it |
 |---|---|
@@ -59,7 +63,9 @@ All three get the same number of alerts. That is an alert, not a forecast, and w
 
 - **71,868** of 208,322 residents live in flood-hazard areas: **143,737 capsules** for each week the water stays.
 - **36** clinics and hospitals on OpenStreetMap. Within a 30-minute walk of one: 62,625 exposed residents on a dry day, 60,140 in the flood. The access gap is **2,485** people, smaller than we expected, and we say so.
-- Most exposed residents who cannot reach care cannot reach it on dry days either. **3 temporary dose points** (Lucao Barangay Hall, Bolosan Elementary School, Bonuan Boquig National High School, in that order) cover 6,030 of them, raising coverage to 92%; 5 reach 95% and **8** reach 97%.
+- Most exposed residents who cannot reach care cannot reach it on dry days either. **3 temporary dose points** (Lucao Barangay Hall, Bolosan Elementary School, Bonuan Boquig National High School, in that order) cover 6,030 of them, raising coverage to 92%; 5 reach 95% and **8** reach 97%. The 3, 5 and 8 are example staffing budgets, not numbers the model picked; the full curve for 1 to 10 dose points shows each extra site reaching fewer new people (the 1st reaches 2,764, the 10th only 290):
+
+  ![Dose-point coverage curve for Dagupan: share of exposed residents within a 30-minute walk rises from 84% with clinics only to 92.3% with 3 dose points, 94.8% with 5 and 97.0% with 8, then flattens to 97.9% at 10](docs/img/dose_point_curve.png)
 - Checked against 13 flood events named in the news, the ranking shows no detectable agreement (Spearman -0.10, 95% CI -0.48 to 0.30, 31 barangays). We tested 18 alternatives fixed in advance; none beats it after correcting for multiple comparisons. The reports mostly follow where people live (density correlation 0.64), so they are a weak ruler. We read this as "cannot confirm the ranking yet", not as proof it is wrong ([docs/validation.md](docs/validation.md)).
 
 Barangay table, GeoJSON maps and a JSON summary land in `results/`.
@@ -89,6 +95,32 @@ The national total counts only the 25-year cities: 1,355,168 exposed residents a
 
 Clouds hide floods from ordinary satellites; radar sees through them, and still water shows up dark. We trained a U-Net (resnet34 encoder, VV and VH bands in, water mask out) on the hand-labelled [Sen1Floods11](https://github.com/cloudtostreet/Sen1Floods11) chips. On 90 held-out chips from floods in other countries, it scores a pooled IoU of **0.64** against **0.21** for an Otsu threshold, and beats the threshold on 67 of the 82 chips that contain water (median per-chip IoU 0.33 vs 0.05). That is a global test, not a Dagupan one ([docs/flood.md](docs/flood.md)).
 
+| Radar (what the satellite sees) | Our U-Net's water mask | The real flood (hand-drawn) |
+|---|---|---|
+| ![Sentinel-1 radar chip from the USA in greyscale; lakes and a river are dark](web/assets/radar/usa_vv.png) | ![The U-Net's predicted water in blue, covering the lakes, river and most small ponds](web/assets/radar/usa_unet.png) | ![The hand-labelled water in blue](web/assets/radar/usa_label.png) |
+
+*One of the clearer test chips (overlap 0.94). The typical chip scores 0.33.*
+
+**How it learned.** Before training the guesses are close to random; after each of 15 rounds they get closer to the hand-drawn water, while the score on unseen chips climbs (a re-run with the same settings, so numbers differ slightly from the reported run):
+
+![Animation of the U-Net learning over 15 training rounds: three radar chips with their hand-drawn water and the model's guess, which starts blotchy and converges toward the label, beside a rising validation score and a falling training loss](web/assets/radar/unet_training.gif)
+
+**How it reads one image.** The encoder shrinks the radar picture into more abstract features; the decoder rebuilds a sharp water map, with skip connections (gold) passing detail across:
+
+![Animation of the trained U-Net reading one radar chip: four encoder steps shrink it down the left side, four decoder steps grow it back up the right, ending in a water mask that matches the hand-drawn label with IoU 0.94](web/assets/radar/unet_flow.gif)
+
+### A real Dagupan flood: Typhoon Egay, July 2023
+
+We compared a Sentinel-1 pass two days after landfall (28 July 2023) with a dry pass from the same orbit (11 April 2023):
+
+| Before: 11 April 2023 | After: 28 July 2023 | New water found |
+|---|---|---|
+| ![Radar image of Dagupan on a dry day; the sea and fishponds are dark, barangay borders in yellow](web/assets/radar/egay_before.jpg) | ![Radar image of Dagupan two days after Typhoon Egay; some fields east and south of the city are darker](web/assets/radar/egay_after.jpg) | ![The July image with new water in light blue and permanent water (sea, rivers, fishponds) in navy; most new water lies outside the city borders](web/assets/radar/egay_water.jpg) |
+
+Only 0.46 km2 of new open water showed inside the city (about 1.2% of its land). Per barangay, it agrees with NOAH's 100-year hazard map (Spearman 0.54, 95% CI 0.18 to 0.80) but not clearly with the 25-year map the pipeline uses (0.23, CI -0.17 to 0.56), and the news reports name 26 of 31 barangays, so they cannot separate a good map from a bad one. With no hand-drawn map of where Egay's water went, this is a consistency check, not a score. Radar also misses flooded streets between buildings, so downtown is probably undercounted ([docs/sentinel1.md](docs/sentinel1.md)).
+
+The trained U-Net (94 MB) is on the [unet-v1 release](https://github.com/lambat-ph/lambat/releases/tag/unet-v1).
+
 ## Status
 
 | Part | State |
@@ -97,7 +129,7 @@ Clouds hide floods from ordinary satellites; radar sees through them, and still 
 | Flood mapping (threshold vs U-Net on Sen1Floods11) | Trained and scored (pooled IoU 0.64 vs 0.21) |
 | Validation against news reports | Done, with confidence intervals; no detectable agreement |
 | Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Run: 0.46 km2 of new water inside the city two days after landfall; matches NOAH 100-year map (rho 0.54), not the 25-year map or news reports ([docs/sentinel1.md](docs/sentinel1.md)) |
-| Dashboard (`web/`, MapLibre) | Multi-city map (12 cities, with a national summary), priority table, dose points, alert chart; deploys to GitHub Pages once public |
+| Dashboard (`web/`, MapLibre) | Multi-city map (12 cities, with a national summary), priority table, dose points, alert chart, satellite page; live on [GitHub Pages](https://lambat-ph.github.io/lambat/) |
 
 ## Run it
 
