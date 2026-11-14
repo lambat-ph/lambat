@@ -1,5 +1,5 @@
 import { skel } from "../format.js";
-// "Flood from space" page. Numbers come from docs/flood.md (full run, one seed).
+// "Flood from space" page. Numbers come from docs/flood.md (seed 0; four seeds give 0.62 to 0.64).
 const EX = {
   usa: {
     note: "Lakes and a wide river with clear, dark water. One of the better chips: U-Net 0.94, Otsu 0.55 on this chip.",
@@ -138,7 +138,7 @@ function resultsHTML() {
   <div class="card"><h3 class="card-title">What these numbers do not say</h3>
     <ul class="rd-cave">
       <li>The test chips are floods in other countries, not Dagupan. We have not yet measured how well it does on Dagupan or on tidal flooding.</li>
-      <li>One training run, one random seed. A different run could move these scores by a few points.</li>
+      <li>Four training runs with different random seeds scored 0.62 to 0.64, so the result is not a lucky run.</li>
       <li>Chip scores vary widely (the middle half runs from 0.105 to 0.592) because many chips hold very little water and IoU is harsh on those. The pooled 0.639 is the steadier figure. The median of 0.333 is the more cautious one.</li>
       <li>The Otsu threshold is a weak comparison: one cut-off per image, one band, no before picture.</li>
     </ul></div>`;

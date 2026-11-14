@@ -52,6 +52,6 @@ How to read the n column: a chip's IoU is undefined when neither the label nor t
 - Test chips are from other countries and flood events, not Dagupan. This says nothing yet about performance on Dagupan or on tidal flooding.
 - Scores are on the hand-labelled split only (roughly 512 x 512 px chips). The weakly-labelled Sen1Floods11 data is not used.
 - The per-chip scores are spread wide (IQR 0.105 to 0.592). Many chips have very little water, and IoU is harsh on those. The pooled IoU of 0.639 is the more stable figure, and the per-chip median of 0.333 is the more conservative one.
-- One training run, one seed. The valid IoU moved between 0.51 and 0.61 from epoch to epoch, so a different seed could shift the test numbers by a few points.
+- Seeds. The reported run is seed 0. Three more runs with the same settings (seeds 1 to 3, `--epochs 15 --pretrained --seed N`, 14 Nov 2026) scored pooled test IoU 0.632, 0.636 and 0.620 against 0.639 for seed 0, so the result holds to about two points (mean 0.632). Per-chip medians were 0.371, 0.335 and 0.346 on 87 chips with water. Otsu stays at 0.208.
 - Otsu is a weak baseline here: one threshold per chip, VV only, no before image. A before/after change threshold (`threshold_extent`) is not part of this comparison.
 - Bug fixed in `scripts/train_unet.py`: a test chip with all-NaN VV crashed the Otsu step. Such chips now get an empty mask.
