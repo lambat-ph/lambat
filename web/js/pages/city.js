@@ -413,7 +413,8 @@ function lineChart(series, years, W) {
     s += `<text class="axis-title" transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Cases per week</text>`;
     s += `<text class="axis-title" x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle">Week, ${years[0]} to ${years[1]}</text>`;
   }
-  return `<svg class="chart-city" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(lineDesc(series))}">${s}</svg>`;
+  s += `<line class="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" visibility="hidden"/>`;
+  return `<svg class="chart-city" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(lineDesc(series))}" data-l="${L}" data-r="${R}" data-mode="line" tabindex="0">${s}</svg>`;
 }
 function lineDesc(series) {
   const n = series.length;
@@ -453,7 +454,54 @@ function barChart(series, fired, years, W) {
   series.forEach((d, i) => { const y = d.week.slice(0, 4); if (!seen[y]) { seen[y] = 1; s += `<line class="grid" x1="${L + slot * i}" x2="${L + slot * i}" y1="${T}" y2="${H - B}"/><text x="${L + slot * i + 4}" y="${H - B + 16}">${y}</text>`; } });
   s += `<text class="axis-title" transform="translate(11 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Cases per week</text>`;
   const desc = `${lineDesc(series)} The warning went off in ${fired.size} of these weeks.`;
-  return `<svg class="chart-city" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}">${s}</svg>`;
+  s += `<line class="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" visibility="hidden"/>`;
+  return `<svg class="chart-city" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(desc)}" data-l="${L}" data-r="${R}" data-mode="bars" tabindex="0">${s}</svg>`;
+}
+// Hover, tap or arrow keys on a weekly chart show that week's numbers in a tooltip.
+const weekLabel = (w) => {
+  const d = new Date(w + "T00:00:00");
+  return isNaN(d) ? w : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+};
+function attachTip(host, series, text) {
+  const svg = host.querySelector("svg[data-mode]");
+  if (!svg || !series || !series.length) return;
+  const n = series.length, W = +svg.getAttribute("width"), L = +svg.dataset.l, R = +svg.dataset.r, bars = svg.dataset.mode === "bars";
+  const slot = (W - L - R) / n;
+  const xOf = (i) => (bars ? L + slot * (i + 0.5) : L + ((W - L - R) * i) / Math.max(1, n - 1));
+  const xh = svg.querySelector(".xh");
+  const tip = document.createElement("div");
+  tip.className = "chart-tip";
+  tip.setAttribute("role", "status");
+  tip.hidden = true;
+  host.appendChild(tip);
+  let cur = -1;
+  const show = (i) => {
+    cur = Math.max(0, Math.min(n - 1, i));
+    const x = xOf(cur);
+    xh.setAttribute("x1", x); xh.setAttribute("x2", x); xh.setAttribute("visibility", "visible");
+    tip.innerHTML = text(series[cur], cur);
+    tip.hidden = false;
+    const scale = svg.getBoundingClientRect().width / W || 1;
+    const left = x * scale, tw = tip.offsetWidth, hw = host.clientWidth;
+    tip.style.left = `${Math.max(0, Math.min(hw - tw, left - tw / 2))}px`;
+  };
+  const hide = () => { cur = -1; xh.setAttribute("visibility", "hidden"); tip.hidden = true; };
+  const fromEvent = (e) => {
+    const r = svg.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * W;
+    return bars ? Math.floor((px - L) / slot) : Math.round(((px - L) / (W - L - R)) * (n - 1));
+  };
+  svg.addEventListener("pointermove", (e) => show(fromEvent(e)));
+  svg.addEventListener("pointerdown", (e) => show(fromEvent(e)));
+  svg.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") hide(); });
+  svg.addEventListener("blur", hide);
+  svg.addEventListener("keydown", (e) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (e.key === "Escape") return hide();
+    if (!step) return;
+    e.preventDefault();
+    show(cur < 0 ? (step > 0 ? 0 : n - 1) : cur + step);
+  });
 }
 const METHOD_LABEL = { rain_model: "Rain warning", seasonal: "Seasonal average", last_week: "Last week's cases" };
 function alertPanel(m) {
@@ -586,6 +634,12 @@ export async function render(el, params = {}) {
     line: (w) => lineChart(m.series, m.alert.years, w),
     bars: (w) => barChart(m.series, firedWeeks(m.series, m.alert), m.alert.years, w),
   };
+  const firedSet = m.series && m.alert ? firedWeeks(m.series, m.alert) : new Set();
+  const nCases = (v) => `${fmt(v)} ${v === 1 ? "case" : "cases"}`;
+  const tips = {
+    bars: (d, i) => `<b>Week of ${esc(weekLabel(d.week))}</b><span>${nCases(d.actual)} reported</span>${firedSet.has(i) ? "<span class=\"t-gold\">Warning went off</span>" : ""}`,
+    line: (d) => `<b>Week of ${esc(weekLabel(d.week))}</b><span>Actual: ${nCases(d.actual)}</span><span>Rain model: ${dec(d.rain, 1)}</span><span>Seasonal average: ${dec(d.seasonal, 1)}</span>`,
+  };
   const ros = [];
   el.querySelectorAll(".chart-host").forEach((host) => {
     let last = 0;
@@ -594,6 +648,7 @@ export async function render(el, params = {}) {
       if (!w || w === last) return;
       last = w;
       host.innerHTML = drawers[host.dataset.chart](w);
+      if (tips[host.dataset.chart]) attachTip(host, m.series, tips[host.dataset.chart]);
     });
     ro.observe(host);
     ros.push(ro);

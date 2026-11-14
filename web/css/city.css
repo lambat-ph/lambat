@@ -27,7 +27,12 @@
 .legend .ln.dash{border-top-style:dashed}
 .legend .ln.rain{border-top-color:var(--blue);border-top-width:4px}
 .legend .ln.seas{border-top-color:var(--series-muted);border-top-style:dashed}
-.chart-host{width:100%;min-height:1px}
+.chart-host{position:relative;width:100%;min-height:1px}
+.chart-city:focus-visible{outline:2px solid var(--blue);outline-offset:4px;border-radius:var(--radius-sm)}
+.chart-city .xh{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+.chart-tip{position:absolute;top:0;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:150px;max-width:240px;padding:8px 12px;border-radius:var(--radius-sm);background:var(--ink);color:#fff;font:500 var(--t-sm)/1.35 var(--f-text);font-variant-numeric:tabular-nums;pointer-events:none;box-shadow:var(--shadow)}
+.chart-tip b{font-weight:700}
+.chart-tip .t-gold{color:var(--gold);font-weight:600}
 .chart-city{display:block;max-width:100%;height:auto;overflow:visible}
 .chart-city text{font:500 12px var(--f-text);fill:var(--muted)}
 .chart-city .val{font-size:13px}
