@@ -69,7 +69,7 @@ A stricter check (`scripts/run_alert_eval.py`, [docs/alert.md](docs/alert.md)):
 
 - **71,868** of 208,322 residents live in flood-hazard areas: **143,737 capsules** for each week the water stays.
 - **36** clinics and hospitals on OpenStreetMap. Within a 30-minute walk of one: 62,625 exposed residents on a dry day, 60,140 in the flood. The access gap is **2,485** people, smaller than we expected, and we say so.
-- Most exposed residents who cannot reach care cannot reach it on dry days either. **3 temporary dose points** (Lucao Barangay Hall, Bolosan Elementary School, Bonuan Boquig National High School, in that order) cover 6,030 of them, raising the share of exposed residents within a 30-minute walk from 84% (clinics alone) to 92%; 5 reach 95% and **8** reach 97%. These are modelled walking times, not checked on the ground. The 3, 5 and 8 are example staffing budgets, not numbers the model picked; the full curve for 1 to 10 dose points shows each extra site reaching fewer new people (the 1st reaches 2,764, the 10th only 290):
+- Most exposed residents who cannot reach care cannot reach it on dry days either. **3 temporary dose points** (Bonuan Boquig National High School, Bolosan Elementary School and Lucao Barangay Hall, largest gain first) cover 6,030 of them, raising the share of exposed residents within a 30-minute walk from 84% (clinics alone) to 92%; 5 reach 95% and **8** reach 97%. These are modelled walking times, not checked on the ground. The 3, 5 and 8 are example staffing budgets, not numbers the model picked; the full curve for 1 to 10 dose points shows each extra site reaching fewer new people (the 1st reaches 2,764, the 10th only 290):
 
   ![Dose-point coverage curve for Dagupan: share of exposed residents within a 30-minute walk rises from 84% with clinics only to 92.3% with 3 dose points, 94.8% with 5 and 97.0% with 8, then flattens to 97.9% at 10](docs/img/dose_point_curve.png)
 - Checked against 13 flood events named in the news, the ranking shows no detectable agreement (Spearman -0.10, 95% CI -0.48 to 0.30, 31 barangays). We tested 18 alternatives fixed in advance; none beats it after correcting for multiple comparisons. The reports mostly follow where people live (density correlation 0.64), so they are a weak ruler. We read this as "cannot confirm the ranking yet", not as proof it is wrong ([docs/validation.md](docs/validation.md)).
@@ -145,6 +145,13 @@ The trained U-Net (94 MB) is on the [unet-v1 release](https://github.com/lambat-
 | Validation against news reports | Done, with confidence intervals; no detectable agreement |
 | Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Run: 0.46 km2 of new water inside the city two days after landfall; matches NOAH 100-year map (rho 0.54), not the 25-year map or news reports ([docs/sentinel1.md](docs/sentinel1.md)) |
 | Dashboard (`web/`, MapLibre) | Multi-city map (12 cities, with a national summary), priority table, dose points, alert chart, satellite page; live on [GitHub Pages](https://lambat-ph.github.io/lambat/) |
+
+### For a health office: the map's planning tools (Dagupan)
+
+- **How often each site is chosen.** Each dose point says how many of 200 simulated versions of the same flood put it in the best plan, for example "In the best 3 in 102 of 200 simulated floods".
+- **Can't use a site?** Mark it and the plan is re-solved in the browser without it.
+- **5, 25 or 100-year flood.** Switch the flood map and every number and site updates.
+- **Print plan.** A one-page sheet with each site, the barangays it serves and the residents it brings within reach.
 
 ## What we proposed, and how far we got
 

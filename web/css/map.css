@@ -410,3 +410,58 @@ body.route-map #view{position:relative;padding-bottom:0}
 .hw-seg b:first-child{background:var(--blue);color:#fff;border-radius:999px;width:14px}
 .sec-legend .src{margin-top:var(--s2)}
 @media (max-width:599px){.sec-legend .key{display:none}}
+
+/* ---------- planner: flood size, honest numbers, pick counts, exclude, plan changed ---------- */
+.flood-pick{display:flex;align-items:center;gap:var(--s1);margin:0 0 var(--s2)}
+.flood-pick.pre{min-height:48px}
+.flood-note{margin:calc(var(--s1)*-1) 0 var(--s2)}
+.flood-pick .mseg{flex:1 1 auto;max-width:264px}
+.honest-box:empty{display:none}
+.honest-box .a-do{margin:var(--s2) 0 0;font:600 var(--t-sm)/1.4 var(--f-text);color:var(--blue-dark)}
+.sec-sites .honest-box .a-do{display:none}
+.honest{margin-top:var(--s2);display:grid;gap:2px;font-size:var(--t-sm);line-height:1.4}
+.honest p{margin:0}
+.honest b{font:700 var(--t-sm) var(--f-display);color:var(--blue-dark)}
+.a .honest-note,.honest .honest-note{margin-top:var(--s0);font-size:var(--t-xs);color:var(--muted)}
+.site-x{display:flex;flex-direction:column;align-items:flex-start;gap:var(--s0);padding:0 var(--s1) 0 calc(32px + var(--s2) + var(--s1))}
+.pk{display:block;font-size:var(--t-xs);line-height:1.4;color:var(--muted)}
+.pk .tip-q{text-align:left}
+.pk .tip-q::after{inset:-14px -6px}
+.excl{text-align:left}
+.srow.open .site-x{background:transparent}
+.plan-changed{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s1) var(--s2);margin:0 0 var(--s2);padding:var(--s1) var(--s2);border-radius:var(--radius-sm);background:var(--blue-wash);font-size:var(--t-sm);line-height:1.4}
+.plan-changed p{margin:0;flex:1 1 180px}
+.plan-changed .btn{min-height:44px}
+
+/* ---------- print plan: a plain sheet. On screen it is a full-page preview with Print and Close; on paper only the sheet shows ---------- */
+.printview{position:fixed;inset:0;z-index:80;overflow:auto;background:var(--bg);padding:var(--s2)}
+.pv-bar{display:flex;gap:var(--s1);justify-content:center;margin:0 auto var(--s2);max-width:210mm}
+.pv-bar .btn{min-height:44px}
+.pv-sheet{box-sizing:border-box;width:100%;max-width:210mm;margin:0 auto;padding:12mm;background:var(--card);color:var(--ink);font:400 10pt/1.4 var(--f-text);box-shadow:var(--shadow)}
+.pv-sheet h1{font:700 18pt/1.2 var(--f-display);margin:0 0 4px}
+.pv-sheet p{margin:0 0 8px}
+.pv-meta{color:var(--ink)}
+.pv-cov{font-size:11pt}
+.pv-t{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:9.5pt}
+.pv-t th,.pv-t td{border:1px solid var(--ink);padding:4px 6px;text-align:left;vertical-align:top}
+.pv-t th{font-weight:700}
+.pv-t .c{text-align:center;width:11mm}
+.pv-t .r{text-align:right;width:28mm}
+.pv-t tr{break-inside:avoid}
+.pv-note{margin-top:12px;padding-top:8px;border-top:1px solid var(--ink)}
+@media (max-width:599px){.pv-sheet{padding:var(--s2)}.pv-t{font-size:var(--t-xs)}.pv-t .r{width:auto}}
+@media print{
+  @page{size:A4;margin:12mm}
+  html,body,body.route-map{height:auto!important;overflow:visible!important;background:var(--card)!important}
+  .app{display:none!important}
+  .no-print{display:none!important}
+  .printview{position:static;inset:auto;overflow:visible;background:var(--card);padding:0}
+  .pv-sheet{max-width:none;width:auto;padding:0;box-shadow:none}
+}
+@media (max-width:599px){
+  .mapwrap.pl .col{height:min(82%,720px)}
+  .sec-sites .honest{margin:0 0 var(--s2)}
+  .sec-sites .flood-pick{margin-bottom:var(--s2)}
+}
+@media (max-width:599px){
+}
