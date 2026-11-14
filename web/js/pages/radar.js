@@ -168,6 +168,39 @@ function egayHTML(gj, sum) {
   <p class="caption" style="margin-top:var(--s1)">One radar pass. Water may already have drained, and radar misses floods between buildings (flooded streets look brighter, not darker), so the city shares are probably too low downtown. Full numbers: docs/sentinel1.md.</p></div>`;
 }
 
+// Hover, tap or focus a dot to see that barangay's numbers.
+function scatterTips(fig) {
+  const svg = fig && fig.querySelector(".rd-scatter");
+  if (!svg) return;
+  const tip = document.createElement("div");
+  tip.className = "rd-tip";
+  tip.setAttribute("role", "status");
+  tip.hidden = true;
+  fig.appendChild(tip);
+  let on = null;
+  const show = (c) => {
+    if (on) on.classList.remove("on");
+    on = c;
+    c.classList.add("on");
+    const d = c.dataset;
+    tip.innerHTML = `<b>${d.name}</b><span>NOAH 100-year: ${d.noah}% at risk</span><span>Radar: ${d.radar}% new water</span><span>${d.news === "1" ? "Named in Egay news reports" : "Not in Egay news reports"}</span>`;
+    tip.hidden = false;
+    const fr = fig.getBoundingClientRect(), cr = c.getBoundingClientRect();
+    const x = cr.left + cr.width / 2 - fr.left, y = cr.top - fr.top;
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    tip.style.left = `${Math.max(0, Math.min(fig.clientWidth - tw, x - tw / 2))}px`;
+    tip.style.top = `${Math.max(0, y - th - 10)}px`;
+  };
+  const hide = () => { if (on) on.classList.remove("on"); on = null; tip.hidden = true; };
+  svg.querySelectorAll("circle").forEach((c) => {
+    c.addEventListener("pointerenter", () => show(c));
+    c.addEventListener("pointerdown", () => show(c));
+    c.addEventListener("focus", () => show(c));
+    c.addEventListener("blur", hide);
+  });
+  svg.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") hide(); });
+}
+
 function scatterSVG(feats) {
   const pts = feats.map((f) => f.properties).filter((p) => Number.isFinite(+p.s1_threshold_share) && Number.isFinite(+p.noah_100yr_share));
   const W = 560, H = 300, L = 52, R = 24, T = 12, B = 48;
@@ -176,7 +209,7 @@ function scatterSVG(feats) {
   let s = "";
   for (const v of [0, 0.5, 1]) s += `<line x1="${X(v)}" x2="${X(v)}" y1="${T}" y2="${H - B}" class="g"/><text x="${X(v)}" y="${H - B + 18}" text-anchor="middle">${v * 100}%</text>`;
   for (const v of [0, 0.05, 0.1]) s += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" class="g"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
-  s += pts.map((p) => `<circle cx="${X(+p.noah_100yr_share).toFixed(1)}" cy="${Y(+p.s1_threshold_share).toFixed(1)}" r="5"><title>${esc(p.adm4_en)}: NOAH ${(p.noah_100yr_share * 100).toFixed(0)}%, radar ${(p.s1_threshold_share * 100).toFixed(1)}%</title></circle>`).join("");
+  s += pts.map((p) => `<circle cx="${X(+p.noah_100yr_share).toFixed(1)}" cy="${Y(+p.s1_threshold_share).toFixed(1)}" r="5" tabindex="0" data-name="${esc(p.adm4_en)}" data-noah="${(p.noah_100yr_share * 100).toFixed(0)}" data-radar="${(p.s1_threshold_share * 100).toFixed(1)}" data-news="${p.egay_reported === true || p.egay_reported === "True" ? 1 : 0}" aria-label="${esc(p.adm4_en)}: NOAH 100-year ${(p.noah_100yr_share * 100).toFixed(0)}%, radar new water ${(p.s1_threshold_share * 100).toFixed(1)}%"></circle>`).join("");
   s += `<text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle" class="ax">NOAH 100-year map: share of barangay at risk</text>`;
   s += `<text transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle" class="ax">Radar: new water seen</text>`;
   return `<svg class="rd-scatter" viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter plot of ${pts.length} barangays. Barangays NOAH rates more at risk in a 100-year flood tend to show more new water on radar, but most show very little.">${s}</svg>`;
@@ -205,7 +238,7 @@ function egayStory(gj, sum) {
       <p>They name ${auc.n_reported} of ${auc.n} barangays as flooded, almost the whole city, so a good map and a bad map score about the same.</p>
     </div>
   </div>
-  <figure class="rd-scatter-fig">${scatterSVG(gj.features || [])}<figcaption>Each dot is a barangay; hover for its name. Most show very little new water. The few that show more tend to be the ones NOAH rates more at risk.</figcaption></figure>
+  <figure class="rd-scatter-fig">${scatterSVG(gj.features || [])}<figcaption>Each dot is a barangay; hover or tap one for its numbers. Most show very little new water. The few that show more tend to be the ones NOAH rates more at risk.</figcaption></figure>
   <div class="rd-verdict">
     <h3>So is the model good?</h3>
     <p><b>On labelled test floods, yes:</b> it found three times as much water as a simple rule. <b>On Dagupan, we cannot grade it yet.</b> Nobody has drawn where Egay's water actually went, so this run is a consistency check, not a test score. It points the same way as NOAH's flood maps.</p>
@@ -312,7 +345,10 @@ export async function render(root) {
       const gj = await r.json(), sum = s.ok ? await s.json() : null;
       card = egayHTML(gj, sum);
       const story = root.querySelector("#rd-egay-story");
-      if (story) story.innerHTML = egayStory(gj, sum);
+      if (story) {
+        story.innerHTML = egayStory(gj, sum);
+        scatterTips(story.querySelector(".rd-scatter-fig"));
+      }
     }
   } catch (e) { /* keep placeholder */ }
   if (slot.isConnected) { slot.innerHTML = card; slot.removeAttribute("aria-busy"); }
