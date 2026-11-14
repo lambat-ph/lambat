@@ -57,6 +57,12 @@ Is that enough to warn a hospital? Modestly. Trained on 2008 to 2016 and tested 
 
 All three get the same number of alerts (16 over 157 test weeks, 39 of them outbreak weeks), so no method could catch more than 16 of 39 (41%); the rain model's 16 alerts included 14 outbreak weeks. The 95% intervals overlap, and pooled across all 12 cities the rain model does not beat last week's count on correlation or average error. That is an alert, not a forecast, and we call it one.
 
+A stricter check (`scripts/run_alert_eval.py`, [docs/alert.md](docs/alert.md)):
+- **Every year from 2012 to 2019**, each trained only on earlier years: the rain model caught 25 of 67 outbreak weeks (37%, of a possible 48% at its alert budget); 25 of its 32 alerts (78%) were outbreak weeks, against 47% for last week's count. It beat last week's count on correlation in all 8 years.
+- **A fairer baseline** that knows the latest case count and the season does no better than the seasonal average in Dagupan; adding rain to it gives the same result as the rain model, so the signal is the rain.
+- **Across cities** the rain model beats last week's count on correlation in 7 of 9 cities, but pooled over all cities it does not (0.53 vs 0.54).
+- **2020 to 2022** (COVID years, reporting changed): Dagupan had no outbreak weeks and all methods tracked cases poorly. The alert has not been tested on a live season.
+
 ## What one run produces
 
 `scripts/run_pipeline.py` runs steps 2 to 4 for Dagupan in about 5 seconds. For a 25-year flood:
