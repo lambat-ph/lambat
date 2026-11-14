@@ -1,0 +1,2507 @@
+{
+  "horizon_weeks": 2,
+  "methods": [
+    "seasonal",
+    "last_week",
+    "rain_model",
+    "season_ar",
+    "season_ar_rain"
+  ],
+  "outbreak_definition": "count above the 90th percentile of training weeks (Dagupan: 2 or more cases)",
+  "rolling_origin_dagupan": {
+    "per_year": {
+      "2012": [
+        {
+          "method": "seasonal",
+          "correlation": 0.21953235829669968,
+          "mae": 0.8254716981132075,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.06521739130434782,
+          "alerts": 3,
+          "outbreak_weeks": 7,
+          "precision": 0.0,
+          "sensitivity_ceiling": 0.42857142857142855,
+          "hits": 0,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 46
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.5564853556485352,
+          "mae": 0.6792452830188679,
+          "sensitivity": 0.42857142857142855,
+          "false_alert_rate": 0.0,
+          "alerts": 3,
+          "outbreak_weeks": 7,
+          "precision": 1.0,
+          "sensitivity_ceiling": 0.42857142857142855,
+          "hits": 3,
+          "false_alerts": 0,
+          "non_outbreak_weeks": 46
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.8716559383837785,
+          "mae": 0.46157897070345655,
+          "sensitivity": 0.42857142857142855,
+          "false_alert_rate": 0.0,
+          "alerts": 3,
+          "outbreak_weeks": 7,
+          "precision": 1.0,
+          "sensitivity_ceiling": 0.42857142857142855,
+          "hits": 3,
+          "false_alerts": 0,
+          "non_outbreak_weeks": 46
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.18780847864850006,
+          "mae": 0.8209982144108959,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.06521739130434782,
+          "alerts": 3,
+          "outbreak_weeks": 7,
+          "precision": 0.0,
+          "sensitivity_ceiling": 0.42857142857142855,
+          "hits": 0,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 46
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.830105234535585,
+          "mae": 0.43421930828885996,
+          "sensitivity": 0.42857142857142855,
+          "false_alert_rate": 0.0,
+          "alerts": 3,
+          "outbreak_weeks": 7,
+          "precision": 1.0,
+          "sensitivity_ceiling": 0.42857142857142855,
+          "hits": 3,
+          "false_alerts": 0,
+          "non_outbreak_weeks": 46
+        }
+      ],
+      "2013": [
+        {
+          "method": "seasonal",
+          "correlation": 0.35685593145454314,
+          "mae": 0.5499999999999999,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.0625,
+          "alerts": 3,
+          "outbreak_weeks": 4,
+          "precision": 0.0,
+          "sensitivity_ceiling": 0.75,
+          "hits": 0,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 48
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.050247933884297546,
+          "mae": 0.8461538461538461,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.041666666666666664,
+          "alerts": 3,
+          "outbreak_weeks": 4,
+          "precision": 0.3333333333333333,
+          "sensitivity_ceiling": 0.75,
+          "hits": 1,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 48
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.7823328658903914,
+          "mae": 0.5343106512608339,
+          "sensitivity": 0.5,
+          "false_alert_rate": 0.020833333333333332,
+          "alerts": 3,
+          "outbreak_weeks": 4,
+          "precision": 0.6666666666666666,
+          "sensitivity_ceiling": 0.75,
+          "hits": 2,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 48
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.2338972066365971,
+          "mae": 0.6527063037376047,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.041666666666666664,
+          "alerts": 3,
+          "outbreak_weeks": 4,
+          "precision": 0.3333333333333333,
+          "sensitivity_ceiling": 0.75,
+          "hits": 1,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 48
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.7067250690420437,
+          "mae": 0.57285017362897,
+          "sensitivity": 0.5,
+          "false_alert_rate": 0.020833333333333332,
+          "alerts": 3,
+          "outbreak_weeks": 4,
+          "precision": 0.6666666666666666,
+          "sensitivity_ceiling": 0.75,
+          "hits": 2,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 48
+        }
+      ],
+      "2014": [
+        {
+          "method": "seasonal",
+          "correlation": 0.589122281768415,
+          "mae": 0.4993589743589744,
+          "sensitivity": 0.2857142857142857,
+          "false_alert_rate": 0.044444444444444446,
+          "alerts": 4,
+          "outbreak_weeks": 7,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.5714285714285714,
+          "hits": 2,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 45
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.2710888610763456,
+          "mae": 0.6538461538461539,
+          "sensitivity": 0.2857142857142857,
+          "false_alert_rate": 0.044444444444444446,
+          "alerts": 4,
+          "outbreak_weeks": 7,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.5714285714285714,
+          "hits": 2,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 45
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.8968692141823553,
+          "mae": 0.35820432462918583,
+          "sensitivity": 0.5714285714285714,
+          "false_alert_rate": 0.0,
+          "alerts": 4,
+          "outbreak_weeks": 7,
+          "precision": 1.0,
+          "sensitivity_ceiling": 0.5714285714285714,
+          "hits": 4,
+          "false_alerts": 0,
+          "non_outbreak_weeks": 45
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.5680654038065486,
+          "mae": 0.5055520874341675,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.08888888888888889,
+          "alerts": 4,
+          "outbreak_weeks": 7,
+          "precision": 0.0,
+          "sensitivity_ceiling": 0.5714285714285714,
+          "hits": 0,
+          "false_alerts": 4,
+          "non_outbreak_weeks": 45
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.896952507065589,
+          "mae": 0.35800062072113487,
+          "sensitivity": 0.5714285714285714,
+          "false_alert_rate": 0.0,
+          "alerts": 4,
+          "outbreak_weeks": 7,
+          "precision": 1.0,
+          "sensitivity_ceiling": 0.5714285714285714,
+          "hits": 4,
+          "false_alerts": 0,
+          "non_outbreak_weeks": 45
+        }
+      ],
+      "2015": [
+        {
+          "method": "seasonal",
+          "correlation": 0.2487122896122374,
+          "mae": 0.793956043956044,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.09302325581395349,
+          "alerts": 4,
+          "outbreak_weeks": 9,
+          "precision": 0.0,
+          "sensitivity_ceiling": 0.4444444444444444,
+          "hits": 0,
+          "false_alerts": 4,
+          "non_outbreak_weeks": 43
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.0059530867745597104,
+          "mae": 1.0961538461538463,
+          "sensitivity": 0.1111111111111111,
+          "false_alert_rate": 0.06976744186046512,
+          "alerts": 4,
+          "outbreak_weeks": 9,
+          "precision": 0.25,
+          "sensitivity_ceiling": 0.4444444444444444,
+          "hits": 1,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 43
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.2668208042776469,
+          "mae": 0.7330155890490622,
+          "sensitivity": 0.2222222222222222,
+          "false_alert_rate": 0.046511627906976744,
+          "alerts": 4,
+          "outbreak_weeks": 9,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.4444444444444444,
+          "hits": 2,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 43
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.1683948808519546,
+          "mae": 0.8091640403625298,
+          "sensitivity": 0.1111111111111111,
+          "false_alert_rate": 0.06976744186046512,
+          "alerts": 4,
+          "outbreak_weeks": 9,
+          "precision": 0.25,
+          "sensitivity_ceiling": 0.4444444444444444,
+          "hits": 1,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 43
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.2666625529113033,
+          "mae": 0.7346599675785624,
+          "sensitivity": 0.2222222222222222,
+          "false_alert_rate": 0.046511627906976744,
+          "alerts": 4,
+          "outbreak_weeks": 9,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.4444444444444444,
+          "hits": 2,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 43
+        }
+      ],
+      "2016": [
+        {
+          "method": "seasonal",
+          "correlation": 0.7029758949135274,
+          "mae": 0.7962225274725271,
+          "sensitivity": 0.4444444444444444,
+          "false_alert_rate": 0.023255813953488372,
+          "alerts": 5,
+          "outbreak_weeks": 9,
+          "precision": 0.8,
+          "sensitivity_ceiling": 0.5555555555555556,
+          "hits": 4,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 43
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.4753255555242604,
+          "mae": 1.0192307692307692,
+          "sensitivity": 0.2222222222222222,
+          "false_alert_rate": 0.06976744186046512,
+          "alerts": 5,
+          "outbreak_weeks": 9,
+          "precision": 0.4,
+          "sensitivity_ceiling": 0.5555555555555556,
+          "hits": 2,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 43
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.8181627064780205,
+          "mae": 0.638774128520259,
+          "sensitivity": 0.5555555555555556,
+          "false_alert_rate": 0.0,
+          "alerts": 5,
+          "outbreak_weeks": 9,
+          "precision": 1.0,
+          "sensitivity_ceiling": 0.5555555555555556,
+          "hits": 5,
+          "false_alerts": 0,
+          "non_outbreak_weeks": 43
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.6502593346260633,
+          "mae": 0.8406128187682204,
+          "sensitivity": 0.3333333333333333,
+          "false_alert_rate": 0.046511627906976744,
+          "alerts": 5,
+          "outbreak_weeks": 9,
+          "precision": 0.6,
+          "sensitivity_ceiling": 0.5555555555555556,
+          "hits": 3,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 43
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.8188610240743055,
+          "mae": 0.6411143164285916,
+          "sensitivity": 0.5555555555555556,
+          "false_alert_rate": 0.0,
+          "alerts": 5,
+          "outbreak_weeks": 9,
+          "precision": 1.0,
+          "sensitivity_ceiling": 0.5555555555555556,
+          "hits": 5,
+          "false_alerts": 0,
+          "non_outbreak_weeks": 43
+        }
+      ],
+      "2017": [
+        {
+          "method": "seasonal",
+          "correlation": 0.41974191180336373,
+          "mae": 0.7846153846153846,
+          "sensitivity": 0.15384615384615385,
+          "false_alert_rate": 0.07692307692307693,
+          "alerts": 5,
+          "outbreak_weeks": 13,
+          "precision": 0.4,
+          "sensitivity_ceiling": 0.38461538461538464,
+          "hits": 2,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 39
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.07836856715780484,
+          "mae": 1.2307692307692308,
+          "sensitivity": 0.07692307692307693,
+          "false_alert_rate": 0.10256410256410256,
+          "alerts": 5,
+          "outbreak_weeks": 13,
+          "precision": 0.2,
+          "sensitivity_ceiling": 0.38461538461538464,
+          "hits": 1,
+          "false_alerts": 4,
+          "non_outbreak_weeks": 39
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.5222492186786813,
+          "mae": 0.7342606622047237,
+          "sensitivity": 0.3076923076923077,
+          "false_alert_rate": 0.02564102564102564,
+          "alerts": 5,
+          "outbreak_weeks": 13,
+          "precision": 0.8,
+          "sensitivity_ceiling": 0.38461538461538464,
+          "hits": 4,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 39
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.3608802126900456,
+          "mae": 0.8221530369358561,
+          "sensitivity": 0.15384615384615385,
+          "false_alert_rate": 0.07692307692307693,
+          "alerts": 5,
+          "outbreak_weeks": 13,
+          "precision": 0.4,
+          "sensitivity_ceiling": 0.38461538461538464,
+          "hits": 2,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 39
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.5303262446592107,
+          "mae": 0.7457081941928997,
+          "sensitivity": 0.3076923076923077,
+          "false_alert_rate": 0.02564102564102564,
+          "alerts": 5,
+          "outbreak_weeks": 13,
+          "precision": 0.8,
+          "sensitivity_ceiling": 0.38461538461538464,
+          "hits": 4,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 39
+        }
+      ],
+      "2018": [
+        {
+          "method": "seasonal",
+          "correlation": 0.6972281139303607,
+          "mae": 2.2083857442348007,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.024390243902439025,
+          "alerts": 4,
+          "outbreak_weeks": 12,
+          "precision": 0.75,
+          "sensitivity_ceiling": 0.3333333333333333,
+          "hits": 3,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 41
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.46980086417433764,
+          "mae": 2.5283018867924527,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.024390243902439025,
+          "alerts": 4,
+          "outbreak_weeks": 12,
+          "precision": 0.75,
+          "sensitivity_ceiling": 0.3333333333333333,
+          "hits": 3,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 41
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.759478827834413,
+          "mae": 2.022954289418508,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.024390243902439025,
+          "alerts": 4,
+          "outbreak_weeks": 12,
+          "precision": 0.75,
+          "sensitivity_ceiling": 0.3333333333333333,
+          "hits": 3,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 41
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.6345229065283498,
+          "mae": 2.074475965368614,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.024390243902439025,
+          "alerts": 4,
+          "outbreak_weeks": 12,
+          "precision": 0.75,
+          "sensitivity_ceiling": 0.3333333333333333,
+          "hits": 3,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 41
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.7379078629625095,
+          "mae": 1.9311396320516976,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.024390243902439025,
+          "alerts": 4,
+          "outbreak_weeks": 12,
+          "precision": 0.75,
+          "sensitivity_ceiling": 0.3333333333333333,
+          "hits": 3,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 41
+        }
+      ],
+      "2019": [
+        {
+          "method": "seasonal",
+          "correlation": 0.6486922669649312,
+          "mae": 0.6691958041958043,
+          "sensitivity": 0.3333333333333333,
+          "false_alert_rate": 0.043478260869565216,
+          "alerts": 4,
+          "outbreak_weeks": 6,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.6666666666666666,
+          "hits": 2,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 46
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.44640234948604995,
+          "mae": 0.8076923076923077,
+          "sensitivity": 0.3333333333333333,
+          "false_alert_rate": 0.043478260869565216,
+          "alerts": 4,
+          "outbreak_weeks": 6,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.6666666666666666,
+          "hits": 2,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 46
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.6173579772121756,
+          "mae": 0.642733887591375,
+          "sensitivity": 0.3333333333333333,
+          "false_alert_rate": 0.043478260869565216,
+          "alerts": 4,
+          "outbreak_weeks": 6,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.6666666666666666,
+          "hits": 2,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 46
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.6427375950715507,
+          "mae": 0.6853986200327669,
+          "sensitivity": 0.16666666666666666,
+          "false_alert_rate": 0.06521739130434782,
+          "alerts": 4,
+          "outbreak_weeks": 6,
+          "precision": 0.25,
+          "sensitivity_ceiling": 0.6666666666666666,
+          "hits": 1,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 46
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.5729117131343252,
+          "mae": 0.6828671371533679,
+          "sensitivity": 0.3333333333333333,
+          "false_alert_rate": 0.043478260869565216,
+          "alerts": 4,
+          "outbreak_weeks": 6,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.6666666666666666,
+          "hits": 2,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 46
+        }
+      ]
+    },
+    "pooled": [
+      {
+        "method": "seasonal",
+        "correlation": 0.4445676011186353,
+        "mae": 0.8938961211568867,
+        "sensitivity": 0.19402985074626866,
+        "precision": 0.40625,
+        "sensitivity_ceiling": 0.47761194029850745,
+        "false_alert_rate": 0.05413105413105413,
+        "hits": 13,
+        "alerts": 32,
+        "outbreak_weeks": 67
+      },
+      {
+        "method": "last_week",
+        "correlation": 0.43173133450911266,
+        "mae": 1.1100478468899522,
+        "sensitivity": 0.22388059701492538,
+        "precision": 0.46875,
+        "sensitivity_ceiling": 0.47761194029850745,
+        "false_alert_rate": 0.04843304843304843,
+        "hits": 15,
+        "alerts": 32,
+        "outbreak_weeks": 67
+      },
+      {
+        "method": "rain_model",
+        "correlation": 0.6372913534457184,
+        "mae": 0.7680091469754713,
+        "sensitivity": 0.373134328358209,
+        "precision": 0.78125,
+        "sensitivity_ceiling": 0.47761194029850745,
+        "false_alert_rate": 0.019943019943019943,
+        "hits": 25,
+        "alerts": 32,
+        "outbreak_weeks": 67
+      },
+      {
+        "method": "season_ar",
+        "correlation": 0.44464706561178297,
+        "mae": 0.9039967720249129,
+        "sensitivity": 0.16417910447761194,
+        "precision": 0.34375,
+        "sensitivity_ceiling": 0.47761194029850745,
+        "false_alert_rate": 0.05982905982905983,
+        "hits": 11,
+        "alerts": 32,
+        "outbreak_weeks": 67
+      },
+      {
+        "method": "season_ar_rain",
+        "correlation": 0.6503903659315211,
+        "mae": 0.7645800123029495,
+        "sensitivity": 0.373134328358209,
+        "precision": 0.78125,
+        "sensitivity_ceiling": 0.47761194029850745,
+        "false_alert_rate": 0.019943019943019943,
+        "hits": 25,
+        "alerts": 32,
+        "outbreak_weeks": 67
+      }
+    ],
+    "year_wins": {
+      "rain_model_vs_last_week": {
+        "years_better_correlation": 8,
+        "years_better_sensitivity": 5,
+        "years": 8
+      },
+      "rain_model_vs_season_ar": {
+        "years_better_correlation": 7,
+        "years_better_sensitivity": 7,
+        "years": 8
+      },
+      "season_ar_rain_vs_last_week": {
+        "years_better_correlation": 8,
+        "years_better_sensitivity": 5,
+        "years": 8
+      },
+      "season_ar_rain_vs_season_ar": {
+        "years_better_correlation": 7,
+        "years_better_sensitivity": 7,
+        "years": 8
+      }
+    }
+  },
+  "out_of_time_2020_2022": {
+    "note": "COVID-era: reporting and health-seeking changed, read with care. Trained 2008-2019.",
+    "cities": {
+      "PH015518000": {
+        "status": "evaluated",
+        "name": "Dagupan City",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 2.0,
+        "alert_rate": 0.08856682769726248,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": 0.15853480324599034,
+            "mae": 0.7499514374514373,
+            "sensitivity": null,
+            "false_alert_rate": 0.08974358974358974,
+            "alerts": 14,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 156
+          },
+          {
+            "method": "last_week",
+            "correlation": 0.1333333333333336,
+            "mae": 0.19230769230769232,
+            "sensitivity": null,
+            "false_alert_rate": 0.08974358974358974,
+            "alerts": 14,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 156
+          },
+          {
+            "method": "rain_model",
+            "correlation": 0.1087771407801607,
+            "mae": 0.6165321148805253,
+            "sensitivity": null,
+            "false_alert_rate": 0.08974358974358974,
+            "alerts": 14,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 156
+          },
+          {
+            "method": "season_ar",
+            "correlation": 0.1585970840300695,
+            "mae": 0.5626023843359694,
+            "sensitivity": null,
+            "false_alert_rate": 0.08974358974358974,
+            "alerts": 14,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 156
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": 0.13933242350306677,
+            "mae": 0.5036455445285896,
+            "sensitivity": null,
+            "false_alert_rate": 0.08974358974358974,
+            "alerts": 14,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 156
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": 0.38937021175311887,
+          "rain_l3": 0.5574324480823052,
+          "rain_l4": 0.28662688318854973,
+          "rain_l5": 0.1247644229368492
+        }
+      },
+      "PH034919000": {
+        "status": "too_few_cases",
+        "total_cases": 62
+      },
+      "PH050506000": {
+        "status": "too_few_cases",
+        "total_cases": 60
+      },
+      "PH063022000": {
+        "status": "evaluated",
+        "name": "Iloilo City",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 13.0,
+        "alert_rate": 0.08856682769726248,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": 0.2944590478531059,
+            "mae": 4.464461926961927,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.09032258064516129,
+            "alerts": 14,
+            "outbreak_weeks": 1,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 155
+          },
+          {
+            "method": "last_week",
+            "correlation": 0.6073291790442613,
+            "mae": 1.75,
+            "sensitivity": 1.0,
+            "false_alert_rate": 0.08387096774193549,
+            "alerts": 14,
+            "outbreak_weeks": 1,
+            "precision": 0.07142857142857142,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 13,
+            "non_outbreak_weeks": 155
+          },
+          {
+            "method": "rain_model",
+            "correlation": 0.45571323246202616,
+            "mae": 4.609027790138031,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.09032258064516129,
+            "alerts": 14,
+            "outbreak_weeks": 1,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 155
+          },
+          {
+            "method": "season_ar",
+            "correlation": 0.5931372592792435,
+            "mae": 1.8982222911326052,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.09032258064516129,
+            "alerts": 14,
+            "outbreak_weeks": 1,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 155
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": 0.6703703397740071,
+            "mae": 1.9935687171095129,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.09032258064516129,
+            "alerts": 14,
+            "outbreak_weeks": 1,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 14,
+            "non_outbreak_weeks": 155
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": 0.11466397293336383,
+          "rain_l3": 0.2040302021759223,
+          "rain_l4": 0.23087683710905282,
+          "rain_l5": 0.19416783495213116
+        }
+      },
+      "PH072230000": {
+        "status": "too_few_cases",
+        "total_cases": 39
+      },
+      "PH083747000": {
+        "status": "evaluated",
+        "name": "Tacloban City",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 1.0,
+        "alert_rate": 0.037037037037037035,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": 0.05576851111220255,
+            "mae": 0.22227078477078477,
+            "sensitivity": null,
+            "false_alert_rate": 0.038461538461538464,
+            "alerts": 6,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 156
+          },
+          {
+            "method": "last_week",
+            "correlation": 0.16083916083916058,
+            "mae": 0.1282051282051282,
+            "sensitivity": null,
+            "false_alert_rate": 0.038461538461538464,
+            "alerts": 6,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 156
+          },
+          {
+            "method": "rain_model",
+            "correlation": 0.11340807265692031,
+            "mae": 0.22628674725412878,
+            "sensitivity": null,
+            "false_alert_rate": 0.038461538461538464,
+            "alerts": 6,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 156
+          },
+          {
+            "method": "season_ar",
+            "correlation": 0.009306188524328443,
+            "mae": 0.22654754676610198,
+            "sensitivity": null,
+            "false_alert_rate": 0.038461538461538464,
+            "alerts": 6,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 156
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": 0.1014868575311117,
+            "mae": 0.23003405199108612,
+            "sensitivity": null,
+            "false_alert_rate": 0.038461538461538464,
+            "alerts": 6,
+            "outbreak_weeks": 0,
+            "precision": 0.0,
+            "sensitivity_ceiling": null,
+            "hits": 0,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 156
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": 0.285005578554463,
+          "rain_l3": 0.28062566731380406,
+          "rain_l4": 0.17983410782180148,
+          "rain_l5": -0.08522773191409866
+        }
+      },
+      "PH097332000": {
+        "status": "evaluated",
+        "name": "Zamboanga City",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 2.0,
+        "alert_rate": 0.04186795491143317,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": 0.08260706631693945,
+            "mae": 1.46977466977467,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.04666666666666667,
+            "alerts": 7,
+            "outbreak_weeks": 6,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 7,
+            "non_outbreak_weeks": 150
+          },
+          {
+            "method": "last_week",
+            "correlation": 0.0294987454874861,
+            "mae": 2.076923076923077,
+            "sensitivity": 0.16666666666666666,
+            "false_alert_rate": 0.04,
+            "alerts": 7,
+            "outbreak_weeks": 6,
+            "precision": 0.14285714285714285,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 150
+          },
+          {
+            "method": "rain_model",
+            "correlation": 0.13850343133866547,
+            "mae": 1.4618976062732585,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.04666666666666667,
+            "alerts": 7,
+            "outbreak_weeks": 6,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 7,
+            "non_outbreak_weeks": 150
+          },
+          {
+            "method": "season_ar",
+            "correlation": 0.08471865815439007,
+            "mae": 1.4887215402304297,
+            "sensitivity": 0.16666666666666666,
+            "false_alert_rate": 0.04,
+            "alerts": 7,
+            "outbreak_weeks": 6,
+            "precision": 0.14285714285714285,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 150
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": 0.15787427340218108,
+            "mae": 1.4605059875846267,
+            "sensitivity": 0.3333333333333333,
+            "false_alert_rate": 0.03333333333333333,
+            "alerts": 7,
+            "outbreak_weeks": 6,
+            "precision": 0.2857142857142857,
+            "sensitivity_ceiling": 1.0,
+            "hits": 2,
+            "false_alerts": 5,
+            "non_outbreak_weeks": 150
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": -0.007281239646393565,
+          "rain_l3": 0.2887901287053488,
+          "rain_l4": 0.01603890580869323,
+          "rain_l5": 0.09363208182220498
+        }
+      },
+      "PH104305000": {
+        "status": "evaluated",
+        "name": "Cagayan de Oro City",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 1.0,
+        "alert_rate": 0.057971014492753624,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": -0.03423572471262732,
+            "mae": 1.4833333333333332,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.060810810810810814,
+            "alerts": 9,
+            "outbreak_weeks": 8,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 9,
+            "non_outbreak_weeks": 148
+          },
+          {
+            "method": "last_week",
+            "correlation": -0.0688796202811797,
+            "mae": 0.5064102564102564,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.060810810810810814,
+            "alerts": 9,
+            "outbreak_weeks": 8,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 9,
+            "non_outbreak_weeks": 148
+          },
+          {
+            "method": "rain_model",
+            "correlation": -0.008354703109577762,
+            "mae": 2.7340651819428863,
+            "sensitivity": 0.125,
+            "false_alert_rate": 0.05405405405405406,
+            "alerts": 9,
+            "outbreak_weeks": 8,
+            "precision": 0.1111111111111111,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 148
+          },
+          {
+            "method": "season_ar",
+            "correlation": -0.048618320379568467,
+            "mae": 1.3982775410878525,
+            "sensitivity": 0.125,
+            "false_alert_rate": 0.05405405405405406,
+            "alerts": 9,
+            "outbreak_weeks": 8,
+            "precision": 0.1111111111111111,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 148
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": -0.02861330961486656,
+            "mae": 1.8500920274857555,
+            "sensitivity": 0.125,
+            "false_alert_rate": 0.05405405405405406,
+            "alerts": 9,
+            "outbreak_weeks": 8,
+            "precision": 0.1111111111111111,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 148
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": 0.15589834478639736,
+          "rain_l3": 1.20371975059906,
+          "rain_l4": 0.8783888067098772,
+          "rain_l5": 0.21781369075517715
+        }
+      },
+      "PH112402000": {
+        "status": "evaluated",
+        "name": "Davao City",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 3.0,
+        "alert_rate": 0.05475040257648953,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": 0.12342389343338817,
+            "mae": 1.1546231546231547,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.0625,
+            "alerts": 9,
+            "outbreak_weeks": 12,
+            "precision": 0.0,
+            "sensitivity_ceiling": 0.75,
+            "hits": 0,
+            "false_alerts": 9,
+            "non_outbreak_weeks": 144
+          },
+          {
+            "method": "last_week",
+            "correlation": 0.12364574376612228,
+            "mae": 1.4615384615384615,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.0625,
+            "alerts": 9,
+            "outbreak_weeks": 12,
+            "precision": 0.0,
+            "sensitivity_ceiling": 0.75,
+            "hits": 0,
+            "false_alerts": 9,
+            "non_outbreak_weeks": 144
+          },
+          {
+            "method": "rain_model",
+            "correlation": 0.24888349207650046,
+            "mae": 1.1002781368689865,
+            "sensitivity": 0.16666666666666666,
+            "false_alert_rate": 0.04861111111111111,
+            "alerts": 9,
+            "outbreak_weeks": 12,
+            "precision": 0.2222222222222222,
+            "sensitivity_ceiling": 0.75,
+            "hits": 2,
+            "false_alerts": 7,
+            "non_outbreak_weeks": 144
+          },
+          {
+            "method": "season_ar",
+            "correlation": 0.1756638253364632,
+            "mae": 1.1431057387613333,
+            "sensitivity": 0.08333333333333333,
+            "false_alert_rate": 0.05555555555555555,
+            "alerts": 9,
+            "outbreak_weeks": 12,
+            "precision": 0.1111111111111111,
+            "sensitivity_ceiling": 0.75,
+            "hits": 1,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 144
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": 0.24164716779998088,
+            "mae": 1.128926703866136,
+            "sensitivity": 0.08333333333333333,
+            "false_alert_rate": 0.05555555555555555,
+            "alerts": 9,
+            "outbreak_weeks": 12,
+            "precision": 0.1111111111111111,
+            "sensitivity_ceiling": 0.75,
+            "hits": 1,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 144
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": 0.14263911001896168,
+          "rain_l3": 0.29017360423687366,
+          "rain_l4": 0.2975088616574333,
+          "rain_l5": 0.2576475781881343
+        }
+      },
+      "PH137401000": {
+        "status": "evaluated",
+        "name": "City of Mandaluyong",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 1.0,
+        "alert_rate": 0.03542673107890499,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": 0.14449333771215508,
+            "mae": 0.3913655788655788,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.0410958904109589,
+            "alerts": 6,
+            "outbreak_weeks": 10,
+            "precision": 0.0,
+            "sensitivity_ceiling": 0.6,
+            "hits": 0,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 146
+          },
+          {
+            "method": "last_week",
+            "correlation": 0.261109197382018,
+            "mae": 0.38461538461538464,
+            "sensitivity": 0.3,
+            "false_alert_rate": 0.02054794520547945,
+            "alerts": 6,
+            "outbreak_weeks": 10,
+            "precision": 0.5,
+            "sensitivity_ceiling": 0.6,
+            "hits": 3,
+            "false_alerts": 3,
+            "non_outbreak_weeks": 146
+          },
+          {
+            "method": "rain_model",
+            "correlation": 0.3181261613456954,
+            "mae": 0.3527098911697578,
+            "sensitivity": 0.1,
+            "false_alert_rate": 0.03424657534246575,
+            "alerts": 6,
+            "outbreak_weeks": 10,
+            "precision": 0.16666666666666666,
+            "sensitivity_ceiling": 0.6,
+            "hits": 1,
+            "false_alerts": 5,
+            "non_outbreak_weeks": 146
+          },
+          {
+            "method": "season_ar",
+            "correlation": 0.1885949751245038,
+            "mae": 0.38798572723698826,
+            "sensitivity": 0.1,
+            "false_alert_rate": 0.03424657534246575,
+            "alerts": 6,
+            "outbreak_weeks": 10,
+            "precision": 0.16666666666666666,
+            "sensitivity_ceiling": 0.6,
+            "hits": 1,
+            "false_alerts": 5,
+            "non_outbreak_weeks": 146
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": 0.2843349678347099,
+            "mae": 0.35347666318835963,
+            "sensitivity": 0.1,
+            "false_alert_rate": 0.03424657534246575,
+            "alerts": 6,
+            "outbreak_weeks": 10,
+            "precision": 0.16666666666666666,
+            "sensitivity_ceiling": 0.6,
+            "hits": 1,
+            "false_alerts": 5,
+            "non_outbreak_weeks": 146
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": 0.35667547512441,
+          "rain_l3": 0.5642451324832174,
+          "rain_l4": 0.21542794687208366,
+          "rain_l5": 0.198312792062618
+        }
+      },
+      "PH137503000": {
+        "status": "evaluated",
+        "name": "City of Navotas",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 2.0,
+        "alert_rate": 0.057971014492753624,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": 0.3025490278018203,
+            "mae": 0.645503108003108,
+            "sensitivity": 0.25,
+            "false_alert_rate": 0.05263157894736842,
+            "alerts": 9,
+            "outbreak_weeks": 4,
+            "precision": 0.1111111111111111,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 152
+          },
+          {
+            "method": "last_week",
+            "correlation": 0.1687019335920614,
+            "mae": 0.5064102564102564,
+            "sensitivity": 0.25,
+            "false_alert_rate": 0.05263157894736842,
+            "alerts": 9,
+            "outbreak_weeks": 4,
+            "precision": 0.1111111111111111,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 152
+          },
+          {
+            "method": "rain_model",
+            "correlation": 0.6039984210692002,
+            "mae": 0.48531406288183265,
+            "sensitivity": 0.75,
+            "false_alert_rate": 0.039473684210526314,
+            "alerts": 9,
+            "outbreak_weeks": 4,
+            "precision": 0.3333333333333333,
+            "sensitivity_ceiling": 1.0,
+            "hits": 3,
+            "false_alerts": 6,
+            "non_outbreak_weeks": 152
+          },
+          {
+            "method": "season_ar",
+            "correlation": 0.32494771085782254,
+            "mae": 0.5650988777779405,
+            "sensitivity": 0.5,
+            "false_alert_rate": 0.046052631578947366,
+            "alerts": 9,
+            "outbreak_weeks": 4,
+            "precision": 0.2222222222222222,
+            "sensitivity_ceiling": 1.0,
+            "hits": 2,
+            "false_alerts": 7,
+            "non_outbreak_weeks": 152
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": 0.6122676459567576,
+            "mae": 0.4450327457623422,
+            "sensitivity": 1.0,
+            "false_alert_rate": 0.03289473684210526,
+            "alerts": 9,
+            "outbreak_weeks": 4,
+            "precision": 0.4444444444444444,
+            "sensitivity_ceiling": 1.0,
+            "hits": 4,
+            "false_alerts": 5,
+            "non_outbreak_weeks": 152
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": 0.49512358797613965,
+          "rain_l3": 0.6950446089989937,
+          "rain_l4": 0.13260096397110455,
+          "rain_l5": 0.3036649534332305
+        }
+      },
+      "PH137603000": {
+        "status": "evaluated",
+        "name": "City of Muntinlupa",
+        "horizon_weeks": 2,
+        "train_years": [
+          2008,
+          2019
+        ],
+        "test_years": [
+          2020,
+          2022
+        ],
+        "outbreak_threshold": 1.0,
+        "alert_rate": 0.05314009661835749,
+        "scores": [
+          {
+            "method": "seasonal",
+            "correlation": 0.25768627010193135,
+            "mae": 0.3393065268065268,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.05333333333333334,
+            "alerts": 8,
+            "outbreak_weeks": 6,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 150
+          },
+          {
+            "method": "last_week",
+            "correlation": 0.08206106870229023,
+            "mae": 0.24358974358974358,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.05333333333333334,
+            "alerts": 8,
+            "outbreak_weeks": 6,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 150
+          },
+          {
+            "method": "rain_model",
+            "correlation": 0.3713308194325072,
+            "mae": 0.27972479246813936,
+            "sensitivity": 0.16666666666666666,
+            "false_alert_rate": 0.04666666666666667,
+            "alerts": 8,
+            "outbreak_weeks": 6,
+            "precision": 0.125,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 7,
+            "non_outbreak_weeks": 150
+          },
+          {
+            "method": "season_ar",
+            "correlation": 0.277470977813355,
+            "mae": 0.29876857761138337,
+            "sensitivity": 0.16666666666666666,
+            "false_alert_rate": 0.04666666666666667,
+            "alerts": 8,
+            "outbreak_weeks": 6,
+            "precision": 0.125,
+            "sensitivity_ceiling": 1.0,
+            "hits": 1,
+            "false_alerts": 7,
+            "non_outbreak_weeks": 150
+          },
+          {
+            "method": "season_ar_rain",
+            "correlation": 0.32495384263113414,
+            "mae": 0.26423043196644874,
+            "sensitivity": 0.0,
+            "false_alert_rate": 0.05333333333333334,
+            "alerts": 8,
+            "outbreak_weeks": 6,
+            "precision": 0.0,
+            "sensitivity_ceiling": 1.0,
+            "hits": 0,
+            "false_alerts": 8,
+            "non_outbreak_weeks": 150
+          }
+        ],
+        "rain_coefficients": {
+          "rain_l2": 0.4117914864792884,
+          "rain_l3": 0.6504099518005294,
+          "rain_l4": 0.17083863301183558,
+          "rain_l5": 0.5062372683209988
+        }
+      }
+    }
+  },
+  "per_city_2017_2019": {
+    "PH015518000": {
+      "status": "evaluated",
+      "name": "Dagupan City",
+      "total_cases": 508,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 1.0,
+      "alert_rate": 0.09913793103448276,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": 0.5015466893272698,
+          "mae": 1.2413658881811749,
+          "sensitivity": 0.20512820512820512,
+          "false_alert_rate": 0.06779661016949153,
+          "alerts": 16,
+          "outbreak_weeks": 39,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.41025641025641024,
+          "hits": 8,
+          "false_alerts": 8,
+          "non_outbreak_weeks": 118
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.479394284645403,
+          "mae": 1.5286624203821657,
+          "sensitivity": 0.2564102564102564,
+          "false_alert_rate": 0.05084745762711865,
+          "alerts": 16,
+          "outbreak_weeks": 39,
+          "precision": 0.625,
+          "sensitivity_ceiling": 0.41025641025641024,
+          "hits": 10,
+          "false_alerts": 6,
+          "non_outbreak_weeks": 118
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.6537589378203872,
+          "mae": 1.1406366276289601,
+          "sensitivity": 0.358974358974359,
+          "false_alert_rate": 0.01694915254237288,
+          "alerts": 16,
+          "outbreak_weeks": 39,
+          "precision": 0.875,
+          "sensitivity_ceiling": 0.41025641025641024,
+          "hits": 14,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 118
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.5460443550053212,
+          "mae": 1.1986755981627852,
+          "sensitivity": 0.28205128205128205,
+          "false_alert_rate": 0.0423728813559322,
+          "alerts": 16,
+          "outbreak_weeks": 39,
+          "precision": 0.6875,
+          "sensitivity_ceiling": 0.41025641025641024,
+          "hits": 11,
+          "false_alerts": 5,
+          "non_outbreak_weeks": 118
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.6746767444895228,
+          "mae": 1.1189757697321365,
+          "sensitivity": 0.358974358974359,
+          "false_alert_rate": 0.01694915254237288,
+          "alerts": 16,
+          "outbreak_weeks": 39,
+          "precision": 0.875,
+          "sensitivity_ceiling": 0.41025641025641024,
+          "hits": 14,
+          "false_alerts": 2,
+          "non_outbreak_weeks": 118
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": 0.5385037224868341,
+        "rain_l3": 0.5156134899301307,
+        "rain_l4": 0.3883845105765841,
+        "rain_l5": 0.15908107298110022
+      }
+    },
+    "PH034919000": {
+      "status": "too_few_cases",
+      "total_cases": 62
+    },
+    "PH050506000": {
+      "status": "too_few_cases",
+      "total_cases": 60
+    },
+    "PH063022000": {
+      "status": "evaluated",
+      "name": "Iloilo City",
+      "total_cases": 3948,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 13.0,
+      "alert_rate": 0.09698275862068965,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": 0.5319366308030368,
+          "mae": 4.136482661004954,
+          "sensitivity": 0.6,
+          "false_alert_rate": 0.061224489795918366,
+          "alerts": 15,
+          "outbreak_weeks": 10,
+          "precision": 0.4,
+          "sensitivity_ceiling": 1.0,
+          "hits": 6,
+          "false_alerts": 9,
+          "non_outbreak_weeks": 147
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.6516205368702697,
+          "mae": 2.713375796178344,
+          "sensitivity": 0.8,
+          "false_alert_rate": 0.047619047619047616,
+          "alerts": 15,
+          "outbreak_weeks": 10,
+          "precision": 0.5333333333333333,
+          "sensitivity_ceiling": 1.0,
+          "hits": 8,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 147
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.6091699219634711,
+          "mae": 3.6954791941705483,
+          "sensitivity": 0.7,
+          "false_alert_rate": 0.05442176870748299,
+          "alerts": 15,
+          "outbreak_weeks": 10,
+          "precision": 0.4666666666666667,
+          "sensitivity_ceiling": 1.0,
+          "hits": 7,
+          "false_alerts": 8,
+          "non_outbreak_weeks": 147
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.6917584346590807,
+          "mae": 2.5995018404354737,
+          "sensitivity": 0.7,
+          "false_alert_rate": 0.05442176870748299,
+          "alerts": 15,
+          "outbreak_weeks": 10,
+          "precision": 0.4666666666666667,
+          "sensitivity_ceiling": 1.0,
+          "hits": 7,
+          "false_alerts": 8,
+          "non_outbreak_weeks": 147
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.7255963165156918,
+          "mae": 2.48678145470864,
+          "sensitivity": 0.9,
+          "false_alert_rate": 0.04081632653061224,
+          "alerts": 15,
+          "outbreak_weeks": 10,
+          "precision": 0.6,
+          "sensitivity_ceiling": 1.0,
+          "hits": 9,
+          "false_alerts": 6,
+          "non_outbreak_weeks": 147
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": 0.10249544019167565,
+        "rain_l3": 0.19300886160584463,
+        "rain_l4": 0.22966339501991884,
+        "rain_l5": 0.17204683866750523
+      }
+    },
+    "PH072230000": {
+      "status": "too_few_cases",
+      "total_cases": 39
+    },
+    "PH083747000": {
+      "status": "evaluated",
+      "name": "Tacloban City",
+      "total_cases": 122,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 0.0,
+      "alert_rate": 0.09698275862068965,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": 0.15716379120657564,
+          "mae": 0.3476468506723283,
+          "sensitivity": 0.21428571428571427,
+          "false_alert_rate": 0.06976744186046512,
+          "alerts": 15,
+          "outbreak_weeks": 28,
+          "precision": 0.4,
+          "sensitivity_ceiling": 0.5357142857142857,
+          "hits": 6,
+          "false_alerts": 9,
+          "non_outbreak_weeks": 129
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.02724232887490157,
+          "mae": 0.445859872611465,
+          "sensitivity": 0.14285714285714285,
+          "false_alert_rate": 0.08527131782945736,
+          "alerts": 15,
+          "outbreak_weeks": 28,
+          "precision": 0.26666666666666666,
+          "sensitivity_ceiling": 0.5357142857142857,
+          "hits": 4,
+          "false_alerts": 11,
+          "non_outbreak_weeks": 129
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.27877913520052705,
+          "mae": 0.33524217916432386,
+          "sensitivity": 0.2857142857142857,
+          "false_alert_rate": 0.05426356589147287,
+          "alerts": 15,
+          "outbreak_weeks": 28,
+          "precision": 0.5333333333333333,
+          "sensitivity_ceiling": 0.5357142857142857,
+          "hits": 8,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 129
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.08018254855926166,
+          "mae": 0.3538857244531326,
+          "sensitivity": 0.14285714285714285,
+          "false_alert_rate": 0.08527131782945736,
+          "alerts": 15,
+          "outbreak_weeks": 28,
+          "precision": 0.26666666666666666,
+          "sensitivity_ceiling": 0.5357142857142857,
+          "hits": 4,
+          "false_alerts": 11,
+          "non_outbreak_weeks": 129
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.2673697880037432,
+          "mae": 0.3356029321869342,
+          "sensitivity": 0.2857142857142857,
+          "false_alert_rate": 0.05426356589147287,
+          "alerts": 15,
+          "outbreak_weeks": 28,
+          "precision": 0.5333333333333333,
+          "sensitivity_ceiling": 0.5357142857142857,
+          "hits": 8,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 129
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": 0.21111938447674872,
+        "rain_l3": 0.27961633153427745,
+        "rain_l4": 0.10172123662280513,
+        "rain_l5": -0.06164163874724862
+      }
+    },
+    "PH097332000": {
+      "status": "evaluated",
+      "name": "Zamboanga City",
+      "total_cases": 530,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 2.0,
+      "alert_rate": 0.04525862068965517,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": 0.03175361307243782,
+          "mae": 0.6682236376503893,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.046052631578947366,
+          "alerts": 7,
+          "outbreak_weeks": 5,
+          "precision": 0.0,
+          "sensitivity_ceiling": 1.0,
+          "hits": 0,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 152
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.06358105690087078,
+          "mae": 0.6624203821656051,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.046052631578947366,
+          "alerts": 7,
+          "outbreak_weeks": 5,
+          "precision": 0.0,
+          "sensitivity_ceiling": 1.0,
+          "hits": 0,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 152
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.20355694247027778,
+          "mae": 0.6273905350166588,
+          "sensitivity": 0.4,
+          "false_alert_rate": 0.03289473684210526,
+          "alerts": 7,
+          "outbreak_weeks": 5,
+          "precision": 0.2857142857142857,
+          "sensitivity_ceiling": 1.0,
+          "hits": 2,
+          "false_alerts": 5,
+          "non_outbreak_weeks": 152
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.0765756170378804,
+          "mae": 0.6419726137744017,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.046052631578947366,
+          "alerts": 7,
+          "outbreak_weeks": 5,
+          "precision": 0.0,
+          "sensitivity_ceiling": 1.0,
+          "hits": 0,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 152
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.19165647757782128,
+          "mae": 0.6109622462969849,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.046052631578947366,
+          "alerts": 7,
+          "outbreak_weeks": 5,
+          "precision": 0.0,
+          "sensitivity_ceiling": 1.0,
+          "hits": 0,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 152
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": -0.008420205605075448,
+        "rain_l3": 0.2361159184362064,
+        "rain_l4": 0.04178481560359118,
+        "rain_l5": 0.05201174119439533
+      }
+    },
+    "PH104305000": {
+      "status": "evaluated",
+      "name": "Cagayan de Oro City",
+      "total_cases": 1054,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 1.0,
+      "alert_rate": 0.05387931034482758,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": 0.06154551104388664,
+          "mae": 2.1414720452937015,
+          "sensitivity": 0.09090909090909091,
+          "false_alert_rate": 0.04794520547945205,
+          "alerts": 8,
+          "outbreak_weeks": 11,
+          "precision": 0.125,
+          "sensitivity_ceiling": 0.7272727272727273,
+          "hits": 1,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 146
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.11739543809108105,
+          "mae": 0.8726114649681529,
+          "sensitivity": 0.18181818181818182,
+          "false_alert_rate": 0.0410958904109589,
+          "alerts": 8,
+          "outbreak_weeks": 11,
+          "precision": 0.25,
+          "sensitivity_ceiling": 0.7272727272727273,
+          "hits": 2,
+          "false_alerts": 6,
+          "non_outbreak_weeks": 146
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.16584712004182048,
+          "mae": 2.3407109432251625,
+          "sensitivity": 0.2727272727272727,
+          "false_alert_rate": 0.03424657534246575,
+          "alerts": 8,
+          "outbreak_weeks": 11,
+          "precision": 0.375,
+          "sensitivity_ceiling": 0.7272727272727273,
+          "hits": 3,
+          "false_alerts": 5,
+          "non_outbreak_weeks": 146
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.05785784582426135,
+          "mae": 1.8149093147983535,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.0547945205479452,
+          "alerts": 8,
+          "outbreak_weeks": 11,
+          "precision": 0.0,
+          "sensitivity_ceiling": 0.7272727272727273,
+          "hits": 0,
+          "false_alerts": 8,
+          "non_outbreak_weeks": 146
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.17322788696847471,
+          "mae": 1.5064897323611934,
+          "sensitivity": 0.2727272727272727,
+          "false_alert_rate": 0.03424657534246575,
+          "alerts": 8,
+          "outbreak_weeks": 11,
+          "precision": 0.375,
+          "sensitivity_ceiling": 0.7272727272727273,
+          "hits": 3,
+          "false_alerts": 5,
+          "non_outbreak_weeks": 146
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": 0.3005071215996826,
+        "rain_l3": 1.5408019972534541,
+        "rain_l4": 1.1619160238313815,
+        "rain_l5": 0.37037819341952194
+      }
+    },
+    "PH112402000": {
+      "status": "evaluated",
+      "name": "Davao City",
+      "total_cases": 843,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 3.0,
+      "alert_rate": 0.0603448275862069,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": -0.0662954794526551,
+          "mae": 1.2014685067232835,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.059602649006622516,
+          "alerts": 9,
+          "outbreak_weeks": 6,
+          "precision": 0.0,
+          "sensitivity_ceiling": 1.0,
+          "hits": 0,
+          "false_alerts": 9,
+          "non_outbreak_weeks": 151
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.05184098105074587,
+          "mae": 1.4522292993630572,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.059602649006622516,
+          "alerts": 9,
+          "outbreak_weeks": 6,
+          "precision": 0.0,
+          "sensitivity_ceiling": 1.0,
+          "hits": 0,
+          "false_alerts": 9,
+          "non_outbreak_weeks": 151
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.14457813850464143,
+          "mae": 1.2051678553560845,
+          "sensitivity": 0.16666666666666666,
+          "false_alert_rate": 0.052980132450331126,
+          "alerts": 9,
+          "outbreak_weeks": 6,
+          "precision": 0.1111111111111111,
+          "sensitivity_ceiling": 1.0,
+          "hits": 1,
+          "false_alerts": 8,
+          "non_outbreak_weeks": 151
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.06720251608262834,
+          "mae": 1.2656234752879854,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.059602649006622516,
+          "alerts": 9,
+          "outbreak_weeks": 6,
+          "precision": 0.0,
+          "sensitivity_ceiling": 1.0,
+          "hits": 0,
+          "false_alerts": 9,
+          "non_outbreak_weeks": 151
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.10500777046150132,
+          "mae": 1.2533721172392238,
+          "sensitivity": 0.0,
+          "false_alert_rate": 0.059602649006622516,
+          "alerts": 9,
+          "outbreak_weeks": 6,
+          "precision": 0.0,
+          "sensitivity_ceiling": 1.0,
+          "hits": 0,
+          "false_alerts": 9,
+          "non_outbreak_weeks": 151
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": 0.22416829947774775,
+        "rain_l3": 0.24203251938625042,
+        "rain_l4": 0.23251873790857086,
+        "rain_l5": 0.3038233686838332
+      }
+    },
+    "PH137401000": {
+      "status": "evaluated",
+      "name": "City of Mandaluyong",
+      "total_cases": 175,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 0.0,
+      "alert_rate": 0.08405172413793104,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": 0.49371542101847016,
+          "mae": 0.39486907289455064,
+          "sensitivity": 0.18421052631578946,
+          "false_alert_rate": 0.05042016806722689,
+          "alerts": 13,
+          "outbreak_weeks": 38,
+          "precision": 0.5384615384615384,
+          "sensitivity_ceiling": 0.34210526315789475,
+          "hits": 7,
+          "false_alerts": 6,
+          "non_outbreak_weeks": 119
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.4049471374426493,
+          "mae": 0.445859872611465,
+          "sensitivity": 0.3157894736842105,
+          "false_alert_rate": 0.008403361344537815,
+          "alerts": 13,
+          "outbreak_weeks": 38,
+          "precision": 0.9230769230769231,
+          "sensitivity_ceiling": 0.34210526315789475,
+          "hits": 12,
+          "false_alerts": 1,
+          "non_outbreak_weeks": 119
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.4749121422534265,
+          "mae": 0.391409406760278,
+          "sensitivity": 0.21052631578947367,
+          "false_alert_rate": 0.04201680672268908,
+          "alerts": 13,
+          "outbreak_weeks": 38,
+          "precision": 0.6153846153846154,
+          "sensitivity_ceiling": 0.34210526315789475,
+          "hits": 8,
+          "false_alerts": 5,
+          "non_outbreak_weeks": 119
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.48371847842875393,
+          "mae": 0.3723323292607963,
+          "sensitivity": 0.2631578947368421,
+          "false_alert_rate": 0.025210084033613446,
+          "alerts": 13,
+          "outbreak_weeks": 38,
+          "precision": 0.7692307692307693,
+          "sensitivity_ceiling": 0.34210526315789475,
+          "hits": 10,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 119
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.5075158395893543,
+          "mae": 0.3804802664623744,
+          "sensitivity": 0.2631578947368421,
+          "false_alert_rate": 0.025210084033613446,
+          "alerts": 13,
+          "outbreak_weeks": 38,
+          "precision": 0.7692307692307693,
+          "sensitivity_ceiling": 0.34210526315789475,
+          "hits": 10,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 119
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": 0.43927781943829136,
+        "rain_l3": 0.7080982472763759,
+        "rain_l4": 0.38329329255667,
+        "rain_l5": 0.293935806468093
+      }
+    },
+    "PH137503000": {
+      "status": "evaluated",
+      "name": "City of Navotas",
+      "total_cases": 471,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 1.0,
+      "alert_rate": 0.08836206896551724,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": 0.4274955238740496,
+          "mae": 0.7259377211606511,
+          "sensitivity": 0.2916666666666667,
+          "false_alert_rate": 0.05263157894736842,
+          "alerts": 14,
+          "outbreak_weeks": 24,
+          "precision": 0.5,
+          "sensitivity_ceiling": 0.5833333333333334,
+          "hits": 7,
+          "false_alerts": 7,
+          "non_outbreak_weeks": 133
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.3336519880839457,
+          "mae": 0.7834394904458599,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.06015037593984962,
+          "alerts": 14,
+          "outbreak_weeks": 24,
+          "precision": 0.42857142857142855,
+          "sensitivity_ceiling": 0.5833333333333334,
+          "hits": 6,
+          "false_alerts": 8,
+          "non_outbreak_weeks": 133
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.38528926535161045,
+          "mae": 0.6951845332618031,
+          "sensitivity": 0.25,
+          "false_alert_rate": 0.06015037593984962,
+          "alerts": 14,
+          "outbreak_weeks": 24,
+          "precision": 0.42857142857142855,
+          "sensitivity_ceiling": 0.5833333333333334,
+          "hits": 6,
+          "false_alerts": 8,
+          "non_outbreak_weeks": 133
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.45360419761863335,
+          "mae": 0.7174533517801976,
+          "sensitivity": 0.4583333333333333,
+          "false_alert_rate": 0.022556390977443608,
+          "alerts": 14,
+          "outbreak_weeks": 24,
+          "precision": 0.7857142857142857,
+          "sensitivity_ceiling": 0.5833333333333334,
+          "hits": 11,
+          "false_alerts": 3,
+          "non_outbreak_weeks": 133
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.4663070221835907,
+          "mae": 0.6661738456359294,
+          "sensitivity": 0.375,
+          "false_alert_rate": 0.03759398496240601,
+          "alerts": 14,
+          "outbreak_weeks": 24,
+          "precision": 0.6428571428571429,
+          "sensitivity_ceiling": 0.5833333333333334,
+          "hits": 9,
+          "false_alerts": 5,
+          "non_outbreak_weeks": 133
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": 0.7755190354089065,
+        "rain_l3": 0.7286840043359177,
+        "rain_l4": 0.12142491086884152,
+        "rain_l5": 0.49699541540741143
+      }
+    },
+    "PH137603000": {
+      "status": "evaluated",
+      "name": "City of Muntinlupa",
+      "total_cases": 222,
+      "horizon_weeks": 2,
+      "train_years": [
+        2008,
+        2016
+      ],
+      "test_years": [
+        2017,
+        2019
+      ],
+      "outbreak_threshold": 1.0,
+      "alert_rate": 0.04741379310344827,
+      "scores": [
+        {
+          "method": "seasonal",
+          "correlation": 0.22968940275174493,
+          "mae": 0.4462137296532201,
+          "sensitivity": 0.09090909090909091,
+          "false_alert_rate": 0.0410958904109589,
+          "alerts": 7,
+          "outbreak_weeks": 11,
+          "precision": 0.14285714285714285,
+          "sensitivity_ceiling": 0.6363636363636364,
+          "hits": 1,
+          "false_alerts": 6,
+          "non_outbreak_weeks": 146
+        },
+        {
+          "method": "last_week",
+          "correlation": 0.3401681100356597,
+          "mae": 0.4585987261146497,
+          "sensitivity": 0.18181818181818182,
+          "false_alert_rate": 0.03424657534246575,
+          "alerts": 7,
+          "outbreak_weeks": 11,
+          "precision": 0.2857142857142857,
+          "sensitivity_ceiling": 0.6363636363636364,
+          "hits": 2,
+          "false_alerts": 5,
+          "non_outbreak_weeks": 146
+        },
+        {
+          "method": "rain_model",
+          "correlation": 0.31305971133004695,
+          "mae": 0.3695736987428447,
+          "sensitivity": 0.09090909090909091,
+          "false_alert_rate": 0.0410958904109589,
+          "alerts": 7,
+          "outbreak_weeks": 11,
+          "precision": 0.14285714285714285,
+          "sensitivity_ceiling": 0.6363636363636364,
+          "hits": 1,
+          "false_alerts": 6,
+          "non_outbreak_weeks": 146
+        },
+        {
+          "method": "season_ar",
+          "correlation": 0.4032715432649421,
+          "mae": 0.41413266526034526,
+          "sensitivity": 0.18181818181818182,
+          "false_alert_rate": 0.03424657534246575,
+          "alerts": 7,
+          "outbreak_weeks": 11,
+          "precision": 0.2857142857142857,
+          "sensitivity_ceiling": 0.6363636363636364,
+          "hits": 2,
+          "false_alerts": 5,
+          "non_outbreak_weeks": 146
+        },
+        {
+          "method": "season_ar_rain",
+          "correlation": 0.3238355265504183,
+          "mae": 0.37280820594059827,
+          "sensitivity": 0.09090909090909091,
+          "false_alert_rate": 0.0410958904109589,
+          "alerts": 7,
+          "outbreak_weeks": 11,
+          "precision": 0.14285714285714285,
+          "sensitivity_ceiling": 0.6363636363636364,
+          "hits": 1,
+          "false_alerts": 6,
+          "non_outbreak_weeks": 146
+        }
+      ],
+      "rain_coefficients": {
+        "rain_l2": 0.4157054653528189,
+        "rain_l3": 0.8257520416096751,
+        "rain_l4": 0.2870729164571339,
+        "rain_l5": 0.7718542080891058
+      }
+    }
+  },
+  "per_city_winners": {
+    "correlation": {
+      "Cagayan de Oro City": {
+        "winners": [
+          "season_ar_rain"
+        ],
+        "value": 0.17322788696847471
+      },
+      "City of Mandaluyong": {
+        "winners": [
+          "season_ar_rain"
+        ],
+        "value": 0.5075158395893543
+      },
+      "City of Muntinlupa": {
+        "winners": [
+          "season_ar"
+        ],
+        "value": 0.4032715432649421
+      },
+      "City of Navotas": {
+        "winners": [
+          "season_ar_rain"
+        ],
+        "value": 0.4663070221835907
+      },
+      "Dagupan City": {
+        "winners": [
+          "season_ar_rain"
+        ],
+        "value": 0.6746767444895228
+      },
+      "Davao City": {
+        "winners": [
+          "rain_model"
+        ],
+        "value": 0.14457813850464143
+      },
+      "Iloilo City": {
+        "winners": [
+          "season_ar_rain"
+        ],
+        "value": 0.7255963165156918
+      },
+      "Tacloban City": {
+        "winners": [
+          "rain_model"
+        ],
+        "value": 0.27877913520052705
+      },
+      "Zamboanga City": {
+        "winners": [
+          "rain_model"
+        ],
+        "value": 0.20355694247027778
+      }
+    },
+    "sensitivity": {
+      "Cagayan de Oro City": {
+        "winners": [
+          "rain_model",
+          "season_ar_rain"
+        ],
+        "value": 0.2727272727272727
+      },
+      "City of Mandaluyong": {
+        "winners": [
+          "last_week"
+        ],
+        "value": 0.3157894736842105
+      },
+      "City of Muntinlupa": {
+        "winners": [
+          "last_week",
+          "season_ar"
+        ],
+        "value": 0.18181818181818182
+      },
+      "City of Navotas": {
+        "winners": [
+          "season_ar"
+        ],
+        "value": 0.4583333333333333
+      },
+      "Dagupan City": {
+        "winners": [
+          "rain_model",
+          "season_ar_rain"
+        ],
+        "value": 0.358974358974359
+      },
+      "Davao City": {
+        "winners": [
+          "rain_model"
+        ],
+        "value": 0.16666666666666666
+      },
+      "Iloilo City": {
+        "winners": [
+          "season_ar_rain"
+        ],
+        "value": 0.9
+      },
+      "Tacloban City": {
+        "winners": [
+          "rain_model",
+          "season_ar_rain"
+        ],
+        "value": 0.2857142857142857
+      },
+      "Zamboanga City": {
+        "winners": [
+          "rain_model"
+        ],
+        "value": 0.4
+      }
+    }
+  }
+}

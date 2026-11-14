@@ -39,6 +39,7 @@ def design(cases: pd.Series, rain: pd.Series, horizon: int = 2) -> pd.DataFrame:
     for lag in RAIN_LAGS:
         df[f"rain_l{lag + horizon}"] = np.log1p(rain.shift(lag + horizon))
     df["last_week"] = df.cases.shift(horizon)
+    df["ar_log"] = np.log1p(df.last_week)  # log of the newest case count known at forecast time
     df["woy"] = woy
     return df.dropna()
 
@@ -52,10 +53,29 @@ def seasonal_baseline(train: pd.DataFrame, test: pd.DataFrame, smooth: int = 2) 
     return pd.Series(smoothed.reindex(test.woy).to_numpy(), index=test.index)
 
 
-def fit_rain_model(train: pd.DataFrame):
-    cols = [c for c in train.columns if c.startswith(("sin", "cos", "rain_"))]
+METHODS = ("seasonal", "last_week", "rain_model")
+ALL_METHODS = METHODS + ("season_ar", "season_ar_rain")
+
+
+def feature_columns(train: pd.DataFrame, method: str = "rain_model") -> list[str]:
+    """Predictor columns for a GLM method: season, plus last known count (ar_log) and/or rain lags."""
+    season = [c for c in train.columns if c.startswith(("sin", "cos"))]
+    rain = [c for c in train.columns if c.startswith("rain_")]
+    return {
+        "rain_model": season + rain,
+        "season_ar": season + ["ar_log"],
+        "season_ar_rain": season + ["ar_log"] + rain,
+    }[method]
+
+
+def fit_glm(train: pd.DataFrame, method: str = "rain_model"):
+    cols = feature_columns(train, method)
     X = sm.add_constant(train[cols])
     return sm.GLM(train.cases, X, family=sm.families.Poisson()).fit(), cols
+
+
+def fit_rain_model(train: pd.DataFrame):
+    return fit_glm(train, "rain_model")
 
 
 @dataclass
@@ -67,6 +87,11 @@ class Score:
     false_alert_rate: float
     alerts: int
     outbreak_weeks: int
+    precision: float = float("nan")  # share of alerts that were outbreak weeks
+    sensitivity_ceiling: float = float("nan")  # best possible sensitivity: min(1, alerts / outbreak weeks)
+    hits: int = 0
+    false_alerts: int = 0
+    non_outbreak_weeks: int = 0
 
 
 def score(method: str, pred: pd.Series, actual: pd.Series, threshold: float, alert_rate: float) -> Score:
@@ -86,6 +111,11 @@ def score(method: str, pred: pd.Series, actual: pd.Series, threshold: float, ale
         false_alert_rate=fp / negatives if negatives else float("nan"),
         alerts=n_alerts,
         outbreak_weeks=int(outbreak.sum()),
+        precision=tp / n_alerts,
+        sensitivity_ceiling=min(1.0, n_alerts / outbreak.sum()) if outbreak.sum() else float("nan"),
+        hits=tp,
+        false_alerts=fp,
+        non_outbreak_weeks=negatives,
     )
 
 
@@ -95,10 +125,11 @@ def evaluate(
     horizon: int = 2,
     train_years: tuple[int, int] = (2008, 2016),
     test_years: tuple[int, int] = (2017, 2019),
+    methods: tuple[str, ...] = METHODS,
 ) -> dict:
     """Train on one block of years, test on a later block, return scores and
-    the weekly predictions. 2020 onwards is left out: COVID-19 disrupted
-    reporting."""
+    the weekly predictions. The default test block stops at 2019: COVID-19 disrupted
+    reporting from 2020. `methods` may add "season_ar" and "season_ar_rain"."""
     df = design(cases, rain, horizon)
     yr = df.index.year
     train = df[(yr >= train_years[0]) & (yr <= train_years[1])]
@@ -113,6 +144,11 @@ def evaluate(
         "last_week": test.last_week.astype(float),
         "rain_model": pd.Series(model.predict(sm.add_constant(test[cols], has_constant="add")), index=test.index),
     }
+    for m in ("season_ar", "season_ar_rain"):
+        if m in methods:
+            mm, mc = fit_glm(train, m)
+            preds[m] = pd.Series(mm.predict(sm.add_constant(test[mc], has_constant="add")), index=test.index)
+    preds = {m: preds[m] for m in methods}
     scores = [score(m, p, test.cases, threshold, alert_rate) for m, p in preds.items()]
     return {
         "horizon_weeks": horizon,
