@@ -192,13 +192,28 @@ function scatterTips(fig) {
     tip.style.top = `${Math.max(0, y - th - 10)}px`;
   };
   const hide = () => { if (on) on.classList.remove("on"); on = null; tip.hidden = true; };
-  svg.querySelectorAll("circle").forEach((c) => {
-    c.addEventListener("pointerenter", () => show(c));
-    c.addEventListener("pointerdown", () => show(c));
+  // Snap to the nearest dot within about 32 px, so a cluster does not need pixel-perfect aim.
+  const dots = [...svg.querySelectorAll("circle")];
+  const nearest = (e) => {
+    let best = null, bd = Infinity;
+    for (const c of dots) {
+      const r = c.getBoundingClientRect();
+      const d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
+      if (d < bd) { bd = d; best = c; }
+    }
+    return bd <= 32 ? best : null;
+  };
+  const track = (e) => {
+    const c = nearest(e);
+    if (c) { if (c !== on) show(c); } else if (e.pointerType === "mouse") hide();
+  };
+  svg.addEventListener("pointermove", track);
+  svg.addEventListener("pointerdown", track);
+  svg.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") hide(); });
+  dots.forEach((c) => {
     c.addEventListener("focus", () => show(c));
     c.addEventListener("blur", hide);
   });
-  svg.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") hide(); });
 }
 
 function scatterSVG(feats) {
