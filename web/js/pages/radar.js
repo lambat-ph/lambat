@@ -118,7 +118,7 @@ function resultsHTML() {
   </div>
   <div class="rd-def">
     <p><b>What is IoU?</b> The overlap between the predicted water and the hand-drawn water, divided by their union. 1 is perfect. 0 means no overlap at all.</p>
-    <p><b>What the scores say.</b> 0.64 against 0.21 means the U-Net found about three times as much of the true flood overlap as the simple threshold. A typical single image scores 0.33, lower than the pooled 0.64. The test images are floods in other countries. The model has not been tested on Dagupan yet.</p>
+    <p><b>What the scores say.</b> 0.64 against 0.21 means the U-Net's overlap with the hand-drawn water was about three times the simple threshold's, on test images from floods outside the Philippines. A typical single image scores 0.33, lower than the pooled 0.64. The test images are floods in other countries. The model has not been tested on Dagupan yet.</p>
   </div>
   <div class="rd-two">
     <div class="card"><h3 class="card-title">Pooled IoU, higher is better</h3>${CHART}</div>
@@ -277,7 +277,7 @@ export async function render(root) {
   <section class="rd-story rd-num" aria-labelledby="rd-num-h">
     <h2 id="rd-num-h" class="sr-only">How well it works</h2>
     <p class="rd-big">Our model found about <b>three times</b> as much of the real flood as a simple rule.</p>
-    <p class="caption">IoU 0.64 vs 0.21. IoU is overlap with the real flood: 0 is none, 1 is perfect.</p>
+    <p class="caption">IoU 0.64 vs 0.21 on 90 test images from floods in other countries; not yet scored on a Philippine flood. IoU is overlap with the hand-drawn water: 0 is none, 1 is perfect.</p>
   </section>
 
   <section class="rd-story rd-egay" aria-labelledby="rd-egay-h">

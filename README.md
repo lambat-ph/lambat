@@ -6,7 +6,7 @@
 
 **Leptospirosis Alert, Mapping and Barangay Allocation Tool.** *Lambat* is Filipino for *net*, and a net is only as good as where you cast it.
 
-**In one sentence:** after a flood, LAMBAT shows a city health office which barangays waded through floodwater, who can no longer walk to a clinic, and where to open temporary stations for the free doxycycline that prevents leptospirosis.
+**In one sentence:** after a flood, LAMBAT shows a city health office which barangays lie where a mapped flood reaches, who can no longer walk to a clinic, and where to open temporary stations for the free doxycycline that prevents leptospirosis.
 
 ![The LAMBAT map of Dagupan City: barangays shaded by how many residents were in the floodwater, with gold numbered dose points](docs/img/map.jpg)
 
@@ -55,7 +55,7 @@ Is that enough to warn a hospital? Modestly. Trained on 2008 to 2016 and tested 
 | Last week's count | 0.48 | 1.53 | 26% | 5.1% |
 | **Rain model** | **0.65** | **1.14** | **36%** | **1.7%** |
 
-All three get the same number of alerts. That is an alert, not a forecast, and we call it one.
+All three get the same number of alerts (16 over 157 test weeks, 39 of them outbreak weeks), so no method could catch more than 16 of 39 (41%); the rain model's 16 alerts included 14 outbreak weeks. The 95% intervals overlap, and pooled across all 12 cities the rain model does not beat last week's count on correlation or average error. That is an alert, not a forecast, and we call it one.
 
 ## What one run produces
 
@@ -63,7 +63,7 @@ All three get the same number of alerts. That is an alert, not a forecast, and w
 
 - **71,868** of 208,322 residents live in flood-hazard areas: **143,737 capsules** for each week the water stays.
 - **36** clinics and hospitals on OpenStreetMap. Within a 30-minute walk of one: 62,625 exposed residents on a dry day, 60,140 in the flood. The access gap is **2,485** people, smaller than we expected, and we say so.
-- Most exposed residents who cannot reach care cannot reach it on dry days either. **3 temporary dose points** (Lucao Barangay Hall, Bolosan Elementary School, Bonuan Boquig National High School, in that order) cover 6,030 of them, raising coverage to 92%; 5 reach 95% and **8** reach 97%. The 3, 5 and 8 are example staffing budgets, not numbers the model picked; the full curve for 1 to 10 dose points shows each extra site reaching fewer new people (the 1st reaches 2,764, the 10th only 290):
+- Most exposed residents who cannot reach care cannot reach it on dry days either. **3 temporary dose points** (Lucao Barangay Hall, Bolosan Elementary School, Bonuan Boquig National High School, in that order) cover 6,030 of them, raising the share of exposed residents within a 30-minute walk from 84% (clinics alone) to 92%; 5 reach 95% and **8** reach 97%. These are modelled walking times, not checked on the ground. The 3, 5 and 8 are example staffing budgets, not numbers the model picked; the full curve for 1 to 10 dose points shows each extra site reaching fewer new people (the 1st reaches 2,764, the 10th only 290):
 
   ![Dose-point coverage curve for Dagupan: share of exposed residents within a 30-minute walk rises from 84% with clinics only to 92.3% with 3 dose points, 94.8% with 5 and 97.0% with 8, then flattens to 97.9% at 10](docs/img/dose_point_curve.png)
 - Checked against 13 flood events named in the news, the ranking shows no detectable agreement (Spearman -0.10, 95% CI -0.48 to 0.30, 31 barangays). We tested 18 alternatives fixed in advance; none beats it after correcting for multiple comparisons. The reports mostly follow where people live (density correlation 0.64), so they are a weak ruler. We read this as "cannot confirm the ranking yet", not as proof it is wrong ([docs/validation.md](docs/validation.md)).
@@ -125,11 +125,22 @@ The trained U-Net (94 MB) is on the [unet-v1 release](https://github.com/lambat-
 
 | Part | State |
 |---|---|
-| Data, alert, exposure, access, siting, end-to-end script | Working, tested, in CI |
+| Data, alert, exposure, access, siting, end-to-end script | Working, unit-tested, in CI; not yet validated against ground data |
 | Flood mapping (threshold vs U-Net on Sen1Floods11) | Trained and scored (pooled IoU 0.64 vs 0.21) |
 | Validation against news reports | Done, with confidence intervals; no detectable agreement |
 | Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Run: 0.46 km2 of new water inside the city two days after landfall; matches NOAH 100-year map (rho 0.54), not the 25-year map or news reports ([docs/sentinel1.md](docs/sentinel1.md)) |
 | Dashboard (`web/`, MapLibre) | Multi-city map (12 cities, with a national summary), priority table, dose points, alert chart, satellite page; live on [GitHub Pages](https://lambat-ph.github.io/lambat/) |
+
+## What we proposed, and how far we got
+
+| Objective in the proposal | Status |
+|---|---|
+| Rerunnable pipeline joining cases, rain, flood, roads, population and clinics | Met for OSM clinics; the DOH facility registry is not joined yet |
+| Two-week alert beating seasonal and last-week baselines | Partly: compared at the same number of alerts, not the same false-alert rate; Dagupan intervals overlap and the pooled 12-city result does not beat last week's count |
+| Walking times under three flood scenarios, checked on 30 routes | Partly: scenarios run; the 30-route check is not done |
+| 3, 5 and 8 dose points against clinic-only access | Met (84% to 92%, 95%, 97% in Dagupan); house-to-house outreach not modelled |
+| Compare the flooded-barangay list with reported floods | Done, no detectable agreement (Spearman -0.10) |
+| Radar threshold vs U-Net vs hazard map | Done on global test chips and one Dagupan flood (Typhoon Egay); no labelled Philippine flood yet |
 
 ## Run it
 

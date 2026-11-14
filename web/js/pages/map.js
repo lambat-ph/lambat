@@ -1058,7 +1058,7 @@ function renderLegend() {
   const labs = edges.map(label);
   const dyn = m.key === "unreached" && S.dynCut;
   const title = dyn ? `${m.legend}, after opening ${S.plan} dose points` : m.legend;
-  const darker = m.key === "share" ? "Darker blue: more of the barangay is flooded" : m.key === "unreached" ? "Darker blue: more residents cut off from care" : "Darker blue: more residents in the floodwater";
+  const darker = m.key === "share" ? "Darker blue: more of the barangay is flooded" : m.key === "unreached" ? "Darker blue: more residents cut off from care" : "Darker blue: more residents living where the flood map reaches";
   // Drop the second-to-last label when it would run into the last one.
   const ticks = labs.map((t, i) => (i === labs.length - 2 && labs.length > 3 && t.length + labs[i + 1].length > 9 ? "" : `<span style="left:${(i / n) * 100}%">${t}</span>`)).join("");
   const zero = S.hasZero ? `<div class="lg-zero"><i class="zsw${S.view === "3d" ? " flat" : ""}" aria-hidden="true"></i><span><b>0</b> ${m.key === "share" ? "none flooded" : "none"}</span></div>` : "";
@@ -1094,7 +1094,7 @@ function tourSteps() {
   });
   const topE = topRow("exposed");
   steps.push({
-    title: "Who was in the water",
+    title: "Who lives where the flood reaches",
     metric: "exposed", plan: null, hi: topE, val: fmt(topE.exposed), spot: null, pref: ["right", "left", "top", "bottom"],
     body: `Darker barangays have more exposed residents: people who live where a ${years()}-year flood reaches. ${esc(topE.name)} has the most: ${fmt(topE.exposed)} of ${fmt(topE.pop)} residents.`,
   });
