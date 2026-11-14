@@ -179,10 +179,19 @@ def node_barangays(G: nx.Graph, barangays: gpd.GeoDataFrame) -> pd.Series:
     return j.set_index("node").adm4_pcode.reindex(nodes).rename("adm4_pcode")
 
 
-def flood_classes(G: nx.Graph, barangays: gpd.GeoDataFrame, hazard: pd.DataFrame, scenario: str = "25yr") -> pd.Series:
+def flood_classes(
+    G: nx.Graph,
+    barangays: gpd.GeoDataFrame,
+    hazard: pd.DataFrame,
+    scenario: str = "25yr",
+    rng: np.random.Generator | None = None,
+) -> pd.Series:
     """Severity code (0-3) per node, calibrated to NOAH area shares per barangay.
 
     Needs node attr 'elevation' (run node_elevations first). Also sets node attr 'adm4'.
+    With rng (a numpy Generator) the within-barangay node order is random instead of
+    elevation-ranked; the count of nodes per severity class in each barangay is unchanged.
+    Used by the sensitivity analysis. Without rng the result is the published placement.
     """
     brgy = node_barangays(G, barangays)
     elev = pd.Series({n: G.nodes[n]["elevation"] for n in G.nodes})
@@ -194,7 +203,10 @@ def flood_classes(G: nx.Graph, barangays: gpd.GeoDataFrame, hazard: pd.DataFrame
             continue
         pct = {k: float(np.nan_to_num(hazard.at[code, f"{scenario}_{k}"])) for k in ("high", "med", "low")}
         n = len(grp)
-        order = grp.sort_values(["elev", "node"], kind="mergesort").index.tolist()
+        if rng is None:
+            order = grp.sort_values(["elev", "node"], kind="mergesort").index.tolist()
+        else:
+            order = grp.index[rng.permutation(n)].tolist()
         n_high = round(pct["high"] / 100.0 * n)
         n_med = round(pct["med"] / 100.0 * n)
         n_low = round(pct["low"] / 100.0 * n)
@@ -209,15 +221,25 @@ def flood_classes(G: nx.Graph, barangays: gpd.GeoDataFrame, hazard: pd.DataFrame
     return out
 
 
-def apply_flood(G: nx.Graph, classes: pd.Series, factors: dict[int, float] | None = None) -> nx.Graph:
-    """Copy of G with flooded edges slowed or closed. Edge severity = less severe endpoint.
+def apply_flood(
+    G: nx.Graph,
+    classes: pd.Series,
+    factors: dict[int, float] | None = None,
+    edge_rule: str = "min",
+) -> nx.Graph:
+    """Copy of G with flooded edges slowed or closed.
 
+    Edge severity = the less severe endpoint (edge_rule "min", the default and the published
+    behaviour) or the more severe endpoint ("max", a harsher check).
     factors maps severity -> speed multiplier; 0 closes the edge (removed).
     """
+    if edge_rule not in ("min", "max"):
+        raise ValueError(f"edge_rule must be 'min' or 'max', got {edge_rule!r}")
+    pick = min if edge_rule == "min" else max
     factors = {**SPEED_FACTORS, **(factors or {})}
     F = G.copy()
     for u, v, d in list(F.edges(data=True)):
-        sev = min(int(classes.get(u, 0)), int(classes.get(v, 0)))
+        sev = pick(int(classes.get(u, 0)), int(classes.get(v, 0)))
         d["severity"] = sev
         if sev == 0:
             continue

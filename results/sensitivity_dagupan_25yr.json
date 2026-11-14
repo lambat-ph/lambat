@@ -1,0 +1,673 @@
+{
+  "city": "PH015518000",
+  "scenario": "25yr",
+  "seed": 20261114,
+  "published_checked_against": "results\\summary_25yr.json",
+  "published": {
+    "exposed_on_network": 71680.2801680018,
+    "clinics_only_share": 0.8390086698324775,
+    "access_gap": 2485.0106704822397,
+    "plan_share": {
+      "3": 0.9231324836009056,
+      "5": 0.9480936960468268,
+      "8": 0.9702745155694507
+    },
+    "k3_sites": [
+      "n9035409102",
+      "r12322576",
+      "w802759432"
+    ]
+  },
+  "a_placement": {
+    "n": 200,
+    "seed": 20261114,
+    "access_gap": {
+      "median": 2493.4624195720494,
+      "p05": 1416.9073495203331,
+      "p95": 3944.129128539582,
+      "min": 726.883839111372,
+      "max": 5730.538998320367
+    },
+    "clinics_only_share": {
+      "median": 0.8603651327539298,
+      "p05": 0.8391416179465551,
+      "p95": 0.8752317779605153,
+      "min": 0.8188318926401884,
+      "max": 0.8885283015547089
+    },
+    "exposed_on_network": {
+      "median": 71680.2801680018,
+      "p05": 71680.2801680018,
+      "p95": 71680.2801680018,
+      "min": 71680.28016800179,
+      "max": 71680.2801680018
+    },
+    "plan_share": {
+      "3": {
+        "median": 0.938193169430833,
+        "p05": 0.9265570252308468,
+        "p95": 0.9483785486307809,
+        "min": 0.9149305667507266,
+        "max": 0.9541564493701051
+      },
+      "5": {
+        "median": 0.9614478602609606,
+        "p05": 0.9509398177178363,
+        "p95": 0.9699430133223834,
+        "min": 0.9456628300134828,
+        "max": 0.9744758024178889
+      },
+      "8": {
+        "median": 0.9837539920724035,
+        "p05": 0.9752179912334746,
+        "p95": 0.9902354677313469,
+        "min": 0.9699414587062819,
+        "max": 0.9926874727934805
+      }
+    },
+    "k3_site_frequency": [
+      {
+        "site": "w808135262",
+        "name": "Leon-Francisco Maramba Elementary School (school, w808135262)",
+        "share_of_draws": 0.725,
+        "published_plan": false
+      },
+      {
+        "site": "r12322576",
+        "name": "Bolosan Elementary School (school, r12322576)",
+        "share_of_draws": 0.51,
+        "published_plan": true
+      },
+      {
+        "site": "n9035409102",
+        "name": "Lucao Barangay Hall (townhall, n9035409102)",
+        "share_of_draws": 0.33,
+        "published_plan": true
+      },
+      {
+        "site": "n9126843173",
+        "name": "Bolosan Barangay Hall (townhall, n9126843173)",
+        "share_of_draws": 0.285,
+        "published_plan": false
+      },
+      {
+        "site": "r17882000",
+        "name": "Federico N. Ceralde Integrated School (school, r17882000)",
+        "share_of_draws": 0.235,
+        "published_plan": false
+      },
+      {
+        "site": "r12322575",
+        "name": "Judge Jose de Venecia, Sr. Memorial National High School (school, r12322575)",
+        "share_of_draws": 0.18,
+        "published_plan": false
+      },
+      {
+        "site": "w802759412",
+        "name": "Bonuan Boquig Elementary School (school, w802759412)",
+        "share_of_draws": 0.17,
+        "published_plan": false
+      },
+      {
+        "site": "n9716221923",
+        "name": "Bonuan Binloc Child Development Center (community_centre, n9716221923)",
+        "share_of_draws": 0.115,
+        "published_plan": false
+      },
+      {
+        "site": "w802759432",
+        "name": "Bonuan Boquig National High School (school, w802759432)",
+        "share_of_draws": 0.105,
+        "published_plan": true
+      },
+      {
+        "site": "w978197584",
+        "name": "Bonuan Binloc Barangay Hall (townhall, w978197584)",
+        "share_of_draws": 0.1,
+        "published_plan": false
+      },
+      {
+        "site": "w1215767998",
+        "name": "Tebeng Barangay Hall (townhall, w1215767998)",
+        "share_of_draws": 0.055,
+        "published_plan": false
+      },
+      {
+        "site": "w813253237",
+        "name": "Mangin-Tebeng Elementary School (school, w813253237)",
+        "share_of_draws": 0.05,
+        "published_plan": false
+      },
+      {
+        "site": "w1181520315",
+        "name": "(unnamed community_centre) (community_centre, w1181520315)",
+        "share_of_draws": 0.04,
+        "published_plan": false
+      },
+      {
+        "site": "w237832258",
+        "name": "Kingfisher School (school, w237832258)",
+        "share_of_draws": 0.025,
+        "published_plan": false
+      },
+      {
+        "site": "w1215768006",
+        "name": "Tebeng Elementary School (school, w1215768006)",
+        "share_of_draws": 0.02,
+        "published_plan": false
+      },
+      {
+        "site": "w987405613",
+        "name": "Tambac Barangay Hall (townhall, w987405613)",
+        "share_of_draws": 0.015,
+        "published_plan": false
+      },
+      {
+        "site": "w813251298",
+        "name": "Tambac Elementary School (school, w813251298)",
+        "share_of_draws": 0.015,
+        "published_plan": false
+      },
+      {
+        "site": "r14108516",
+        "name": "Bliss Elementary School (school, r14108516)",
+        "share_of_draws": 0.01,
+        "published_plan": false
+      },
+      {
+        "site": "w808130122",
+        "name": "Lomboy Elementary School (school, w808130122)",
+        "share_of_draws": 0.01,
+        "published_plan": false
+      },
+      {
+        "site": "w797749288",
+        "name": "Salapingao Elementary School (school, w797749288)",
+        "share_of_draws": 0.005,
+        "published_plan": false
+      }
+    ],
+    "k3_exact_published_set_share": 0.01,
+    "published_elevation_run": {
+      "access_gap": 2485.0106704822397,
+      "clinics_only_share": 0.8390086698324775,
+      "plan_share": {
+        "3": 0.9231324836009056,
+        "5": 0.9480936960468268,
+        "8": 0.9702745155694507
+      }
+    },
+    "published_percentile_in_random": {
+      "access_gap": 50.0,
+      "plan_share_3": 1.5
+    }
+  },
+  "b_parameter_grid": {
+    "harsh_factors": {
+      "1": 0.4,
+      "2": 0.1,
+      "3": 0.0
+    },
+    "rows": [
+      {
+        "walk_limit_min": 15,
+        "speed_kmh": 3.0,
+        "speed_factors": "published",
+        "edge_rule": "min",
+        "clinics_only_share": 0.3563927817872237,
+        "access_gap": 3969.587135926552,
+        "plan_share": {
+          "3": 0.4406170625120964,
+          "5": 0.47966392026474447,
+          "8": 0.5228351193841424
+        },
+        "k3_sites": [
+          "n9028963227",
+          "r12322575",
+          "w237832258"
+        ]
+      },
+      {
+        "walk_limit_min": 15,
+        "speed_kmh": 3.0,
+        "speed_factors": "published",
+        "edge_rule": "max",
+        "clinics_only_share": 0.2699353743355076,
+        "access_gap": 10166.878324664645,
+        "plan_share": {
+          "3": 0.32777025389711667,
+          "5": 0.3627506834888349,
+          "8": 0.3982438406556569
+        },
+        "k3_sites": [
+          "n9035409102",
+          "n9126843173",
+          "w813251509"
+        ]
+      },
+      {
+        "walk_limit_min": 15,
+        "speed_kmh": 3.0,
+        "speed_factors": "harsh",
+        "edge_rule": "min",
+        "clinics_only_share": 0.31402593861425127,
+        "access_gap": 7006.454324399016,
+        "plan_share": {
+          "3": 0.38881563016310894,
+          "5": 0.42425131237629093,
+          "8": 0.4662997343682667
+        },
+        "k3_sites": [
+          "r12322575",
+          "w237832258",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 15,
+        "speed_kmh": 3.0,
+        "speed_factors": "harsh",
+        "edge_rule": "max",
+        "clinics_only_share": 0.23909764398292166,
+        "access_gap": 12377.335476083303,
+        "plan_share": {
+          "3": 0.2923215933872108,
+          "5": 0.3227686940290407,
+          "8": 0.35640888170373874
+        },
+        "k3_sites": [
+          "w237832258",
+          "w813251509",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 15,
+        "speed_kmh": 4.5,
+        "speed_factors": "published",
+        "edge_rule": "min",
+        "clinics_only_share": 0.501382942759378,
+        "access_gap": 3515.3687680782914,
+        "plan_share": {
+          "3": 0.5977925474634438,
+          "5": 0.6499005368551272,
+          "8": 0.7179256203745944
+        },
+        "k3_sites": [
+          "n9028963227",
+          "r12322576",
+          "w808135262"
+        ]
+      },
+      {
+        "walk_limit_min": 15,
+        "speed_kmh": 4.5,
+        "speed_factors": "published",
+        "edge_rule": "max",
+        "clinics_only_share": 0.3891114087841039,
+        "access_gap": 11563.02377831727,
+        "plan_share": {
+          "3": 0.4806453865722372,
+          "5": 0.5242430850280977,
+          "8": 0.5789062091847409
+        },
+        "k3_sites": [
+          "n9035409102",
+          "r12322576",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 15,
+        "speed_kmh": 4.5,
+        "speed_factors": "harsh",
+        "edge_rule": "min",
+        "clinics_only_share": 0.45898448120408014,
+        "access_gap": 6554.502371054296,
+        "plan_share": {
+          "3": 0.5558029674575519,
+          "5": 0.6057560280197939,
+          "8": 0.667284665171075
+        },
+        "k3_sites": [
+          "r12322576",
+          "w237832258",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 15,
+        "speed_kmh": 4.5,
+        "speed_factors": "harsh",
+        "edge_rule": "max",
+        "clinics_only_share": 0.3075511200269447,
+        "access_gap": 17409.288127013577,
+        "plan_share": {
+          "3": 0.3714067946712636,
+          "5": 0.4094091298227678,
+          "8": 0.45480582890676724
+        },
+        "k3_sites": [
+          "n9035409102",
+          "r12322576",
+          "w813251509"
+        ]
+      },
+      {
+        "walk_limit_min": 20,
+        "speed_kmh": 3.0,
+        "speed_factors": "published",
+        "edge_rule": "min",
+        "clinics_only_share": 0.4611799570180069,
+        "access_gap": 3126.7555129633006,
+        "plan_share": {
+          "3": 0.5579376803807377,
+          "5": 0.6136001171705305,
+          "8": 0.6810884505876135
+        },
+        "k3_sites": [
+          "r12322576",
+          "w808135262",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 20,
+        "speed_kmh": 3.0,
+        "speed_factors": "published",
+        "edge_rule": "max",
+        "clinics_only_share": 0.3685035404407842,
+        "access_gap": 9769.82701818508,
+        "plan_share": {
+          "3": 0.45068742517461835,
+          "5": 0.4940922484309702,
+          "8": 0.543676784294963
+        },
+        "k3_sites": [
+          "r12322575",
+          "w237832258",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 20,
+        "speed_kmh": 3.0,
+        "speed_factors": "harsh",
+        "edge_rule": "min",
+        "clinics_only_share": 0.39466879805505317,
+        "access_gap": 7894.294021726334,
+        "plan_share": {
+          "3": 0.5054848901129845,
+          "5": 0.5570429263318769,
+          "8": 0.6165030903393802
+        },
+        "k3_sites": [
+          "n9035409102",
+          "r12322576",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 20,
+        "speed_kmh": 3.0,
+        "speed_factors": "harsh",
+        "edge_rule": "max",
+        "clinics_only_share": 0.2786680663668069,
+        "access_gap": 16209.258968833028,
+        "plan_share": {
+          "3": 0.3442283924750967,
+          "5": 0.38330831203478477,
+          "8": 0.4274848649081303
+        },
+        "k3_sites": [
+          "n9028963227",
+          "w237832258",
+          "w808133650"
+        ]
+      },
+      {
+        "walk_limit_min": 20,
+        "speed_kmh": 4.5,
+        "speed_factors": "published",
+        "edge_rule": "min",
+        "clinics_only_share": 0.6348789007608284,
+        "access_gap": 2815.306425061943,
+        "plan_share": {
+          "3": 0.7389602167245182,
+          "5": 0.790121526539146,
+          "8": 0.843998335306527
+        },
+        "k3_sites": [
+          "r12322576",
+          "w808133650",
+          "w808135262"
+        ]
+      },
+      {
+        "walk_limit_min": 20,
+        "speed_kmh": 4.5,
+        "speed_factors": "published",
+        "edge_rule": "max",
+        "clinics_only_share": 0.5066502995737161,
+        "access_gap": 12006.768483705124,
+        "plan_share": {
+          "3": 0.5916899688081924,
+          "5": 0.642069434876067,
+          "8": 0.704281031308907
+        },
+        "k3_sites": [
+          "n9035409102",
+          "w808135262",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 20,
+        "speed_kmh": 4.5,
+        "speed_factors": "harsh",
+        "edge_rule": "min",
+        "clinics_only_share": 0.6083001886189959,
+        "access_gap": 4720.475957893162,
+        "plan_share": {
+          "3": 0.7059446516786118,
+          "5": 0.7517844890357483,
+          "8": 0.8068995594887596
+        },
+        "k3_sites": [
+          "w237832258",
+          "w68854163",
+          "w808135262"
+        ]
+      },
+      {
+        "walk_limit_min": 20,
+        "speed_kmh": 4.5,
+        "speed_factors": "harsh",
+        "edge_rule": "max",
+        "clinics_only_share": 0.41738809843319613,
+        "access_gap": 18405.10806987012,
+        "plan_share": {
+          "3": 0.5101612656554921,
+          "5": 0.549546236570985,
+          "8": 0.5923491302768504
+        },
+        "k3_sites": [
+          "r12322575",
+          "w237832258",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 30,
+        "speed_kmh": 3.0,
+        "speed_factors": "published",
+        "edge_rule": "min",
+        "clinics_only_share": 0.6348789007608284,
+        "access_gap": 2815.306425061943,
+        "plan_share": {
+          "3": 0.7389602167245182,
+          "5": 0.790121526539146,
+          "8": 0.843998335306527
+        },
+        "k3_sites": [
+          "r12322576",
+          "w808133650",
+          "w808135262"
+        ]
+      },
+      {
+        "walk_limit_min": 30,
+        "speed_kmh": 3.0,
+        "speed_factors": "published",
+        "edge_rule": "max",
+        "clinics_only_share": 0.5066502995737161,
+        "access_gap": 12006.768483705124,
+        "plan_share": {
+          "3": 0.5916899688081924,
+          "5": 0.642069434876067,
+          "8": 0.704281031308907
+        },
+        "k3_sites": [
+          "n9035409102",
+          "w808135262",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 30,
+        "speed_kmh": 3.0,
+        "speed_factors": "harsh",
+        "edge_rule": "min",
+        "clinics_only_share": 0.6083001886189959,
+        "access_gap": 4720.475957893162,
+        "plan_share": {
+          "3": 0.7059446516786118,
+          "5": 0.7517844890357483,
+          "8": 0.8068995594887596
+        },
+        "k3_sites": [
+          "w237832258",
+          "w68854163",
+          "w808135262"
+        ]
+      },
+      {
+        "walk_limit_min": 30,
+        "speed_kmh": 3.0,
+        "speed_factors": "harsh",
+        "edge_rule": "max",
+        "clinics_only_share": 0.41738809843319613,
+        "access_gap": 18405.10806987012,
+        "plan_share": {
+          "3": 0.5101612656554921,
+          "5": 0.549546236570985,
+          "8": 0.5923491302768504
+        },
+        "k3_sites": [
+          "r12322575",
+          "w237832258",
+          "w813254227"
+        ]
+      },
+      {
+        "walk_limit_min": 30,
+        "speed_kmh": 4.5,
+        "speed_factors": "published",
+        "edge_rule": "min",
+        "clinics_only_share": 0.8390086698324775,
+        "access_gap": 2485.0106704822397,
+        "plan_share": {
+          "3": 0.9231324836009056,
+          "5": 0.9480936960468268,
+          "8": 0.9702745155694507
+        },
+        "k3_sites": [
+          "n9035409102",
+          "r12322576",
+          "w802759432"
+        ]
+      },
+      {
+        "walk_limit_min": 30,
+        "speed_kmh": 4.5,
+        "speed_factors": "published",
+        "edge_rule": "max",
+        "clinics_only_share": 0.7139423558048622,
+        "access_gap": 11449.799099560982,
+        "plan_share": {
+          "3": 0.7954989054384153,
+          "5": 0.8324109331532092,
+          "8": 0.871133021757741
+        },
+        "k3_sites": [
+          "n9035409102",
+          "r12322594",
+          "w808135262"
+        ]
+      },
+      {
+        "walk_limit_min": 30,
+        "speed_kmh": 4.5,
+        "speed_factors": "harsh",
+        "edge_rule": "min",
+        "clinics_only_share": 0.7859157928053285,
+        "access_gap": 6290.722970713543,
+        "plan_share": {
+          "3": 0.8742741208803726,
+          "5": 0.9122527421657668,
+          "8": 0.9428704983569552
+        },
+        "k3_sites": [
+          "n9035409102",
+          "n9716221923",
+          "w808135262"
+        ]
+      },
+      {
+        "walk_limit_min": 30,
+        "speed_kmh": 4.5,
+        "speed_factors": "harsh",
+        "edge_rule": "max",
+        "clinics_only_share": 0.585513610263288,
+        "access_gap": 20655.607561606033,
+        "plan_share": {
+          "3": 0.6581363384085219,
+          "5": 0.6972863253693113,
+          "8": 0.746011497364089
+        },
+        "k3_sites": [
+          "n9028963227",
+          "w237832258",
+          "w808135262"
+        ]
+      }
+    ]
+  },
+  "c_ceiling": {
+    "usable_candidate_sites": 80,
+    "share": 0.9891082977823358,
+    "unreachable_exposed": 780.7202664686229
+  },
+  "d_dry_plan": {
+    "dry_plan_sites": [
+      "n9035409102",
+      "r12322576",
+      "w802759432"
+    ],
+    "flood_plan_sites": [
+      "n9035409102",
+      "r12322576",
+      "w802759432"
+    ],
+    "overlap_count": 3,
+    "overlap_sites": [
+      "n9035409102",
+      "r12322576",
+      "w802759432"
+    ],
+    "dry_plan_sites_unusable_in_flood": [],
+    "share_within_reach_if_dry_plan_used_in_flood": 0.9231324836009058,
+    "share_within_reach_flood_plan": 0.9231324836009056
+  },
+  "runtime_s": 235.8
+}

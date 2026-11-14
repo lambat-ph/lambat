@@ -76,6 +76,15 @@ A stricter check (`scripts/run_alert_eval.py`, [docs/alert.md](docs/alert.md)):
 
 Barangay table, GeoJSON maps and a JSON summary land in `results/`.
 
+### How sure are these numbers?
+
+`scripts/run_sensitivity.py` ([docs/sensitivity.md](docs/sensitivity.md)) reruns Dagupan with the parts we had to assume changed:
+- **Which streets flood.** NOAH gives each barangay's flooded share, not which streets; we flood the lowest points first, and in flat Dagupan that order is close to arbitrary. Over 200 random placements with the same shares, the access gap has a median of 2,493 (90% of runs between 1,417 and 3,944), so 2,485 is typical. Coverage with 3 dose points ranges from 92.7% to 94.8%, so our 92.3% is on the cautious side.
+- **Which sites get picked is not stable.** The exact 3-site plan above appears in only 1% of placements; one school outside it is picked in 72.5%. Treat the named sites as candidates for the health office to check, not as the answer.
+- **Walking assumptions matter more than anything else.** If a road counts as flooded when either end floods (we use both ends), clinics alone reach 71.4% and the gap rises to 11,450. Across 24 combinations of walk limit, speed and slowdown, adding 3 dose points raised coverage in every one, by 5.3 to 11.1 points.
+- **Ceiling.** With all 80 usable candidate sites open, 98.9% of exposed residents are within reach; 781 are not, and need house-to-house outreach rather than a fixed site.
+- **The flood barely changes the plan.** The 3 sites chosen for a dry day are the same 3 chosen for the flood, because most residents out of reach are out of reach on dry days too.
+
 ## Cities
 
 The pipeline has been run for all 12 Project CCHAIN cities. Dagupan is the pilot and the only one checked against news reports.
