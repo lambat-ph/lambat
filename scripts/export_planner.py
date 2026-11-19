@@ -25,7 +25,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "web" / "data" / data.DAGUPAN
 SCENARIOS = ("5yr", "25yr", "100yr")
 KS = tuple(range(1, 11))
-UNC_KS = (3, 5, 8)
+UNC_KS = KS  # pick counts and ranges for every plan size the map offers
+PUB_KS = (3, 5, 8)  # the plan sizes in results/summary_25yr.json and the sensitivity file
 SEED = 20261114
 LIMIT = access.WALK_LIMIT_MIN
 
@@ -131,7 +132,7 @@ def check_published(out: dict, st: dict) -> None:
     tol = 1e-6 * pub["exposed_on_road_network"]
     assert abs(st["total"] - pub["exposed_on_road_network"]) < tol
     assert abs(st["gap"] - pub["exposed_access_gap"]) < tol
-    for k in UNC_KS:
+    for k in PUB_KS:
         pp = pub["dose_point_plans"][str(k)]
         mine = out["plans"][str(k)]
         assert sorted(mine["sites"]) == sorted(pp["sites"]), (k, mine["sites"], pp["sites"])
@@ -145,7 +146,7 @@ def check_sensitivity(out: dict) -> None:
     u = out["uncertainty"]
     print(f"CHECK gap median {u['gap']['median']:,.2f} vs sensitivity file {sens['access_gap']['median']:,.2f}")
     print(f"CHECK clinic share median {u['clinic_share']['median']} vs {sens['clinics_only_share']['median']:.4f}")
-    for k in UNC_KS:
+    for k in PUB_KS:
         print(f"CHECK k={k} share median {u['share'][str(k)]['median']} vs {sens['plan_share'][str(k)]['median']:.4f}")
     ref = {r["site"]: round(r["share_of_draws"] * sens["n"]) for r in sens["k3_site_frequency"]}
     print("CHECK k=3 pick counts identical to sensitivity file:", u["pick"]["3"] == ref)

@@ -29,4 +29,4 @@ def test_planner_schema(path):
         assert set(p["sites"]) <= ids
     u = d["uncertainty"]
     assert {"n", "seed", "gap", "clinic_share", "share", "pick"} <= set(u)
-    assert set(u["share"]) == set(u["pick"]) == {"3", "5", "8"}
+    assert set(u["share"]) == set(u["pick"]) == {str(k) for k in range(1, 11)}  # every size the map slider offers

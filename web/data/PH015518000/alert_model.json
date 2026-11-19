@@ -1,0 +1,127 @@
+{
+  "rain_max_by_week": [
+    51.5,
+    10.0,
+    2.4,
+    2.4,
+    3.4,
+    14.0,
+    14.0,
+    14.0,
+    28.4,
+    28.4,
+    28.4,
+    28.4,
+    26.9,
+    102.4,
+    106.0,
+    150.8,
+    161.9,
+    161.9,
+    161.9,
+    244.0,
+    244.0,
+    292.3,
+    292.3,
+    292.3,
+    292.3,
+    362.9,
+    362.9,
+    362.9,
+    362.9,
+    255.7,
+    255.7,
+    267.1,
+    267.1,
+    267.1,
+    267.1,
+    261.7,
+    261.7,
+    261.7,
+    261.7,
+    202.8,
+    202.8,
+    202.8,
+    82.4,
+    55.4,
+    55.4,
+    55.4,
+    39.5,
+    51.5,
+    51.5,
+    51.5,
+    51.5,
+    10.0,
+    0.0
+  ],
+  "guard_factor": 1.25,
+  "city": "PH015518000",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -5.978991988467003,
+    "sin1": 0.8976926686513798,
+    "cos1": 1.7722089501449996,
+    "sin2": 0.4801581427124182,
+    "cos2": -0.2442518493647464,
+    "rain_l2": 0.5385037224868341,
+    "rain_l3": 0.5156134899301307,
+    "rain_l4": 0.3883845105765841,
+    "rain_l5": 0.15908107298110022
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 1.0,
+  "alert_rate": 0.0991,
+  "cutoff": 1.7721,
+  "backtest_fixed_cutoff": {
+    "alerts": 15,
+    "hits": 13,
+    "outbreak_weeks": 39,
+    "false_alerts": 2,
+    "test_weeks": 157
+  },
+  "rain_ref_mm_week": {
+    "median": 17.4,
+    "p90": 123.5,
+    "wet_median": 67.6,
+    "max": 378.7
+  },
+  "examples": [
+    {
+      "label": "Two weeks before the August 2018 peak",
+      "forecast_week": "2018-07-23",
+      "target_week": "2018-08-06",
+      "rain_newest_first": [
+        120.7,
+        372.7,
+        108.5,
+        92.0
+      ],
+      "predicted": 2.05,
+      "actual": 21
+    },
+    {
+      "label": "A dry-season week, February 2018",
+      "forecast_week": "2018-01-22",
+      "target_week": "2018-02-05",
+      "rain_newest_first": [
+        0.2,
+        0.0,
+        0.0,
+        0.5
+      ],
+      "predicted": 0.03,
+      "actual": 0
+    }
+  ],
+  "note": "Prototype. Poisson model trained on Dagupan 2008-2016 (Project CCHAIN). Not a live warning."
+}

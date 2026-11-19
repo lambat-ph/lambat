@@ -22,6 +22,7 @@ const SEEN_KEY = "lambat.tourSeen";
 const PLANS = ["3", "5", "8"];
 // Optional plan-aware fields (cut_off_after_3/5/8). When the data has them, "Cut off from care" follows the plan.
 const cutProp = (k) => "cut_off_after_" + k;
+const dpts = (k) => `${k} dose ${+k === 1 ? "point" : "points"}`;
 const hasCut = (k) => !!(S && S.pl) || !!(S && S.data && S.data.barangays.features.some((f) => Number.isFinite(+f.properties[cutProp(k)]) && f.properties[cutProp(k)] != null));
 function mprop(m) {
   m = m || S.metric;
@@ -300,7 +301,7 @@ async function onLoad() {
   const q = S.params.query;
   const m = METRICS.find((x) => x.key === q.get("metric"));
   if (m) S.metric = m;
-  if (PLANS.includes(q.get("plan"))) S.plan = q.get("plan");
+  if (/^(10|[1-9])$/.test(q.get("plan") || "")) S.plan = q.get("plan");
   if (q.get("view") === "3d") S.view = "3d";
   if (SCENARIOS.includes(q.get("scenario"))) S.plScn = q.get("scenario");
   if (code === "all") {
@@ -707,7 +708,7 @@ function selectBrgy(code, fly) {
     <dl><dt>Residents</dt><dd>${fmt(r.pop)}</dd>
     <dt>Exposed residents</dt><dd>${fmt(r.exposed)}${r.pop ? " (" + pct(r.exposed / r.pop, 0) + ")" : ""}</dd>
     ${r.unreached != null ? `<dt>Cut off from care</dt><dd>${fmt(r.unreached)}</dd>` : ""}
-    ${S.dynCut ? `<dt>Cut off after opening ${S.plan} dose points</dt><dd>${fmt(cutAfter(code))}</dd>` : ""}
+    ${S.dynCut ? `<dt>Cut off after opening ${dpts(S.plan)}</dt><dd>${fmt(cutAfter(code))}</dd>` : ""}
     ${S.pl && S.pl.scn !== "25" ? "" : `<dt>Area flooded</dt><dd>${pct(r.share, 0)}</dd>
     <dt>Capsules per flood week</dt><dd>${fmt(r.capsules)}</dd>`}</dl>
     <a href="${cityHref(S.city, "barangays")}">Open city dashboard</a>`;
@@ -744,7 +745,8 @@ function boundsOf(f) {
 
 /* ---------- dose points ---------- */
 function availPlans() {
-  if (S.pl) { const k = PLANS.filter((p) => S.pl.d.plans[p]); if (k.length) return k; }
+  // Cities with a planner file have exact plans for 1 to 10 sites; the others publish 3, 5 and 8.
+  if (S.pl) { const k = Object.keys(S.pl.d.plans).sort((a, b) => a - b); if (k.length) return k; }
   const plans = S.data && S.data.summary && S.data.summary.dose_point_plans;
   if (plans) { const k = PLANS.filter((p) => plans[p]); if (k.length) return k; }
   return PLANS;
@@ -901,8 +903,9 @@ function setPlan(k) {
   plCut(k, true);
   const wasDyn = S.dynCut; S.dynCut = hasCut(k);
   if (S.metric.key === "unreached" && (wasDyn || S.dynCut)) { paintMetric(); pulseDrops(before); }
-  const seg = $("#planSeg"), i = $(`#planSeg input[value="${k}"]`);
-  if (i) { i.checked = true; seg.style.setProperty("--i", [...seg.querySelectorAll("input")].indexOf(i)); }
+  const seg = $("#planSeg"), rg = $("#planRange");
+  if (rg) syncRange(rg, k);
+  else { const i = $(`#planSeg input[value="${k}"]`); if (i) { i.checked = true; seg.style.setProperty("--i", [...seg.querySelectorAll("input")].indexOf(i)); } }
   drawDose(); syncUrl();
   islRender();
 }
@@ -940,8 +943,34 @@ function showServe(s) {
   map.setFilter("b-serve", f); map.setFilter("b-serve-c", f);
 }
 function clearServe() { showServe(null); }
+const PRESETS = ["3", "5", "8"];
+// Slider state: fill up to the thumb, the number beside it, and what a screen reader hears.
+function syncRange(rg, k) {
+  rg.value = k;
+  const lo = +rg.min, hi = +rg.max;
+  rg.style.setProperty("--p", ((k - lo) / (hi - lo)) * 100 + "%");
+  rg.setAttribute("aria-valuetext", `${k} dose ${+k === 1 ? "point" : "points"}`);
+  const o = $("#planOut"); if (o) o.textContent = k;
+  host.querySelectorAll("#planSeg .pticks button, #planSeg .ppre button").forEach((t) => { const on = t.dataset.k === String(k); t.classList.toggle("on", on); t.setAttribute("aria-pressed", String(on)); });
+}
 function buildPlanSeg() {
-  const seg = $("#planSeg"), av = availPlans();
+  const seg = $("#planSeg"), av = availPlans(), pick = $("#planPick");
+  const slider = av.length > 3;
+  pick.classList.toggle("is-range", slider);
+  pick.querySelector(".plan-u").textContent = slider ? "" : "dose points";
+  if (slider) {
+    // Any plan size from 1 to 10; 3, 5 and 8 (the sizes in the proposal and the deck) are marked as presets.
+    seg.className = "prange"; seg.removeAttribute("role"); seg.removeAttribute("aria-label");
+    const lo = av[0], hi = av[av.length - 1];
+    const pre = PRESETS.filter((k) => av.includes(k));
+    seg.innerHTML = `<div class="prange-top"><output id="planOut" for="planRange">${S.plan}</output><span>dose points</span>`
+      + `<div class="ppre" role="group" aria-label="Preset plan sizes">${pre.map((k) => `<button type="button" data-k="${k}" aria-label="${dpts(k)}" title="Preset: ${dpts(k)}">${k}</button>`).join("")}</div></div>`
+      + `<input type="range" id="planRange" name="plan" min="${lo}" max="${hi}" step="1" value="${S.plan}" aria-label="How many dose points to open">`
+      + `<div class="pticks">${av.map((k) => `<button type="button" data-k="${k}" aria-label="${dpts(k)}">${k}</button>`).join("")}</div>`;
+    syncRange($("#planRange"), S.plan);
+    return;
+  }
+  seg.className = "pseg"; seg.setAttribute("role", "radiogroup"); seg.setAttribute("aria-label", "Plan size: how many dose points to open");
   seg.style.setProperty("--n", av.length);
   seg.style.setProperty("--i", Math.max(0, av.indexOf(S.plan)));
   seg.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + av.map((k) => `<label><input type="radio" name="plan" value="${k}"${k === S.plan ? " checked" : ""}><span>${k}<span class="sr-only"> dose points</span></span></label>`).join("");
@@ -1098,7 +1127,7 @@ async function setFlood(scn) {
   renderStrip();
   syncMeasure();
   syncUrl();
-  $("#actLive").textContent = `${scn}-year flood. ${pct(curPlan().share, 0)} of exposed residents within a ${WALK_MIN}-minute walk with ${S.plan} dose points.`;
+  $("#actLive").textContent = `${scn}-year flood. ${pct(curPlan().share, 0)} of exposed residents within a ${WALK_MIN}-minute walk with ${dpts(S.plan)}.`;
 }
 
 /* ---------- print sheet: a plain page the officer can print or save as PDF ---------- */
@@ -1110,7 +1139,7 @@ function printHtml() {
   const ex = [...pl.excluded];
   const body = S.sites.map((s, i) => `<tr><td class="c">${s.rank ?? i + 1}</td><td><b>${esc(s.name)}</b><br>${esc(s.sub)}</td><td>${esc((s.serves || []).map((x) => nm(x.pcode)).join(", ") || "None")}</td><td class="r">${fmt(s.cutN)}</td></tr>`).join("");
   return `<h1 id="pvT">Dose point plan: ${esc(cityName())}</h1>
-    <p class="pv-meta">After a ${years()}-year flood. Plan of ${S.plan} dose points. Printed ${esc(date)}.</p>
+    <p class="pv-meta">After a ${years()}-year flood. Plan of ${dpts(S.plan)}. Printed ${esc(date)}.</p>
     <p class="pv-cov"><b>${pct(p.share, 0)}</b> of exposed residents within a ${WALK_MIN}-minute walk of free medicine, up from <b>${pct(now, 0)}</b> with clinics alone.${rg ? ` In other plausible versions of this flood: <b>${rangeText(rg)}</b>.` : ""}</p>
     ${ex.length ? `<p class="pv-chg"><b>Plan changed:</b> ${esc(ex.map(siteLabel).join(", "))} excluded. Re-solved in the browser.</p>` : ""}
     <table class="pv-t"><thead><tr><th class="c">Order</th><th>Dose point</th><th>Barangays served</th><th class="r">Residents newly within reach</th></tr></thead><tbody>${body}</tbody>
@@ -1240,7 +1269,7 @@ function renderSentence() {
   let html;
   if (exposed == null) html = `<p class="a-main">Flood exposure and dose point plans are not available for this city yet.</p>`;
   else if (share != null) {
-    const dose = nb(tipBtn("dose", `${S.plan} dose points`, "What is a dose point?"));
+    const dose = nb(tipBtn("dose", `${dpts(S.plan)}`, "What is a dose point?"));
     html = `<div class="stats">${statBlock(rollNum(exposed, "n"), `${exTip} live where a ${years()}-year flood reaches`)}${statBlock(rollNum(share * 100, "p"), `of them within a ${nb(WALK_MIN + "-minute")} walk of free medicine with ${dose}`)}</div>${S.pl ? "" : '<p class="a-do">Open these dose points first, listed below.</p>'}`;
   } else {
     html = `<div class="stats one">${statBlock(rollNum(exposed, "n"), `${exTip} live where a ${years()}-year flood reaches`)}</div><p class="a-main">Dose point plans are not computed for this city yet, so the map shows where the water reached.</p>`;
@@ -1255,10 +1284,16 @@ function renderSentence() {
   const pc = $("#planCov");
   if (pc) {
     pc.innerHTML = share != null
-      ? `<b>${pct(share, 0)}</b> of exposed residents within a ${WALK}${now != null ? `${S.pl ? "" : `, up from ${pct(now, 0)}`}` : ""}.`
+      ? `<b>${pct(share, 0)}</b> of exposed residents within a ${WALK}${now != null ? `${S.pl ? "" : `, up from ${pct(now, 0)}`}` : ""}.${S.pl ? marginalHtml() : ""}`
       : "Coverage is not computed for this plan yet.";
   }
   islRender();
+}
+// What the last site in the plan adds, so the shrinking gain from each extra team is visible.
+function marginalHtml() {
+  const k = +S.plan;
+  const add = k > 1 ? curPlan(String(k)).newly - curPlan(String(k - 1)).newly : curPlan("1").newly;
+  return ` <span class="cov-add">Site ${k} adds ${fmt(Math.round(add))} ${Math.round(add) === 1 ? "person" : "people"}.</span>`;
 }
 // A plan change shows how many points of coverage it added or took away, for three seconds.
 function trackPlan(share) {
@@ -1284,7 +1319,7 @@ function renderLegend() {
   const label = (v) => (m.key === "share" ? pct(v, 0) : fmt(sig2(v)));
   const labs = edges.map(label);
   const dyn = m.key === "unreached" && S.dynCut;
-  const title = dyn ? `${m.legend}, after opening ${S.plan} dose points` : m.legend;
+  const title = dyn ? `${m.legend}, after opening ${dpts(S.plan)}` : m.legend;
   const darker = m.key === "share" ? "Darker blue: more of the barangay is flooded" : m.key === "unreached" ? "Darker blue: more residents cut off from care" : "Darker blue: more residents living where the flood map reaches";
   // Drop the second-to-last label when it would run into the last one.
   const ticks = labs.map((t, i) => (i === labs.length - 2 && labs.length > 3 && t.length + labs[i + 1].length > 9 ? "" : `<span style="left:${(i / n) * 100}%">${t}</span>`)).join("");
@@ -1299,7 +1334,7 @@ function renderLegend() {
       <ul>
         <li><i class="hw-sw" aria-hidden="true"></i><span>${darker}</span></li>
         <li><i class="dot-gold" aria-hidden="true">1</i><span>Gold number: a dose point (1 opens first)</span></li>
-        <li><i class="hw-seg" aria-hidden="true"><b>3</b><b>5</b><b>8</b></i><span>Pick 3, 5 or 8 to see how many dose points to open</span></li>
+        <li><i class="hw-seg" aria-hidden="true"><b>3</b><b>5</b><b>8</b></i><span>${S.pl ? "Slide from 1 to 10 to choose how many dose points to open" : "Pick 3, 5 or 8 to see how many dose points to open"}</span></li>
       </ul>${S.view === "3d" ? '<p class="map-note">Column height follows the colour.</p>' : ""}
     </div>${SRC()}`;
 }
@@ -1522,7 +1557,7 @@ const loadHtml = (st) => `<svg class="isl-ring" viewBox="0 0 24 24" width="22" h
 const cutAfter = (code) => { const f = S.data.barangays.features.find((x) => x.properties.adm4_pcode === code); return f ? +f.properties[cutProp(S.plan)] || 0 : null; };
 function brgyHtml(r) {
   const ex = r.exposed != null ? `${fmt(r.exposed)} exposed residents` : null;
-  const cut = r.unreached != null ? (S.dynCut ? `cut off from care after ${S.plan} dose points: ${fmt(cutAfter(r.id))}` : `cut off from care: ${fmt(r.unreached)}`) : null;
+  const cut = r.unreached != null ? (S.dynCut ? `cut off from care after ${dpts(S.plan)}: ${fmt(cutAfter(r.id))}` : `cut off from care: ${fmt(r.unreached)}`) : null;
   const ar = r.share != null ? `${pct(r.share, 0)} of the area flooded` : null;
   const k = S.metric.key;
   const line = (k === "unreached" ? [cut, ex] : k === "share" ? [ar, ex, cut] : [ex, cut]).filter(Boolean).join(" · ");
@@ -1559,7 +1594,7 @@ function islWant() {
     const p = Math.round(share * 100), chip = I.chip;
     return { kind: "answer", key: `a|${S.city}|${S.plan}|${chip || ""}|${plSig()}`, roll: `${S.city}|${S.plan}|${plSig()}`,
       html: `<span class="isl-badge">${S.plan}</span><span class="isl-t"><b class="n" data-to="${share * 100}" data-f="p">${p}%</b> <span class="isl-xtra">of exposed residents </span>within a ${WALK_MIN}-minute walk</span>${chip ? `<span class="isl-chip">${chip}</span>` : ""}`,
-      live: `Plan of ${S.plan} dose points. ${p}% of exposed residents within a ${WALK_MIN}-minute walk.` };
+      live: `Plan of ${dpts(S.plan)}. ${p}% of exposed residents within a ${WALK_MIN}-minute walk.` };
   }
   if (exposed != null) { const t = `${fmt(exposed)} exposed residents in ${cityName()}`; return { kind: "answer", key: "e|" + S.city, html: `<span class="isl-t"><b class="n">${fmt(exposed)}</b> exposed residents in ${esc(cityName())}</span>`, live: t + "." }; }
   return { kind: "answer", key: "x|" + S.city, html: `<span class="isl-t">No flood data for ${esc(cityName())} yet</span>`, live: "No flood data for this city yet." };
@@ -1684,7 +1719,7 @@ function downloadPlan() {
   a.download = `lambat-${cityName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "city"}-plan-${S.plan}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  $("#actLive").textContent = `Downloaded the plan of ${S.plan} dose points.`;
+  $("#actLive").textContent = `Downloaded the plan of ${dpts(S.plan)}.`;
 }
 
 /* ---------- widgets ---------- */
@@ -1865,7 +1900,9 @@ function wire() {
 
   // site list: hover and focus light up the marker, click pans to it
   const sl = $("#siteList");
-  $("#planSeg").addEventListener("change", (e) => { if (e.target.name === "plan") setPlan(e.target.value); });
+  $("#planSeg").addEventListener("change", (e) => { if (e.target.name === "plan" && e.target.type === "radio") setPlan(e.target.value); });
+  $("#planSeg").addEventListener("input", (e) => { if (e.target.id === "planRange" && e.target.value !== S.plan) setPlan(e.target.value); });
+  $("#planSeg").addEventListener("click", (e) => { const t = e.target.closest && e.target.closest(".pticks button, .ppre button"); if (t && t.dataset.k !== S.plan) setPlan(t.dataset.k); });
   const idOf = (e) => { const b = e.target.closest && e.target.closest("button.site"); return b ? b.dataset.id : null; };
   sl.addEventListener("click", (e) => { const ex = e.target.closest && e.target.closest(".excl"); if (ex) { excludeSite(ex.dataset.ex); return; } const id = idOf(e); if (id) { toggleOpen(id); setActive(id, { pan: true }); } });
   sl.addEventListener("mouseover", (e) => { const id = idOf(e); if (id) setHover(id); });

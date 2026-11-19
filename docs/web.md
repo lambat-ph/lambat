@@ -55,7 +55,7 @@ On Windows PowerShell 5.1, `&&` does not work; use `;` or separate lines. If `py
 | exposed | exposed residents | People who live where a 25-year flood reaches |
 | cannot reach care | cut off from care | Exposed residents more than a 30-minute walk from a clinic while the flood is on |
 | access gap | lose access in the flood | Residents who can walk to a clinic on a dry day but not during the flood (estimated) |
-| site, k | dose point; plan size (3, 5 or 8 dose points) | A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood |
+| site, k | dose point; plan size (1 to 10 dose points on the Dagupan map, with 3, 5 and 8 marked as presets; 3, 5 or 8 for other cities) | A temporary spot, such as a school or barangay hall, where a nurse hands out doxycycline for a few weeks after the flood |
 | barangay rank | rank (most people cut off from care first) | Shown only in the city table, never next to dose point order |
 | site rank | dose point order (1 opens first) | Order that covers the most cut-off residents first |
 | alert | rain warning (test on past data, 2017 to 2019) | A two-week-ahead warning from rainfall, tested on past data, not live |

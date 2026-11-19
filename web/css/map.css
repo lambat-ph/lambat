@@ -84,6 +84,34 @@ body.route-map #view{position:relative;padding-bottom:0}
 .pseg label>span{position:relative;font:600 var(--t-sm) var(--f-text);color:var(--ink);pointer-events:none;transition:color .2s}
 .pseg input:checked+span{color:#fff}
 .pseg label:has(input:focus-visible){outline:3px solid var(--ink);outline-offset:1px;z-index:1}
+/* plan size slider (cities with exact plans for 1 to 10 sites): its own row under the heading */
+.plan-pick.is-range{flex-basis:100%}
+/* the heading row keeps 44px clear for the collapse arrow; the slider row sits below it, so it uses the full width */
+.sec-sites .plan-h .plan-pick.is-range{margin-right:-44px;flex-basis:calc(100% + 44px)}
+.plan-pick.is-range .plan-u{display:none}
+.prange{--p:0%;width:100%}
+.prange-top{display:flex;align-items:baseline;gap:6px;margin-bottom:2px}
+.prange-top output{font:700 1.5rem/1 var(--f-display);color:var(--blue-dark);min-width:1.4ch}
+.prange-top span{font:600 var(--t-sm) var(--f-text);color:var(--muted)}
+.prange input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:100%;height:44px;margin:0;background:transparent;cursor:pointer}
+.prange input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--blue) var(--p),var(--line) var(--p))}
+.prange input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--line)}
+.prange input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--blue)}
+.prange input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#fff;border:3px solid var(--blue);box-shadow:0 1px 3px rgba(20,26,46,.25)}
+.prange input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--blue);box-shadow:0 1px 3px rgba(20,26,46,.25)}
+.prange input[type=range]:focus-visible{outline:3px solid var(--ink);outline-offset:2px;border-radius:8px}
+.pticks{display:flex;justify-content:space-between;margin-top:-6px}
+.pticks button{width:24px;height:24px;padding:0;border:0;border-radius:6px;background:transparent;font:500 .75rem/24px var(--f-text);color:var(--muted);cursor:pointer;text-align:center}
+.pticks button:hover{color:var(--ink)}
+.pticks button.on{color:var(--blue);font-weight:700}
+.pticks button:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
+/* preset plan sizes (3, 5, 8): small filled buttons at the right end of the number row */
+.ppre{display:flex;gap:4px;margin-left:auto;align-self:center}
+.ppre button{min-width:32px;height:28px;padding:0 8px;border:0;border-radius:7px;background:var(--bg);font:600 .8125rem/28px var(--f-text);color:var(--ink);cursor:pointer}
+.ppre button:hover{background:var(--blue-tint)}
+.ppre button.on{background:var(--blue);color:#fff}
+.ppre button:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
+.cov-add{display:block;margin-top:2px;font:500 var(--t-sm)/1.4 var(--f-text);color:var(--muted)}
 .cov{margin:0 0 var(--s2);font:600 var(--t-md)/1.4 var(--f-text)}
 .cov b{color:var(--blue-dark);font:700 var(--t-md) var(--f-display)}
 

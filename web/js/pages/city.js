@@ -537,9 +537,109 @@ function alertPanel(m) {
     ${v ? `<p class="verdict-line">${esc(v)}</p>` : ""}
     <p class="warn-do"><b>What a hospital would do:</b> stock doxycycline and alert the ER staff.</p>
     ${tech}
-  </div>`;
+  </div>
+  <div class="card try-rain" id="tryRain" hidden></div>`;
 }
 
+// ---------- "Try it": run the trained rain model on rainfall the user types in ----------
+// Same formula as src/lambat/alert.py (Poisson: season terms on the target week + log rain 2 to 5 weeks earlier),
+// with coefficients and a warning cut-off fixed from the training years (scripts/export_alert_model.py).
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - y0) / 864e5 + 1) / 7);
+}
+function rainPredict(mdl, target, rainNewestFirst) {
+  const c = mdl.coef, w = isoWeek(target), P = mdl.period_weeks;
+  let z = c.const;
+  [1, 2].forEach((k) => { z += c["sin" + k] * Math.sin((2 * Math.PI * k * w) / P) + c["cos" + k] * Math.cos((2 * Math.PI * k * w) / P); });
+  mdl.rain_lags_weeks.forEach((lag, j) => { z += c["rain_l" + lag] * Math.log1p(Math.max(0, rainNewestFirst[j] || 0)); });
+  return Math.exp(z);
+}
+// Four plain rain patterns for the last four weeks (newest first, mm per week) and the rainy months.
+const RAIN_PICKS = [
+  { id: "dry", label: "Mostly dry", sub: "Under 10 mm a week", mm: [5, 0, 5, 0] },
+  { id: "normal", label: "Normal rainy season", sub: "About 65 mm a week", mm: [70, 60, 70, 60] },
+  { id: "heavy", label: "Heavy rain most weeks", sub: "100 to 150 mm a week", mm: [150, 120, 150, 100] },
+  { id: "typhoon", label: "A typhoon passed", sub: "One week near 250 mm", mm: [120, 250, 110, 90] },
+];
+const TRY_MONTHS = ["Jun", "Jul", "Aug", "Sep", "Oct"]; // Dagupan's rainy season
+const MONTH_FULL = { Jun: "June", Jul: "July", Aug: "August", Sep: "September", Oct: "October", Nov: "November" };
+// Is any week's rain far beyond what Dagupan got at that time of year in the training years?
+// The week furthest above Dagupan's record for that time of year, or null when all four weeks are within the record.
+function aboveRecord(mdl, forecast, rainNewestFirst) {
+  const w0 = isoWeek(forecast);
+  let worst = null;
+  rainNewestFirst.forEach((v, j) => {
+    const w = ((w0 - 1 - j + 53) % 53) + 1, rec = mdl.rain_max_by_week[w - 1];
+    if (v > rec * mdl.guard_factor && (!worst || v / rec > worst.v / worst.rec)) worst = { v, rec };
+  });
+  return worst;
+}
+async function mountTry(el, code) {
+  const box = el.querySelector("#tryRain");
+  if (!box) return;
+  let mdl;
+  try { const r = await fetch(`data/${code}/alert_model.json`); if (!r.ok) return; mdl = await r.json(); } catch { return; }
+  if (!mdl || !mdl.coef || !mdl.rain_max_by_week) return;
+  const bt = mdl.backtest_fixed_cutoff, ex = mdl.examples[0];
+  const st = { month: "Aug", pick: "normal", custom: null };
+  box.innerHTML = `<div class="try-head"><h2 class="card-title">Will this rain bring leptospirosis?</h2><span class="badge try-badge">Test version, not live</span></div>
+    <p class="try-lead">Pick the month and how rainy the last 4 weeks were.</p>
+    <div class="try-step"><p class="try-q" id="tryMonthQ">Month</p>
+      <div class="seg try-months" role="group" aria-labelledby="tryMonthQ">${TRY_MONTHS.map((mo) => `<button type="button" data-mo="${mo}" aria-pressed="false">${mo}</button>`).join("")}</div></div>
+    <div class="try-step"><p class="try-q" id="tryRainQ">Rain in the last 4 weeks</p>
+      <div class="try-picks" role="group" aria-labelledby="tryRainQ">${RAIN_PICKS.map((r) => `<button type="button" class="try-pick" data-pick="${r.id}" aria-pressed="false"><b>${r.label}</b><span>${r.sub}</span></button>`).join("")}</div></div>
+    <div class="try-out" aria-live="polite"></div>
+    <details class="try-more"><summary>Have the actual rainfall? Type it in</summary>
+      <div class="try-mm">${["3 weeks ago", "2 weeks ago", "Last week", "This week"].map((l, i) => `<label><span>${l}</span><input class="field" type="number" inputmode="decimal" min="0" max="1000" step="1" data-j="${3 - i}" placeholder="mm"></label>`).join("")}</div>
+      <p class="try-hint">Weekly totals in mm, for example from PAGASA.</p></details>
+    <details class="try-more"><summary>How this works</summary>
+      <ul class="try-how">
+        <li>It learned from Dagupan's cases and rain, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}.</li>
+        <li>It warns when it expects about 2 or more cases in a week.</li>
+        <li>On ${mdl.trained_years[1] + 1} to 2019 it warned ${bt.alerts} times and was right ${bt.hits} times, catching ${bt.hits} of ${bt.outbreak_weeks} outbreak weeks.</li>
+        <li>It gets the timing, not the size: two weeks before the ${fmt(ex.actual)}-case week in August 2018 it warned, but expected about ${fmt(Math.round(ex.predicted))}.</li>
+      </ul></details>`;
+  box.hidden = false;
+  const out = box.querySelector(".try-out"), mmIn = [...box.querySelectorAll(".try-mm input")];
+  const draw = () => {
+    box.querySelectorAll("[data-mo]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mo === st.month)));
+    box.querySelectorAll("[data-pick]").forEach((b) => b.setAttribute("aria-pressed", String(!st.custom && b.dataset.pick === st.pick)));
+    const mi = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(st.month);
+    const forecast = new Date(2026, mi, 15), target = new Date(forecast);
+    target.setDate(target.getDate() + 7 * mdl.horizon_weeks);
+    const mm = st.custom || RAIN_PICKS.find((r) => r.id === st.pick).mm;
+    const rec = aboveRecord(mdl, forecast, mm);
+    if (rec) {
+      out.innerHTML = `<div class="try-result rec"><p class="try-verdict">Record rainfall</p><p class="try-num">${fmt(rec.v)} mm in one week is above Dagupan's record for ${MONTH_FULL[st.month]} (${fmt(rec.rec)} mm, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}). Check the figure. If it is right, prepare as you would for a major flood.</p></div>`;
+      return;
+    }
+    // Three answers that always agree with the number: at or above the warning level, close to it, or well below.
+    const p = rainPredict(mdl, target, mm), cut = mdl.cutoff, cutTxt = cut.toFixed(1);
+    const shown = p >= cut ? Math.max(p, cut).toFixed(1) : (Math.floor(p * 10) / 10).toFixed(1);
+    let cls, verdict, line;
+    if (p >= cut) { cls = "on"; verdict = "Get the hospital ready"; line = `About ${shown} cases a week expected two weeks from now, above the warning level of ${cutTxt}.`; }
+    else if (p >= 1) { cls = "near"; verdict = "Close to the warning level"; line = `About ${shown} cases a week expected two weeks from now. The warning starts at ${cutTxt}.`; }
+    else { cls = "off"; verdict = "No warning needed"; line = "Fewer than 1 case a week expected two weeks from now."; }
+    out.innerHTML = `<div class="try-result ${cls}"><p class="try-verdict">${verdict}</p><p class="try-num">${line}</p></div>`;
+  };
+  box.addEventListener("click", (e) => {
+    const mo = e.target.closest("[data-mo]"), pk = e.target.closest("[data-pick]");
+    if (mo) st.month = mo.dataset.mo;
+    if (pk) { st.pick = pk.dataset.pick; st.custom = null; mmIn.forEach((i) => { i.value = ""; }); }
+    if (mo || pk) draw();
+  });
+  box.querySelector(".try-mm").addEventListener("input", () => {
+    const filled = mmIn.filter((i) => i.value !== "");
+    if (!filled.length) { st.custom = null; draw(); return; }
+    const v = [0, 0, 0, 0]; mmIn.forEach((i) => { v[+i.dataset.j] = Math.max(0, +i.value || 0); });
+    st.custom = v; draw();
+  });
+  draw();
+}
 // ---------- page ----------
 export async function render(el, params = {}) {
   ensureCss();
@@ -586,6 +686,7 @@ export async function render(el, params = {}) {
   };
   Object.entries(panels).forEach(([id, html]) => { el.querySelector("#panel-" + id).innerHTML = html; });
   barangayPanel(m, el.querySelector("#panel-barangays"), c.code);
+  if (m.alert && m.alert.status === "evaluated") mountTry(el, c.code);
 
   el.querySelector("#city-sel").addEventListener("change", (e) => { location.hash = "#/city/" + e.target.value; });
 

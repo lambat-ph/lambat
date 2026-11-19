@@ -140,3 +140,37 @@
 .chart-city .tick{fill:var(--gold);stroke:var(--ink);stroke-width:.75}
 .city-tech{margin-top:var(--s2);border-top:1px solid var(--line);padding-top:var(--s1)}
 .city-tech>summary{cursor:pointer;font-weight:700;color:var(--blue);padding:var(--s1) 0}
+
+/* "Try it" rain warning box (city.js mountTry): one question, two taps, one answer */
+.try-rain{max-width:860px;margin-top:var(--s2)}
+.try-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s1)}
+.try-head .card-title{margin:0}
+.try-badge{background:var(--line);color:var(--ink)}
+.try-lead{margin:var(--s1) 0 var(--s2);color:var(--muted)}
+.try-step{margin:0 0 var(--s2)}
+.try-q{margin:0 0 var(--s1);font:700 var(--t-sm) var(--f-text)}
+.try-months{max-width:460px}
+.try-months button{min-height:44px}
+.try-picks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s1)}
+.try-pick{display:grid;gap:2px;align-content:start;text-align:left;min-height:64px;padding:10px 12px;border:0;border-radius:12px;background:var(--bg);color:var(--ink);cursor:pointer;font:inherit}
+.try-pick b{font:700 var(--t-sm)/1.25 var(--f-text)}
+.try-pick span{font-size:.75rem;color:var(--muted)}
+.try-pick:hover{background:#E3E5EA}
+.try-pick[aria-pressed="true"]{background:var(--blue);color:#fff}
+.try-pick[aria-pressed="true"] span{color:#D6E0F7}
+.try-pick:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
+.try-result{display:grid;gap:4px;padding:var(--s2);border-radius:12px;background:var(--bg);margin:0 0 var(--s2)}
+.try-result.on{background:var(--blue-dark);color:#fff}
+.try-result.near{background:#FBF1C7;color:var(--blue-dark)}
+.try-result.rec{background:var(--blue-dark);color:#fff}
+.try-result.rec .try-verdict{color:#fff}
+.try-verdict{margin:0;font:700 clamp(1.25rem,2.4vw,1.5rem)/1.25 var(--f-display)}
+.try-result.on .try-verdict{color:var(--gold)}
+.try-num{margin:0}
+.try-more{border-top:1px solid var(--line);padding:var(--s1) 0}
+.try-more>summary{cursor:pointer;font-weight:600;color:var(--blue);min-height:32px;display:flex;align-items:center}
+.try-mm{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s1);margin-top:var(--s1)}
+.try-mm label{display:grid;gap:4px;font-size:.75rem;color:var(--muted)}
+.try-hint{margin:var(--s1) 0 0;font-size:.75rem;color:var(--muted)}
+.try-how{margin:var(--s1) 0 0;padding-left:1.1em;display:grid;gap:4px;font-size:var(--t-sm);max-width:70ch}
+@media (max-width:640px){.try-picks,.try-mm{grid-template-columns:repeat(2,minmax(0,1fr))}}
