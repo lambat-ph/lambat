@@ -17,6 +17,7 @@ environment (Routes API, travelMode WALK). The key is read from the environment 
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import os
 import urllib.request
@@ -60,7 +61,7 @@ def sample() -> None:
         path = paths[o]
         d_node = path[0]
         f = fac_nodes[d_node]
-        km = sum(G[u][v]["length"] for u, v in zip(path, path[1:])) / 1000
+        km = sum(G[u][v]["length"] for u, v in itertools.pairwise(path)) / 1000
         on, dn = G.nodes[o], G.nodes[d_node]
         rows.append({
             "route": k, "barangay": label.get(b, b),

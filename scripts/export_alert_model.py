@@ -52,7 +52,7 @@ def main() -> None:
     fired = pred_test > cutoff
     back = {"alerts": int(fired.sum()), "hits": int((fired & out_test).sum()),
             "outbreak_weeks": int(out_test.sum()), "false_alerts": int((fired & ~out_test).sum()),
-            "test_weeks": int(len(test))}
+            "test_weeks": len(test)}
     print(f"cutoff {cutoff:.3f} expected cases; 2017-2019 with this fixed cut-off: {back}")
 
     wk = rain.dropna()
