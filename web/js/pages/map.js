@@ -661,6 +661,7 @@ async function selectCity(code, first) {
   syncUrl();
   loaderStep(4, "Drawing the map");
   mapReady();
+  loadNoah(); // does not wait for the terrain check below
   await probeTerrain(c);
   if (S.dead || !map) return;
   $("#lyRelief").disabled = !S.reliefOK;
@@ -668,7 +669,6 @@ async function selectCity(code, first) {
   $("#reliefNote").textContent = S.reliefOK ? "" : "Terrain tiles could not be loaded.";
   applyRelief();
   loadS1();
-  loadNoah();
 }
 
 function loadS1() {
