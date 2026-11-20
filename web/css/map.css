@@ -496,3 +496,9 @@ body.route-map #view{position:relative;padding-bottom:0}
 }
 @media (max-width:599px){
 }
+
+/* UP NOAH flood layer key (map.js loadNoah) */
+.noah-key{display:grid;gap:4px;margin:var(--s0) 0 var(--s1);padding:var(--s1) var(--s2);border-radius:var(--radius-sm);background:var(--bg);font-size:var(--t-xs)}
+.noah-key p{display:flex;align-items:center;gap:8px;margin:0}
+.noah-key i{flex:none;width:18px;height:12px;border-radius:3px}
+.noah-key .noah-src{margin-top:2px;color:var(--muted)}

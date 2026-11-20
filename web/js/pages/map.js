@@ -107,6 +107,8 @@ const TEMPLATE = `
         <label class="switch"><span>Terrain relief</span><input type="checkbox" role="switch" id="lyRelief"></label>
         <label class="switch"><span>Show dose points on the map</span><input type="checkbox" role="switch" id="lyDose" checked></label>
         <label class="switch" id="lyS1wrap" hidden><span>Radar flood share</span><input type="checkbox" role="switch" id="lyS1"></label>
+        <label class="switch" id="lyNoahWrap" hidden><span id="lyNoahT">UP NOAH flood map</span><input type="checkbox" role="switch" id="lyNoah"></label>
+        <div class="noah-key" id="noahKey" hidden><p><i style="background:#BFE6F5"></i>Knee-deep or less</p><p><i style="background:#5DB8E6"></i>Knee to neck</p><p><i style="background:#1C6FB0"></i>Above the neck</p><p class="noah-src">Flood water from UP NOAH's hazard map, the same map the numbers use.</p></div>
         <p class="map-note" id="reliefNote" hidden></p>
         <h3 class="opts-h">Go to</h3>
         <label class="wt" for="brgyPick">Find a barangay</label>
@@ -428,6 +430,7 @@ function showNational(first) {
   map.setLayoutProperty("hill", "visibility", "none");
   setNat(true);
   if (map.getLayer("s1-fill")) map.setLayoutProperty("s1-fill", "visibility", "none");
+  applyNoah(false);
   S.natOn = true; declutter();
   clearDose(); S.rollKey = null;
   $("#sites").hidden = true; $("#cities").hidden = false; unbusy();
@@ -589,7 +592,7 @@ function applySat(on) {
   S.satOn = on;
   if (!map.getLayer("sat")) return;
   map.setLayoutProperty("sat", "visibility", on ? "visible" : "none");
-  if (map.getLayer("b-flat")) map.setPaintProperty("b-flat", "fill-opacity", on ? 0.55 : 0.88);
+  if (map.getLayer("b-flat")) map.setPaintProperty("b-flat", "fill-opacity", $("#lyNoah") && $("#lyNoah").checked ? 0.25 : on ? 0.55 : 0.88);
 }
 function applyRelief() {
   if (!map) return;
@@ -665,6 +668,7 @@ async function selectCity(code, first) {
   $("#reliefNote").textContent = S.reliefOK ? "" : "Terrain tiles could not be loaded.";
   applyRelief();
   loadS1();
+  loadNoah();
 }
 
 function loadS1() {
@@ -680,6 +684,51 @@ function loadS1() {
   else map.addSource("s1", { type: "geojson", data: s1 });
   if (!map.getLayer("s1-fill")) map.addLayer({ id: "s1-fill", type: "fill", source: "s1", layout: { visibility: "none" }, paint: { "fill-color": ["interpolate", ["linear"], ["get", key], 0, RAMP[0], 1, RAMP[4]], "fill-opacity": 0.7 } }, "b-line");
   lw.hidden = false;
+}
+
+/* ---------- UP NOAH flood polygons: a visual layer only (the numbers are unchanged) ---------- */
+let noahIdxP = null;
+const noahScns = (code) => {
+  if (!noahIdxP) noahIdxP = fetch("data/noah_index.json").then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+  return noahIdxP.then((i) => (Array.isArray(i[code]) ? i[code] : []));
+};
+const NOAH_COL = ["#BFE6F5", "#5DB8E6", "#1C6FB0"];
+// Show the switch only where a NOAH layer exists for this city and flood; fetch the polygons only when it is on.
+async function loadNoah() {
+  const wrap = $("#lyNoahWrap"), cb = $("#lyNoah"), code = S.city;
+  const scn = S.pl ? String(S.pl.scn) : String(years());
+  const have = await noahScns(code);
+  if (S.dead || !map || S.city !== code) return;
+  S.noahWant = have.includes(scn) ? `${code}|${scn}` : null;
+  if (!S.noahWant) { wrap.hidden = true; cb.checked = false; applyNoah(false); return; }
+  $("#lyNoahT").textContent = `UP NOAH flood map, ${scn}-year`;
+  wrap.hidden = false;
+  if (cb.checked) await showNoah(); else applyNoah(false);
+}
+async function showNoah() {
+  const want = S.noahWant; if (!want) return;
+  if (S.noahHave !== want) {
+    const [code, scn] = want.split("|");
+    let gj = null;
+    try { const r = await fetch(`data/${code}/noah_flood_${scn}yr.geojson`); if (r.ok) gj = await r.json(); } catch { gj = null; }
+    if (S.dead || !map || S.noahWant !== want) return;
+    if (!gj) { $("#lyNoah").checked = false; applyNoah(false); return; }
+    if (map.getSource("noah")) map.getSource("noah").setData(gj);
+    else map.addSource("noah", { type: "geojson", data: gj });
+    if (!map.getLayer("noah-fill")) {
+      map.addLayer({ id: "noah-fill", type: "fill", source: "noah", layout: { visibility: "none" },
+        paint: { "fill-color": ["match", ["get", "level"], 1, NOAH_COL[0], 2, NOAH_COL[1], 3, NOAH_COL[2], NOAH_COL[0]], "fill-opacity": 0.8 } }, "b-line");
+    }
+    S.noahHave = want;
+  }
+  applyNoah($("#lyNoah").checked);
+}
+// The water shows clearly when the barangay colours step back.
+function applyNoah(on) {
+  if (!map) return;
+  if (map.getLayer("noah-fill")) map.setLayoutProperty("noah-fill", "visibility", on ? "visible" : "none");
+  if (map.getLayer("b-flat")) map.setPaintProperty("b-flat", "fill-opacity", on ? 0.25 : S.satOn ? 0.55 : 0.88);
+  const k = $("#noahKey"); if (k) k.hidden = !on;
 }
 
 /* ---------- selection and info card ---------- */
@@ -1127,6 +1176,7 @@ async function setFlood(scn) {
   plCut(S.plan, false);
   map.getSource("brgy").setData(S.data.barangays);
   paintMetric();
+  loadNoah();
   drawDose();
   renderStrip();
   syncMeasure();
@@ -1938,6 +1988,7 @@ function wire() {
   $("#lySat").addEventListener("change", (e) => applySat(e.target.checked));
   $("#lyRelief").addEventListener("change", (e) => { S.reliefOn = e.target.checked; applyRelief(); });
   $("#lyS1").addEventListener("change", (e) => map.setLayoutProperty("s1-fill", "visibility", e.target.checked ? "visible" : "none"));
+  $("#lyNoah").addEventListener("change", (e) => { if (e.target.checked) showNoah(); else applyNoah(false); });
   wireSheet();
   $("#sitesTog").addEventListener("click", () => sitesOpen($("#sites").classList.contains("shut")));
   wireTips();
