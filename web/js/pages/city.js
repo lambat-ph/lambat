@@ -585,32 +585,58 @@ async function mountTry(el, code) {
     return;
   }
   const st = { month: mdl.default_month, pick: "normal", custom: null };
+  const WEEKS = ["3 weeks ago", "2 weeks ago", "Last week", "This week"]; // left to right; column i is lag j = 3 - i
   box.innerHTML = `<div class="try-head"><h2 class="card-title">Will this rain bring leptospirosis?</h2><span class="badge try-badge">Test version, not live</span></div>
-    <p class="try-lead">Pick the month and how rainy the last 4 weeks were.</p>
+    <p class="try-lead">Pick the month and the rain. Drag a bar, or tap its number to type it.</p>
     <div class="try-step"><p class="try-q" id="tryMonthQ">Month</p>
       <div class="seg try-months" role="group" aria-labelledby="tryMonthQ">${mdl.months.map((mo) => `<button type="button" data-mo="${mo}" aria-pressed="false">${mo}</button>`).join("")}</div></div>
     <div class="try-step"><p class="try-q" id="tryRainQ">Rain in the last 4 weeks</p>
-      <div class="try-picks" role="group" aria-labelledby="tryRainQ">${picks.map((r) => `<button type="button" class="try-pick" data-pick="${r.id}" aria-pressed="false"><b>${r.label}</b><span>${r.sub}</span></button>`).join("")}</div></div>
+      <div class="try-picks" role="group" aria-labelledby="tryRainQ">${picks.map((r) => `<button type="button" class="try-pick" data-pick="${r.id}" aria-pressed="false"><b>${r.label}</b><span>${r.sub}</span></button>`).join("")}</div>
+      <div class="rb" role="group" aria-label="Weekly rainfall. Drag a bar or tap its number.">${WEEKS.map((w, i) => `<div class="rb-col" data-i="${i}">
+          <div class="rb-track" role="slider" tabindex="0" aria-label="Rain ${w}, mm" aria-valuemin="0">
+            <span class="rb-rec" aria-hidden="true"></span><span class="rb-bar"><span class="rb-grip" aria-hidden="true"></span></span></div>
+          <button type="button" class="rb-val" aria-label="Type the rain ${w}"></button>
+          <span class="rb-wk">${w}</span></div>`).join("")}</div>
+      <p class="rb-key"><span class="rb-key-l" aria-hidden="true"></span>Wettest week on record for this time of year</p></div>
     <div class="try-out" aria-live="polite"></div>
-    <details class="try-more"><summary>Have the actual rainfall? Type it in</summary>
-      <div class="try-mm">${["3 weeks ago", "2 weeks ago", "Last week", "This week"].map((l, i) => `<label><span>${l}</span><input class="field" type="number" inputmode="decimal" min="0" max="1000" step="1" data-j="${3 - i}" placeholder="mm"></label>`).join("")}</div>
-      <p class="try-hint">Weekly totals in mm, for example from PAGASA.</p></details>
     <details class="try-more"><summary>How this works</summary>
       <ul class="try-how">
         <li>It learned from ${esc(place)}'s cases and rain, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}.</li>
         <li>It warns when it expects ${mdl.cutoff.toFixed(1)} or more cases in a week.</li>
         <li>On ${mdl.trained_years[1] + 1} to 2019 it warned ${bt.alerts} times and was right ${bt.hits} times, catching ${bt.hits} of ${bt.outbreak_weeks} outbreak weeks.</li>
         <li>${ex.warned ? `It gets the timing, not the size: two weeks before the ${fmt(ex.actual)}-case week in ${esc(ex.month_year)} it warned, but expected about ${num(ex.predicted)}.` : `It can miss sharp spikes: it did not flag the ${fmt(ex.actual)}-case week in ${esc(ex.month_year)}, where it expected about ${num(ex.predicted)}.`}</li>
+        <li>Weekly rain totals can come from PAGASA station records.</li>
       </ul></details>`;
   box.hidden = false;
-  const out = box.querySelector(".try-out"), mmIn = [...box.querySelectorAll(".try-mm input")];
-  const draw = () => {
+  const out = box.querySelector(".try-out"), cols = [...box.querySelectorAll(".rb-col")];
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const forecastOf = () => new Date(2026, MON.indexOf(st.month), 15);
+  const mmNow = () => (st.custom || picks.find((r) => r.id === st.pick).mm).slice();
+  // Record (wettest week in the training years) for the calendar week behind each bar.
+  const recordAt = (j) => { const w0 = isoWeek(forecastOf()); return mdl.rain_max_by_week[((w0 - 1 - j + 53) % 53)]; };
+  let scale = 100;
+  const setScale = (mm) => {
+    const hi = Math.max(...[0, 1, 2, 3].map((j) => recordAt(j) * mdl.guard_factor), ...mm, 50);
+    scale = Math.ceil((hi * 1.1) / 50) * 50;
+  };
+  const drawBars = (mm) => {
+    cols.forEach((c, i) => {
+      const j = 3 - i, v = mm[j], tr = c.querySelector(".rb-track");
+      c.querySelector(".rb-bar").style.height = `${Math.min(100, (v / scale) * 100)}%`;
+      c.querySelector(".rb-rec").style.bottom = `${Math.min(100, (recordAt(j) / scale) * 100)}%`;
+      c.classList.toggle("over", v > recordAt(j) * mdl.guard_factor);
+      tr.setAttribute("aria-valuemax", String(scale)); tr.setAttribute("aria-valuenow", String(v)); tr.setAttribute("aria-valuetext", `${fmt(v)} mm`);
+      const b = c.querySelector(".rb-val"); if (b) b.textContent = `${fmt(v)} mm`;
+    });
+  };
+  const draw = (keepScale) => {
     box.querySelectorAll("[data-mo]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mo === st.month)));
     box.querySelectorAll("[data-pick]").forEach((b) => b.setAttribute("aria-pressed", String(!st.custom && b.dataset.pick === st.pick)));
-    const mi = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(st.month);
-    const forecast = new Date(2026, mi, 15), target = new Date(forecast);
+    const forecast = forecastOf(), target = new Date(forecast);
     target.setDate(target.getDate() + 7 * mdl.horizon_weeks);
-    const mm = st.custom || picks.find((r) => r.id === st.pick).mm;
+    const mm = mmNow();
+    if (!keepScale) setScale(mm);
+    drawBars(mm);
     const rec = aboveRecord(mdl, forecast, mm);
     if (rec) {
       out.innerHTML = `<div class="try-result rec"><p class="try-verdict">Record rainfall</p><p class="try-num">${fmt(rec.v)} mm in one week is above ${esc(place)}'s record for ${MF[st.month]} (${fmt(rec.rec)} mm, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}). Check the figure. If it is right, prepare as you would for a major flood.</p></div>`;
@@ -625,17 +651,46 @@ async function mountTry(el, code) {
     else { cls = "off"; verdict = "No warning needed"; line = p < 1 ? "Fewer than 1 case a week expected two weeks from now." : `About ${shown} cases a week expected two weeks from now, below the warning level of ${cutTxt}.`; }
     out.innerHTML = `<div class="try-result ${cls}"><p class="try-verdict">${verdict}</p><p class="try-num">${line}</p></div>`;
   };
+  // One week's rain changed by drag, keys or typing: the bars become a custom pattern.
+  const setWeek = (j, v, keepScale = true) => {
+    const mm = mmNow(); mm[j] = Math.max(0, Math.min(2000, Math.round(v / 5) * 5)); st.custom = mm; draw(keepScale);
+  };
   box.addEventListener("click", (e) => {
-    const mo = e.target.closest("[data-mo]"), pk = e.target.closest("[data-pick]");
-    if (mo) st.month = mo.dataset.mo;
-    if (pk) { st.pick = pk.dataset.pick; st.custom = null; mmIn.forEach((i) => { i.value = ""; }); }
-    if (mo || pk) draw();
+    const mo = e.target.closest("[data-mo]"), pk = e.target.closest("[data-pick]"), val = e.target.closest(".rb-val");
+    if (mo) { st.month = mo.dataset.mo; draw(); }
+    if (pk) { st.pick = pk.dataset.pick; st.custom = null; draw(); }
+    if (val) {
+      const c = val.closest(".rb-col"), j = 3 - +c.dataset.i, label = val.getAttribute("aria-label");
+      const inp = document.createElement("input");
+      Object.assign(inp, { type: "number", min: "0", max: "2000", step: "5", value: String(mmNow()[j]), className: "field rb-in" });
+      inp.setAttribute("inputmode", "decimal"); inp.setAttribute("aria-label", label.replace("Type the rain", "Rain") + ", mm");
+      val.replaceWith(inp); inp.focus(); inp.select();
+      let done = false;
+      const commit = (save) => {
+        if (done) return; done = true;
+        const b = document.createElement("button");
+        Object.assign(b, { type: "button", className: "rb-val" }); b.setAttribute("aria-label", label);
+        inp.replaceWith(b);
+        if (save && inp.value !== "") setWeek(j, +inp.value, false); else draw(true);
+        b.focus();
+      };
+      inp.addEventListener("keydown", (k) => { if (k.key === "Enter") commit(true); if (k.key === "Escape") commit(false); });
+      inp.addEventListener("blur", () => commit(true));
+    }
   });
-  box.querySelector(".try-mm").addEventListener("input", () => {
-    const filled = mmIn.filter((i) => i.value !== "");
-    if (!filled.length) { st.custom = null; draw(); return; }
-    const v = [0, 0, 0, 0]; mmIn.forEach((i) => { v[+i.dataset.j] = Math.max(0, +i.value || 0); });
-    st.custom = v; draw();
+  cols.forEach((c, i) => {
+    const tr = c.querySelector(".rb-track"), j = 3 - i;
+    const fromY = (y) => { const r = tr.getBoundingClientRect(); return Math.max(0, Math.min(scale, ((r.bottom - y) / r.height) * scale)); };
+    tr.addEventListener("pointerdown", (e) => { tr.setPointerCapture(e.pointerId); c.classList.add("drag"); setWeek(j, fromY(e.clientY)); e.preventDefault(); });
+    tr.addEventListener("pointermove", (e) => { if (tr.hasPointerCapture(e.pointerId)) setWeek(j, fromY(e.clientY)); });
+    const end = (e) => { if (tr.hasPointerCapture(e.pointerId)) tr.releasePointerCapture(e.pointerId); c.classList.remove("drag"); draw(); };
+    tr.addEventListener("pointerup", end); tr.addEventListener("pointercancel", end);
+    tr.addEventListener("keydown", (e) => {
+      const v = mmNow()[j], step = { ArrowUp: 5, ArrowRight: 5, ArrowDown: -5, ArrowLeft: -5, PageUp: 25, PageDown: -25 }[e.key];
+      if (step != null) { setWeek(j, Math.min(scale, v + step)); e.preventDefault(); }
+      else if (e.key === "Home") { setWeek(j, 0); e.preventDefault(); }
+      else if (e.key === "End") { setWeek(j, scale); e.preventDefault(); }
+    });
   });
   draw();
 }
