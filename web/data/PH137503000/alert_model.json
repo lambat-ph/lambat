@@ -1,0 +1,180 @@
+{
+  "city": "PH137503000",
+  "city_name": "City of Navotas",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -7.698201418864473,
+    "sin1": 2.4241267144997733,
+    "cos1": 1.0651258886519657,
+    "sin2": 0.7716769037547233,
+    "cos2": -0.8178350795064563,
+    "rain_l2": 0.7755190354089065,
+    "rain_l3": 0.7286840043359177,
+    "rain_l4": 0.12142491086884152,
+    "rain_l5": 0.49699541540741143
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 1.0,
+  "alert_rate": 0.0884,
+  "cutoff": 1.8143,
+  "backtest_fixed_cutoff": {
+    "alerts": 9,
+    "hits": 4,
+    "outbreak_weeks": 24,
+    "false_alerts": 5,
+    "test_weeks": 157
+  },
+  "try_it": false,
+  "months": [
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Jul",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "sub": "About 70 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        145,
+        115,
+        145,
+        100
+      ],
+      "sub": "About 125 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        145,
+        200,
+        145,
+        100
+      ],
+      "sub": "One week near 200 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    114.5,
+    29.4,
+    25.4,
+    6.7,
+    11.6,
+    16.0,
+    16.0,
+    16.0,
+    19.1,
+    26.2,
+    26.2,
+    26.2,
+    26.2,
+    48.4,
+    100.1,
+    179.3,
+    179.3,
+    179.3,
+    179.3,
+    249.8,
+    249.8,
+    272.1,
+    272.1,
+    272.1,
+    272.1,
+    240.5,
+    282.1,
+    303.3,
+    528.5,
+    528.5,
+    528.5,
+    528.5,
+    232.7,
+    429.6,
+    429.6,
+    429.6,
+    429.6,
+    311.2,
+    311.2,
+    177.5,
+    177.5,
+    177.5,
+    166.9,
+    109.3,
+    109.3,
+    109.3,
+    66.0,
+    114.5,
+    114.5,
+    114.5,
+    114.5,
+    29.4,
+    6.4
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2018-07-23",
+      "target_week": "2018-08-06",
+      "month_year": "August 2018",
+      "rain_newest_first": [
+        40.9,
+        260.5,
+        68.3,
+        56.3
+      ],
+      "predicted": 1.04,
+      "actual": 9,
+      "warned": false
+    }
+  ],
+  "note": "Prototype. Poisson model trained on City of Navotas 2008-2016 (Project CCHAIN). Not a live warning."
+}

@@ -7,10 +7,14 @@
 
 import { DATA } from "./config.js";
 
-// Only these cities have planner files. Every other city skips the fetch, so the console stays clean.
-export const PLANNER_CITIES = ["PH015518000"];
 export const SCENARIOS = ["5", "25", "100"];
-export const hasPlanner = (code) => PLANNER_CITIES.includes(code);
+// Which flood scenarios have a planner file, per city (web/data/planner_index.json, written by
+// scripts/export_planner.py). A city without an entry skips the planner fetch, so the console stays clean.
+let indexP = null;
+export function plannerScenarios(code) {
+  if (!indexP) indexP = fetch(`${DATA}/planner_index.json`).then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+  return indexP.then((idx) => (Array.isArray(idx[code]) ? idx[code] : []));
+}
 
 const cache = new Map();
 /** Fetches planner_<scn>yr.json for a city. Resolves to null when the file is missing or malformed. Cached. */

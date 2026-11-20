@@ -1,0 +1,180 @@
+{
+  "city": "PH137603000",
+  "city_name": "City of Muntinlupa",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -10.042140981207305,
+    "sin1": 1.339167495107105,
+    "cos1": 0.0946461066223081,
+    "sin2": -0.36292939187479983,
+    "cos2": -0.9957938857652959,
+    "rain_l2": 0.4157054653528189,
+    "rain_l3": 0.8257520416096751,
+    "rain_l4": 0.2870729164571339,
+    "rain_l5": 0.7718542080891058
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 1.0,
+  "alert_rate": 0.0474,
+  "cutoff": 1.3344,
+  "backtest_fixed_cutoff": {
+    "alerts": 2,
+    "hits": 1,
+    "outbreak_weeks": 11,
+    "false_alerts": 1,
+    "test_weeks": 157
+  },
+  "try_it": false,
+  "months": [
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Sep",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        65,
+        65,
+        65,
+        65
+      ],
+      "sub": "About 65 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        140,
+        110,
+        140,
+        100
+      ],
+      "sub": "About 120 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        140,
+        230,
+        140,
+        100
+      ],
+      "sub": "One week near 230 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    387.6,
+    114.8,
+    15.1,
+    14.9,
+    32.7,
+    32.7,
+    32.7,
+    32.7,
+    14.5,
+    22.5,
+    22.5,
+    22.5,
+    22.5,
+    44.4,
+    108.1,
+    149.1,
+    149.1,
+    149.1,
+    149.1,
+    236.1,
+    236.1,
+    236.1,
+    236.1,
+    209.9,
+    209.9,
+    179.7,
+    228.9,
+    239.1,
+    400.6,
+    400.6,
+    400.6,
+    400.6,
+    198.2,
+    403.1,
+    403.1,
+    403.1,
+    403.1,
+    362.7,
+    329.7,
+    188.7,
+    188.7,
+    188.7,
+    189.2,
+    189.2,
+    189.2,
+    197.0,
+    197.0,
+    387.6,
+    387.6,
+    387.6,
+    387.6,
+    114.8,
+    10.5
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2017-08-21",
+      "target_week": "2017-09-04",
+      "month_year": "September 2017",
+      "rain_newest_first": [
+        121.7,
+        136.2,
+        16.2,
+        71.5
+      ],
+      "predicted": 0.52,
+      "actual": 4,
+      "warned": false
+    }
+  ],
+  "note": "Prototype. Poisson model trained on City of Muntinlupa 2008-2016 (Project CCHAIN). Not a live warning."
+}

@@ -1,0 +1,180 @@
+{
+  "city": "PH137401000",
+  "city_name": "City of Mandaluyong",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -8.32569041309342,
+    "sin1": 1.3663834992727695,
+    "cos1": 0.8323048331189918,
+    "sin2": 0.3321491153768851,
+    "cos2": -0.5118165790988682,
+    "rain_l2": 0.43927781943829136,
+    "rain_l3": 0.7080982472763759,
+    "rain_l4": 0.38329329255667,
+    "rain_l5": 0.293935806468093
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 0.0,
+  "alert_rate": 0.0841,
+  "cutoff": 0.3923,
+  "backtest_fixed_cutoff": {
+    "alerts": 13,
+    "hits": 8,
+    "outbreak_weeks": 38,
+    "false_alerts": 5,
+    "test_weeks": 157
+  },
+  "try_it": false,
+  "months": [
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Sep",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        65,
+        65,
+        65,
+        65
+      ],
+      "sub": "About 65 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        140,
+        110,
+        140,
+        100
+      ],
+      "sub": "About 120 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        140,
+        195,
+        140,
+        100
+      ],
+      "sub": "One week near 195 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    133.5,
+    37.5,
+    24.0,
+    8.5,
+    15.7,
+    24.3,
+    24.3,
+    24.3,
+    24.3,
+    24.6,
+    24.6,
+    24.6,
+    24.6,
+    37.8,
+    92.1,
+    170.9,
+    170.9,
+    170.9,
+    170.9,
+    283.6,
+    283.6,
+    283.6,
+    283.6,
+    254.9,
+    254.9,
+    208.8,
+    262.9,
+    262.9,
+    450.1,
+    450.1,
+    450.1,
+    450.1,
+    209.0,
+    431.4,
+    431.4,
+    431.4,
+    431.4,
+    298.8,
+    298.8,
+    172.5,
+    172.5,
+    172.5,
+    172.5,
+    88.1,
+    88.1,
+    88.1,
+    73.2,
+    133.5,
+    133.5,
+    133.5,
+    133.5,
+    34.5,
+    4.5
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2018-06-11",
+      "target_week": "2018-06-25",
+      "month_year": "June 2018",
+      "rain_newest_first": [
+        152.3,
+        246.5,
+        32.6,
+        18.8
+      ],
+      "predicted": 0.27,
+      "actual": 5,
+      "warned": false
+    }
+  ],
+  "note": "Prototype. Poisson model trained on City of Mandaluyong 2008-2016 (Project CCHAIN). Not a live warning."
+}

@@ -1,4 +1,109 @@
 {
+  "city": "PH015518000",
+  "city_name": "Dagupan City",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -5.978991988467003,
+    "sin1": 0.8976926686513798,
+    "cos1": 1.7722089501449996,
+    "sin2": 0.4801581427124182,
+    "cos2": -0.2442518493647464,
+    "rain_l2": 0.5385037224868341,
+    "rain_l3": 0.5156134899301307,
+    "rain_l4": 0.3883845105765841,
+    "rain_l5": 0.15908107298110022
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 1.0,
+  "alert_rate": 0.0991,
+  "cutoff": 1.7721,
+  "backtest_fixed_cutoff": {
+    "alerts": 15,
+    "hits": 13,
+    "outbreak_weeks": 39,
+    "false_alerts": 2,
+    "test_weeks": 157
+  },
+  "try_it": true,
+  "months": [
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Aug",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        65,
+        65,
+        65,
+        65
+      ],
+      "sub": "About 65 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        150,
+        120,
+        150,
+        105
+      ],
+      "sub": "About 130 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        150,
+        185,
+        150,
+        105
+      ],
+      "sub": "One week near 185 mm"
+    }
+  ],
   "rain_max_by_week": [
     51.5,
     10.0,
@@ -55,51 +160,11 @@
     0.0
   ],
   "guard_factor": 1.25,
-  "city": "PH015518000",
-  "trained_years": [
-    2008,
-    2016
-  ],
-  "horizon_weeks": 2,
-  "period_weeks": 52.18,
-  "coef": {
-    "const": -5.978991988467003,
-    "sin1": 0.8976926686513798,
-    "cos1": 1.7722089501449996,
-    "sin2": 0.4801581427124182,
-    "cos2": -0.2442518493647464,
-    "rain_l2": 0.5385037224868341,
-    "rain_l3": 0.5156134899301307,
-    "rain_l4": 0.3883845105765841,
-    "rain_l5": 0.15908107298110022
-  },
-  "rain_lags_weeks": [
-    2,
-    3,
-    4,
-    5
-  ],
-  "outbreak_threshold": 1.0,
-  "alert_rate": 0.0991,
-  "cutoff": 1.7721,
-  "backtest_fixed_cutoff": {
-    "alerts": 15,
-    "hits": 13,
-    "outbreak_weeks": 39,
-    "false_alerts": 2,
-    "test_weeks": 157
-  },
-  "rain_ref_mm_week": {
-    "median": 17.4,
-    "p90": 123.5,
-    "wet_median": 67.6,
-    "max": 378.7
-  },
   "examples": [
     {
-      "label": "Two weeks before the August 2018 peak",
       "forecast_week": "2018-07-23",
       "target_week": "2018-08-06",
+      "month_year": "August 2018",
       "rain_newest_first": [
         120.7,
         372.7,
@@ -107,21 +172,9 @@
         92.0
       ],
       "predicted": 2.05,
-      "actual": 21
-    },
-    {
-      "label": "A dry-season week, February 2018",
-      "forecast_week": "2018-01-22",
-      "target_week": "2018-02-05",
-      "rain_newest_first": [
-        0.2,
-        0.0,
-        0.0,
-        0.5
-      ],
-      "predicted": 0.03,
-      "actual": 0
+      "actual": 21,
+      "warned": true
     }
   ],
-  "note": "Prototype. Poisson model trained on Dagupan 2008-2016 (Project CCHAIN). Not a live warning."
+  "note": "Prototype. Poisson model trained on Dagupan City 2008-2016 (Project CCHAIN). Not a live warning."
 }

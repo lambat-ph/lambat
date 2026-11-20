@@ -1,7 +1,7 @@
 import { getCities, getCity, cityHref, scenarioOf } from "../data.js";
 import { TERRARIUM, SATELLITE, SATELLITE_ATTR, BASEMAP, BASEMAP_ATTR, BASE_STYLE_URL, COLORS, RAMP, WALK_MIN } from "../config.js";
 import { fmt, pct, esc, reducedMotion, useCss, skel, moreBelow } from "../format.js";
-import { hasPlanner, loadPlanner, planFor, rangeOf, pickCount, clinicShare, SCENARIOS } from "../planner.js";
+import { plannerScenarios, loadPlanner, planFor, rangeOf, pickCount, clinicShare, SCENARIOS } from "../planner.js";
 
 const METRICS = [
   { key: "exposed", seg: "Exposed", prop: "exposed", short: "Exposed residents", desc: "People who live where a {Y}-year flood reaches.",
@@ -606,7 +606,10 @@ async function selectCity(code, first) {
   stage(loaderOn ? 2 : 1, loaderOn ? "Loading barangay outlines" : "Loading " + c.name);
   const ld = $("#loading"); if (!loaderOn) { ld.hidden = false; ld.textContent = "Loading " + c.name; }
   let data;
-  const plP = hasPlanner(code) ? loadPlanner(code, S.plScn || "25") : null;
+  // The planner runs only when this city has a file for the flood its published numbers use (25-year, or 100-year).
+  const baseScn = String(scenarioOf(c).yrs), scns = await plannerScenarios(code);
+  const plP = scns.includes(baseScn) ? loadPlanner(code, S.plScn && scns.includes(S.plScn) ? S.plScn : baseScn) : null;
+  S.plScns = scns; S.plBase = baseScn;
   try { data = await getCity(code); } catch (e) { data = { error: e.message }; }
   const pld = plP ? await plP : null;
   if (S.dead || !map) return;
@@ -984,7 +987,7 @@ function curPlan(k = S.plan) {
   const pl = S.pl, key = k + "|" + [...pl.excluded].sort().join();
   return pl.cache[key] || (pl.cache[key] = planFor(pl.d, k, pl.excluded));
 }
-const pickText = (s) => `In the best ${S.plan} in ${s.pick} of ${S.pl.d.uncertainty.n} simulated floods`;
+const pickText = (s) => `Chosen in ${s.pick} of ${S.pl.d.uncertainty.n} simulated floods`;
 const rangeText = (r) => (r.lo === r.hi ? r.lo + "%" : r.lo + "% to " + r.hi + "%");
 // Called once per city load. pld is the planner file (or null: the city then behaves as before).
 function plAttach(pld) {
@@ -997,13 +1000,13 @@ function plAttach(pld) {
   S.data.barangays.features.forEach((f) => { const p = f.properties; base.feats.set(p.adm4_pcode, { exposed: p.exposed, exposed_unreached_flood: p.exposed_unreached_flood, flooded_share: p.flooded_share, weekly_capsules: p.weekly_capsules }); });
   S.data.rows.forEach((r) => base.rows.set(r.id, { exposed: r.exposed, unreached: r.unreached, share: r.share, capsules: r.capsules }));
   const sum = d.summary || {}, meta = d.meta || {};
-  S.pl = { d: pld, scn: pld.scenario ? String(pld.scenario).replace(/\D/g, "") : "25", excluded: new Set(), cache: {}, base, exposed: sum.exposed != null ? sum.exposed : meta.exposed };
+  S.pl = { d: pld, scn: pld.scenario ? String(pld.scenario).replace(/\D/g, "") : S.plBase, scns: S.plScns, baseScn: S.plBase, excluded: new Set(), cache: {}, base, exposed: sum.exposed != null ? sum.exposed : meta.exposed };
   plApply();
 }
-// Put the numbers of the chosen flood size into the barangay shapes and rows. The 25-year numbers stay as published.
+// Put the numbers of the chosen flood size into the barangay shapes and rows. The city's published flood keeps its published numbers.
 function plApply() {
   const pl = S.pl, b = pl.base;
-  if (pl.scn === "25") {
+  if (pl.scn === pl.baseScn) {
     S.data.barangays.features.forEach((f) => Object.assign(f.properties, b.feats.get(f.properties.adm4_pcode)));
     S.data.rows.forEach((r) => Object.assign(r, b.rows.get(r.id)));
     pl.exposed = S.data.summary && S.data.summary.exposed != null ? S.data.summary.exposed : (S.data.meta || {}).exposed;
@@ -1092,11 +1095,12 @@ function buildFloodSeg() {
   fp.classList.remove("pre");
   $("#mapwrap").classList.toggle("pl", !!S.pl);
   $("#prPlan").hidden = !S.pl;
-  if (!S.pl) { fp.hidden = true; $("#floodNote").hidden = true; seg.innerHTML = ""; return; }
+  if (!S.pl || S.pl.scns.length < 2) { fp.hidden = true; $("#floodNote").hidden = true; seg.innerHTML = ""; return; }
   fp.hidden = false;
-  seg.style.setProperty("--n", SCENARIOS.length);
-  seg.style.setProperty("--i", Math.max(0, SCENARIOS.indexOf(S.pl.scn)));
-  seg.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + SCENARIOS.map((k) => `<label><input type="radio" name="flood" value="${k}"${k === S.pl.scn ? " checked" : ""}><span>${k}-year<span class="sr-only"> flood</span></span></label>`).join("");
+  const sc = S.pl.scns;
+  seg.style.setProperty("--n", sc.length);
+  seg.style.setProperty("--i", Math.max(0, sc.indexOf(S.pl.scn)));
+  seg.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + sc.map((k) => `<label><input type="radio" name="flood" value="${k}"${k === S.pl.scn ? " checked" : ""}><span>${k}-year<span class="sr-only"> flood</span></span></label>`).join("");
 }
 // Switch the flood size: load that planner file, then refresh numbers, shading, sites and the address.
 async function setFlood(scn) {
@@ -1118,7 +1122,7 @@ async function setFlood(scn) {
   plApply();
   syncShareMeasure();
   I.cur = null;
-  $("#floodSeg").style.setProperty("--i", Math.max(0, SCENARIOS.indexOf(scn)));
+  $("#floodSeg").style.setProperty("--i", Math.max(0, pl.scns.indexOf(scn)));
   S.active = null; clearServe();
   plCut(S.plan, false);
   map.getSource("brgy").setData(S.data.barangays);
@@ -1190,7 +1194,7 @@ function preStrip(params) {
   a.setAttribute("aria-busy", "true");
   a.innerHTML = `<span class="sr-only">Loading the numbers.</span>${skel(3)}`;
   $("#colTop").hidden = false;
-  if (hasPlanner(c.code)) { const fp = $("#floodPick"); fp.hidden = false; fp.classList.add("pre"); }
+  plannerScenarios(c.code).then((sc) => { if (S.pre === c.code && sc.length > 1 && sc.includes(String(scenarioOf(c).yrs))) { const fp = $("#floodPick"); fp.hidden = false; fp.classList.add("pre"); } });
   // The ranked list shows placeholder rows until the dose sites arrive.
   $("#sites").hidden = false; $("#sites").setAttribute("aria-busy", "true"); busyParts(true);
   $("#siteList").innerHTML = `<li>${skel("list", { n: 3 })}</li>`;
@@ -1209,7 +1213,11 @@ const statBlock = (num, label, sub) => `<div class="st"><span class="st-n">${num
 const WALK = nb(`${WALK_MIN}-minute walk`);
 // A small "?" next to a term opens a one-line definition.
 // The term itself is the button: dotted blue underline plus a small solid "?" glyph.
-const tipBtn = (k, term, label) => `<button class="tip-q" type="button" data-tip="${k}" aria-label="${label}" aria-expanded="false" aria-controls="tipPop"><span class="tip-t">${term}</span><span class="tip-g" aria-hidden="true">?</span></button>`;
+// The "?" stays on the same line as the term's last word, so it never wraps onto a line of its own.
+const tipBtn = (k, term, label) => {
+  const i = String(term).lastIndexOf(" "), head = i < 0 ? "" : term.slice(0, i + 1), last = i < 0 ? term : term.slice(i + 1);
+  return `<button class="tip-q" type="button" data-tip="${k}" aria-label="${label}" aria-expanded="false" aria-controls="tipPop"><span class="tip-t">${head}</span><span class="tip-nw"><span class="tip-t">${last}</span><span class="tip-g" aria-hidden="true">?</span></span></button>`;
+};
 const TIPS = () => ({
   flood25: { t: `${years()}-year flood`, b: `A flood big enough that it has about a ${Math.round(100 / years())}% chance of happening in any year${years() === 100 ? ". It is larger than a 25-year flood" : ""} (UP NOAH hazard map).` },
   exposed: { t: "Exposed residents", b: `People who live where a ${years()}-year flood reaches.` },

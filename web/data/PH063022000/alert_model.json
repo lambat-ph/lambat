@@ -1,0 +1,180 @@
+{
+  "city": "PH063022000",
+  "city_name": "Iloilo City",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -0.8287407954114583,
+    "sin1": -0.3538247997438613,
+    "cos1": 0.6399646522755946,
+    "sin2": 0.2770503774340586,
+    "cos2": -0.4625597245890623,
+    "rain_l2": 0.10249544019167565,
+    "rain_l3": 0.19300886160584463,
+    "rain_l4": 0.22966339501991884,
+    "rain_l5": 0.17204683866750523
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 13.0,
+  "alert_rate": 0.097,
+  "cutoff": 17.5815,
+  "backtest_fixed_cutoff": {
+    "alerts": 10,
+    "hits": 6,
+    "outbreak_weeks": 10,
+    "false_alerts": 4,
+    "test_weeks": 157
+  },
+  "try_it": true,
+  "months": [
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Jul",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "sub": "About 70 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        125,
+        100,
+        125,
+        90
+      ],
+      "sub": "About 110 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        125,
+        170,
+        125,
+        90
+      ],
+      "sub": "One week near 170 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    57.9,
+    42.0,
+    34.0,
+    34.1,
+    47.0,
+    47.0,
+    47.0,
+    47.0,
+    64.4,
+    64.4,
+    64.4,
+    64.4,
+    55.7,
+    55.7,
+    97.0,
+    97.0,
+    123.9,
+    126.2,
+    170.8,
+    170.8,
+    170.8,
+    295.8,
+    295.8,
+    295.8,
+    295.8,
+    210.7,
+    210.7,
+    244.0,
+    244.0,
+    244.0,
+    244.0,
+    198.5,
+    185.9,
+    185.9,
+    185.9,
+    185.9,
+    137.2,
+    167.9,
+    167.9,
+    167.9,
+    167.9,
+    130.9,
+    130.9,
+    130.9,
+    130.9,
+    80.5,
+    80.5,
+    80.5,
+    80.5,
+    69.9,
+    57.9,
+    42.0,
+    0.1
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2017-10-02",
+      "target_week": "2017-10-16",
+      "month_year": "October 2017",
+      "rain_newest_first": [
+        81.7,
+        98.2,
+        136.1,
+        111.2
+      ],
+      "predicted": 24.12,
+      "actual": 40,
+      "warned": true
+    }
+  ],
+  "note": "Prototype. Poisson model trained on Iloilo City 2008-2016 (Project CCHAIN). Not a live warning."
+}

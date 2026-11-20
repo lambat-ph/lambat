@@ -1,0 +1,180 @@
+{
+  "city": "PH097332000",
+  "city_name": "Zamboanga City",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -1.6949877407634082,
+    "sin1": -0.3263840678903819,
+    "cos1": -0.049776943110068625,
+    "sin2": 0.10893452651940375,
+    "cos2": -0.0038974593042315903,
+    "rain_l2": -0.008420205605075448,
+    "rain_l3": 0.2361159184362064,
+    "rain_l4": 0.04178481560359118,
+    "rain_l5": 0.05201174119439533
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 2.0,
+  "alert_rate": 0.0453,
+  "cutoff": 0.9829,
+  "backtest_fixed_cutoff": {
+    "alerts": 4,
+    "hits": 1,
+    "outbreak_weeks": 5,
+    "false_alerts": 3,
+    "test_weeks": 157
+  },
+  "try_it": false,
+  "months": [
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Sep",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "sub": "About 40 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        75,
+        60,
+        75,
+        50
+      ],
+      "sub": "About 65 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        75,
+        105,
+        75,
+        50
+      ],
+      "sub": "One week near 105 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    74.0,
+    74.0,
+    64.0,
+    112.2,
+    112.2,
+    112.2,
+    112.2,
+    51.5,
+    53.8,
+    53.8,
+    53.8,
+    53.8,
+    80.6,
+    80.6,
+    80.6,
+    102.0,
+    102.0,
+    102.0,
+    102.0,
+    96.2,
+    99.2,
+    99.2,
+    99.2,
+    99.2,
+    92.8,
+    92.8,
+    112.4,
+    112.4,
+    112.4,
+    112.4,
+    99.4,
+    88.9,
+    94.6,
+    94.6,
+    109.1,
+    127.0,
+    193.0,
+    193.0,
+    193.0,
+    193.0,
+    185.8,
+    118.1,
+    118.1,
+    115.1,
+    115.1,
+    115.1,
+    63.0,
+    53.3,
+    50.7,
+    50.7,
+    50.7,
+    49.4,
+    3.4
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2019-09-16",
+      "target_week": "2019-09-30",
+      "month_year": "September 2019",
+      "rain_newest_first": [
+        4.2,
+        78.0,
+        13.1,
+        54.9
+      ],
+      "predicted": 0.94,
+      "actual": 5,
+      "warned": false
+    }
+  ],
+  "note": "Prototype. Poisson model trained on Zamboanga City 2008-2016 (Project CCHAIN). Not a live warning."
+}

@@ -1,0 +1,180 @@
+{
+  "city": "PH112402000",
+  "city_name": "Davao City",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -3.7135236334834043,
+    "sin1": 0.22213785511840234,
+    "cos1": 0.05192879209383322,
+    "sin2": 0.4676255078325234,
+    "cos2": 0.015271573517832239,
+    "rain_l2": 0.22416829947774775,
+    "rain_l3": 0.24203251938625042,
+    "rain_l4": 0.23251873790857086,
+    "rain_l5": 0.3038233686838332
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 3.0,
+  "alert_rate": 0.0603,
+  "cutoff": 2.1585,
+  "backtest_fixed_cutoff": {
+    "alerts": 4,
+    "hits": 0,
+    "outbreak_weeks": 6,
+    "false_alerts": 4,
+    "test_weeks": 157
+  },
+  "try_it": false,
+  "months": [
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Jun",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        55,
+        55,
+        55,
+        55
+      ],
+      "sub": "About 55 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        85,
+        70,
+        85,
+        60
+      ],
+      "sub": "About 75 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        85,
+        110,
+        85,
+        60
+      ],
+      "sub": "One week near 110 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    119.6,
+    119.6,
+    119.6,
+    95.4,
+    145.2,
+    145.2,
+    145.2,
+    145.2,
+    78.9,
+    111.8,
+    111.8,
+    111.8,
+    111.8,
+    98.2,
+    116.0,
+    137.2,
+    137.2,
+    137.2,
+    137.2,
+    124.5,
+    112.8,
+    102.2,
+    102.2,
+    102.2,
+    102.2,
+    101.1,
+    101.1,
+    113.6,
+    137.4,
+    137.4,
+    137.4,
+    137.4,
+    99.8,
+    99.8,
+    99.8,
+    90.4,
+    96.8,
+    96.8,
+    96.8,
+    96.8,
+    95.4,
+    106.8,
+    106.8,
+    133.6,
+    133.6,
+    133.6,
+    133.6,
+    85.6,
+    85.6,
+    75.4,
+    75.4,
+    75.4,
+    15.1
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2017-12-25",
+      "target_week": "2018-01-08",
+      "month_year": "January 2018",
+      "rain_newest_first": [
+        21.1,
+        73.1,
+        76.8,
+        59.6
+      ],
+      "predicted": 1.85,
+      "actual": 39,
+      "warned": false
+    }
+  ],
+  "note": "Prototype. Poisson model trained on Davao City 2008-2016 (Project CCHAIN). Not a live warning."
+}

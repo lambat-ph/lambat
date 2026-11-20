@@ -1,0 +1,180 @@
+{
+  "city": "PH104305000",
+  "city_name": "Cagayan de Oro City",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -19.618984468356533,
+    "sin1": 0.15016531849692294,
+    "cos1": 3.3137929822835415,
+    "sin2": 2.50498962831366,
+    "cos2": 8.473542791183137,
+    "rain_l2": 0.3005071215996826,
+    "rain_l3": 1.5408019972534541,
+    "rain_l4": 1.1619160238313815,
+    "rain_l5": 0.37037819341952194
+  },
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 1.0,
+  "alert_rate": 0.0539,
+  "cutoff": 9.0058,
+  "backtest_fixed_cutoff": {
+    "alerts": 7,
+    "hits": 3,
+    "outbreak_weeks": 11,
+    "false_alerts": 4,
+    "test_weeks": 157
+  },
+  "try_it": false,
+  "months": [
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Jun",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        55,
+        55,
+        55,
+        55
+      ],
+      "sub": "About 55 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        80,
+        65,
+        80,
+        55
+      ],
+      "sub": "About 70 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        80,
+        120,
+        80,
+        55
+      ],
+      "sub": "One week near 120 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    139.2,
+    139.2,
+    112.2,
+    87.7,
+    97.9,
+    97.9,
+    97.9,
+    97.9,
+    70.6,
+    70.6,
+    70.6,
+    70.6,
+    67.8,
+    67.8,
+    70.6,
+    70.6,
+    70.6,
+    70.6,
+    72.8,
+    123.0,
+    123.0,
+    123.0,
+    123.0,
+    117.3,
+    117.3,
+    115.9,
+    118.1,
+    118.1,
+    118.1,
+    118.1,
+    117.0,
+    117.0,
+    121.9,
+    121.9,
+    121.9,
+    121.9,
+    102.6,
+    102.6,
+    87.3,
+    99.2,
+    99.2,
+    99.2,
+    99.2,
+    109.9,
+    109.9,
+    109.9,
+    109.9,
+    77.1,
+    77.1,
+    67.7,
+    67.7,
+    63.3,
+    4.5
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2017-01-16",
+      "target_week": "2017-01-30",
+      "month_year": "January 2017",
+      "rain_newest_first": [
+        148.8,
+        31.8,
+        58.5,
+        26.2
+      ],
+      "predicted": 4.18,
+      "actual": 17,
+      "warned": false
+    }
+  ],
+  "note": "Prototype. Poisson model trained on Cagayan de Oro City 2008-2016 (Project CCHAIN). Not a live warning."
+}

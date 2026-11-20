@@ -1,9 +1,12 @@
 """Export the data behind the in-browser dose-point planner.
 
-    uv run python scripts/export_planner.py                  # 5yr, 25yr, 100yr
-    uv run python scripts/export_planner.py --scenario 25yr --n 50
+    uv run python scripts/export_planner.py                         # Dagupan, 5yr, 25yr, 100yr
+    uv run python scripts/export_planner.py --city PH112402000      # one city, every scenario it has
+    uv run python scripts/export_planner.py --city all --scenario 25yr --n 50
 
-Writes web/data/PH015518000/planner_<scenario>.json. Reuses the pipeline's own steps
+Writes web/data/<city>/planner_<scenario>.json for each scenario with NOAH flood hazard in
+at least one barangay. Large cities (over run_pipeline.BIG_CITY_KM2) use the same smaller
+walk graph as the pipeline: flooded barangays plus a 2 km buffer, for that scenario. Reuses the pipeline's own steps
 (scripts/run_pipeline.py `_access`) and the random within-barangay flood placement from
 scripts/run_sensitivity.py. Uses the existing OSM cache only; if a download would be
 needed the script stops (see OFFLINE below).
@@ -19,10 +22,11 @@ from pathlib import Path
 
 import numpy as np
 
-from lambat import access, data, siting
+from lambat import access, cities, data, siting
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "web" / "data" / data.DAGUPAN
+WEB = ROOT / "web" / "data"
+BIG_CITY_KM2 = 400  # same rule as scripts/run_pipeline.py
 SCENARIOS = ("5yr", "25yr", "100yr")
 KS = tuple(range(1, 11))
 UNC_KS = KS  # pick counts and ranges for every plan size the map offers
@@ -38,14 +42,21 @@ def r2(x) -> float:
 class Ctx:
     """Everything that does not change between flood states."""
 
-    def __init__(self) -> None:
-        self.brgy = data.barangays(data.DAGUPAN)
-        self.pop = data.population(data.DAGUPAN)
-        self.hazard = data.flood_hazard(data.DAGUPAN)
-        self.G = access.road_graph(barangays=self.brgy)
+    def __init__(self, city: str = data.DAGUPAN, scenario: str = "25yr") -> None:
+        self.city = city
+        brgy = data.barangays(city)
+        self.hazard = data.flood_hazard(city)
+        area = float(brgy.to_crs(data.CRS_METRIC).area.sum() / 1e6)
+        self.scope = "flooded" if area > BIG_CITY_KM2 else "full"
+        if self.scope == "flooded":
+            brgy = cities.flooded_scope(brgy, self.hazard, scenario)
+        self.brgy = brgy
+        pop = data.population(city)
+        self.pop = pop[pop.index.isin(brgy.adm4_pcode)]
+        self.G = access.road_graph(city, barangays=self.brgy)
         access.node_elevations(self.G)
-        self.facilities = access.health_facilities(self.G, barangays=self.brgy)
-        self.cands = access.candidate_sites(self.G, barangays=self.brgy)
+        self.facilities = access.health_facilities(self.G, city, barangays=self.brgy)
+        self.cands = access.candidate_sites(self.G, city, barangays=self.brgy)
 
 
 def solve(ctx: Ctx, scenario: str, classes, ks=KS) -> dict:
@@ -111,7 +122,7 @@ def export(ctx: Ctx, scenario: str, n: int) -> tuple[dict, dict]:
             print(f"  [{scenario}] {i + 1}/{n} draws, {time.time() - t0:.0f} s", flush=True)
 
     out = {
-        "city": data.DAGUPAN, "scenario": scenario, "walk_limit_min": LIMIT,
+        "city": ctx.city, "scenario": scenario, "scope": ctx.scope, "walk_limit_min": LIMIT,
         "exposed_on_network": r2(total), "clinic_reach": r2(clinic), "access_gap": r2(st["gap"]),
         "points": {"w": [r2(w) for w in missed.exposed], "pcode": [str(a) for a in missed.adm4]},
         "candidates": cand_out,
@@ -127,18 +138,28 @@ def export(ctx: Ctx, scenario: str, n: int) -> tuple[dict, dict]:
     return out, st
 
 
-def check_published(out: dict, st: dict) -> None:
-    pub = json.loads((ROOT / "results" / "summary_25yr.json").read_text())
+def check_published(out: dict, st: dict, city: str, scenario: str) -> bool:
+    """Compare with results/<city>/summary_<scenario>.json when the pipeline wrote one. False if there is none."""
+    f = ROOT / "results" / city / f"summary_{scenario}.json"
+    if not f.exists():
+        return False
+    pub = json.loads(f.read_text())
+    if not pub.get("dose_point_plans") or pub.get("exposed_on_road_network") is None:
+        return False
     tol = 1e-6 * pub["exposed_on_road_network"]
-    assert abs(st["total"] - pub["exposed_on_road_network"]) < tol
-    assert abs(st["gap"] - pub["exposed_access_gap"]) < tol
+    assert abs(st["total"] - pub["exposed_on_road_network"]) < tol, (city, scenario, "exposed")
+    assert abs(st["gap"] - pub["exposed_access_gap"]) < tol, (city, scenario, "gap")
     for k in PUB_KS:
-        pp = pub["dose_point_plans"][str(k)]
+        pp = pub["dose_point_plans"].get(str(k))
+        if not pp:
+            continue
         mine = out["plans"][str(k)]
-        assert sorted(mine["sites"]) == sorted(pp["sites"]), (k, mine["sites"], pp["sites"])
-        assert abs(st["plans"][k].covered - pp["exposed_newly_covered"]) < tol
-        assert round(mine["share"], 4) == round(pp["share_of_exposed_within_reach_after"], 4)
-    print("CHECK 25yr plans k=3,5,8 match results/summary_25yr.json (sites, newly covered, shares)", flush=True)
+        assert abs(st["plans"][k].covered - pp["exposed_newly_covered"]) < tol, (city, scenario, k)
+        assert round(mine["share"], 4) == round(pp["share_of_exposed_within_reach_after"], 4), (city, scenario, k)
+        if sorted(mine["sites"]) != sorted(pp["sites"]):  # equal coverage, different tie: report, do not fail
+            print(f"NOTE [{city} {scenario}] k={k}: same coverage, different tied sites", flush=True)
+    print(f"CHECK [{city} {scenario}] plans k=3,5,8 match {f.relative_to(ROOT)} (newly covered, shares)", flush=True)
+    return True
 
 
 def check_sensitivity(out: dict) -> None:
@@ -164,27 +185,53 @@ def block_network() -> None:
     requests.Session.request = _stop
 
 
+def scenarios_for(city: str) -> list[str]:
+    hz = data.flood_hazard(city)
+    return [sc for sc in SCENARIOS if (access.flooded_share(hz, sc) > 0).any()]
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--city", default=data.DAGUPAN, help="adm3 pcode or 'all'")
     ap.add_argument("--scenario", nargs="+", default=list(SCENARIOS), choices=SCENARIOS)
     ap.add_argument("--n", type=int, default=200)
+    ap.add_argument("--allow-download", action="store_true", help="let OSM queries go to the network (default: cache only)")
     args = ap.parse_args()
     t_all = time.time()
-    block_network()
-    ctx = Ctx()
-    for sc in args.scenario:
-        t0 = time.time()
-        out, st = export(ctx, sc, args.n)
-        if sc == "25yr":
-            check_published(out, st)
-            check_sensitivity(out)
-        path = OUT / f"planner_{sc}.json"
-        path.write_text(json.dumps(out, separators=(",", ":")))
-        p = out["plans"]
-        print(f"[{sc}] {path.relative_to(ROOT)} {path.stat().st_size / 1e6:.2f} MB, {time.time() - t0:.0f} s; "
-              f"points {len(out['points']['w'])}, candidates {len(out['candidates'])}, gap {out['access_gap']:,.0f}, "
-              f"k3/5/8 {p['3']['share']:.4f}/{p['5']['share']:.4f}/{p['8']['share']:.4f}", flush=True)
+    if not args.allow_download:
+        block_network()
+    for city in cities.resolve(args.city):
+        ctx = None
+        for sc in [x for x in args.scenario if x in scenarios_for(city)]:
+            t0 = time.time()
+            if ctx is None or ctx.scope == "flooded":  # the full-city graph is shared by every scenario
+                ctx = Ctx(city, sc)
+            out, st = export(ctx, sc, args.n)
+            check_published(out, st, city, sc)
+            if city == data.DAGUPAN and sc == "25yr":
+                check_sensitivity(out)
+            d = WEB / city
+            d.mkdir(parents=True, exist_ok=True)
+            path = d / f"planner_{sc}.json"
+            path.write_text(json.dumps(out, separators=(",", ":")))
+            p = out["plans"]
+            print(f"[{city} {sc}] {path.relative_to(ROOT)} {path.stat().st_size / 1e6:.2f} MB, {time.time() - t0:.0f} s; "
+                  f"scope {ctx.scope}, points {len(out['points']['w'])}, candidates {len(out['candidates'])}, "
+                  f"gap {out['access_gap']:,.0f}, k3/5/8 {p['3']['share']:.4f}/{p['5']['share']:.4f}/{p['8']['share']:.4f}",
+                  flush=True)
+    write_index()
     print(f"total {time.time() - t_all:.0f} s")
+
+
+def write_index() -> None:
+    """web/data/planner_index.json: which planner scenarios exist per city (the map reads it)."""
+    idx = {}
+    for city in cities.CITIES:
+        have = [sc.replace("yr", "") for sc in SCENARIOS if (WEB / city / f"planner_{sc}.json").exists()]
+        if have:
+            idx[city] = have
+    (WEB / "planner_index.json").write_text(json.dumps(idx, indent=1))
+    print("planner index:", idx, flush=True)
 
 
 if __name__ == "__main__":

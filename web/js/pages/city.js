@@ -558,17 +558,8 @@ function rainPredict(mdl, target, rainNewestFirst) {
   mdl.rain_lags_weeks.forEach((lag, j) => { z += c["rain_l" + lag] * Math.log1p(Math.max(0, rainNewestFirst[j] || 0)); });
   return Math.exp(z);
 }
-// Four plain rain patterns for the last four weeks (newest first, mm per week) and the rainy months.
-const RAIN_PICKS = [
-  { id: "dry", label: "Mostly dry", sub: "Under 10 mm a week", mm: [5, 0, 5, 0] },
-  { id: "normal", label: "Normal rainy season", sub: "About 65 mm a week", mm: [70, 60, 70, 60] },
-  { id: "heavy", label: "Heavy rain most weeks", sub: "100 to 150 mm a week", mm: [150, 120, 150, 100] },
-  { id: "typhoon", label: "A typhoon passed", sub: "One week near 250 mm", mm: [120, 250, 110, 90] },
-];
-const TRY_MONTHS = ["Jun", "Jul", "Aug", "Sep", "Oct"]; // Dagupan's rainy season
-const MONTH_FULL = { Jun: "June", Jul: "July", Aug: "August", Sep: "September", Oct: "October", Nov: "November" };
-// Is any week's rain far beyond what Dagupan got at that time of year in the training years?
-// The week furthest above Dagupan's record for that time of year, or null when all four weeks are within the record.
+// Each city's rainy months, rain choices and record come from its alert_model.json (scripts/export_alert_model.py).
+// The week furthest above the city's record for that time of year, or null when all four weeks are within the record.
 function aboveRecord(mdl, forecast, rainNewestFirst) {
   const w0 = isoWeek(forecast);
   let worst = null;
@@ -584,24 +575,32 @@ async function mountTry(el, code) {
   let mdl;
   try { const r = await fetch(`data/${code}/alert_model.json`); if (!r.ok) return; mdl = await r.json(); } catch { return; }
   if (!mdl || !mdl.coef || !mdl.rain_max_by_week) return;
-  const bt = mdl.backtest_fixed_cutoff, ex = mdl.examples[0];
-  const st = { month: "Aug", pick: "normal", custom: null };
+  const bt = mdl.backtest_fixed_cutoff, ex = mdl.examples[0], picks = mdl.presets, MF = mdl.month_full;
+  const place = mdl.city_name.replace(/^City of /, "").replace(/ City$/, "");
+  const num = (v) => (v < 1 ? v.toFixed(1) : fmt(Math.round(v)));
+  // Offered only where a warning level fixed in advance worked on the test years (see export_alert_model.py).
+  if (!mdl.try_it) {
+    box.innerHTML = `<h2 class="card-title">Try it</h2><p class="try-lead">Offered where a warning level set in advance caught at least a quarter of outbreak weeks, with at least half its warnings right. In ${esc(place)} it caught ${bt.hits} of ${bt.outbreak_weeks} in ${mdl.trained_years[1] + 1} to 2019, so the tool is not offered here.</p>`;
+    box.hidden = false;
+    return;
+  }
+  const st = { month: mdl.default_month, pick: "normal", custom: null };
   box.innerHTML = `<div class="try-head"><h2 class="card-title">Will this rain bring leptospirosis?</h2><span class="badge try-badge">Test version, not live</span></div>
     <p class="try-lead">Pick the month and how rainy the last 4 weeks were.</p>
     <div class="try-step"><p class="try-q" id="tryMonthQ">Month</p>
-      <div class="seg try-months" role="group" aria-labelledby="tryMonthQ">${TRY_MONTHS.map((mo) => `<button type="button" data-mo="${mo}" aria-pressed="false">${mo}</button>`).join("")}</div></div>
+      <div class="seg try-months" role="group" aria-labelledby="tryMonthQ">${mdl.months.map((mo) => `<button type="button" data-mo="${mo}" aria-pressed="false">${mo}</button>`).join("")}</div></div>
     <div class="try-step"><p class="try-q" id="tryRainQ">Rain in the last 4 weeks</p>
-      <div class="try-picks" role="group" aria-labelledby="tryRainQ">${RAIN_PICKS.map((r) => `<button type="button" class="try-pick" data-pick="${r.id}" aria-pressed="false"><b>${r.label}</b><span>${r.sub}</span></button>`).join("")}</div></div>
+      <div class="try-picks" role="group" aria-labelledby="tryRainQ">${picks.map((r) => `<button type="button" class="try-pick" data-pick="${r.id}" aria-pressed="false"><b>${r.label}</b><span>${r.sub}</span></button>`).join("")}</div></div>
     <div class="try-out" aria-live="polite"></div>
     <details class="try-more"><summary>Have the actual rainfall? Type it in</summary>
       <div class="try-mm">${["3 weeks ago", "2 weeks ago", "Last week", "This week"].map((l, i) => `<label><span>${l}</span><input class="field" type="number" inputmode="decimal" min="0" max="1000" step="1" data-j="${3 - i}" placeholder="mm"></label>`).join("")}</div>
       <p class="try-hint">Weekly totals in mm, for example from PAGASA.</p></details>
     <details class="try-more"><summary>How this works</summary>
       <ul class="try-how">
-        <li>It learned from Dagupan's cases and rain, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}.</li>
-        <li>It warns when it expects about 2 or more cases in a week.</li>
+        <li>It learned from ${esc(place)}'s cases and rain, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}.</li>
+        <li>It warns when it expects ${mdl.cutoff.toFixed(1)} or more cases in a week.</li>
         <li>On ${mdl.trained_years[1] + 1} to 2019 it warned ${bt.alerts} times and was right ${bt.hits} times, catching ${bt.hits} of ${bt.outbreak_weeks} outbreak weeks.</li>
-        <li>It gets the timing, not the size: two weeks before the ${fmt(ex.actual)}-case week in August 2018 it warned, but expected about ${fmt(Math.round(ex.predicted))}.</li>
+        <li>${ex.warned ? `It gets the timing, not the size: two weeks before the ${fmt(ex.actual)}-case week in ${esc(ex.month_year)} it warned, but expected about ${num(ex.predicted)}.` : `It can miss sharp spikes: it did not flag the ${fmt(ex.actual)}-case week in ${esc(ex.month_year)}, where it expected about ${num(ex.predicted)}.`}</li>
       </ul></details>`;
   box.hidden = false;
   const out = box.querySelector(".try-out"), mmIn = [...box.querySelectorAll(".try-mm input")];
@@ -611,10 +610,10 @@ async function mountTry(el, code) {
     const mi = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(st.month);
     const forecast = new Date(2026, mi, 15), target = new Date(forecast);
     target.setDate(target.getDate() + 7 * mdl.horizon_weeks);
-    const mm = st.custom || RAIN_PICKS.find((r) => r.id === st.pick).mm;
+    const mm = st.custom || picks.find((r) => r.id === st.pick).mm;
     const rec = aboveRecord(mdl, forecast, mm);
     if (rec) {
-      out.innerHTML = `<div class="try-result rec"><p class="try-verdict">Record rainfall</p><p class="try-num">${fmt(rec.v)} mm in one week is above Dagupan's record for ${MONTH_FULL[st.month]} (${fmt(rec.rec)} mm, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}). Check the figure. If it is right, prepare as you would for a major flood.</p></div>`;
+      out.innerHTML = `<div class="try-result rec"><p class="try-verdict">Record rainfall</p><p class="try-num">${fmt(rec.v)} mm in one week is above ${esc(place)}'s record for ${MF[st.month]} (${fmt(rec.rec)} mm, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}). Check the figure. If it is right, prepare as you would for a major flood.</p></div>`;
       return;
     }
     // Three answers that always agree with the number: at or above the warning level, close to it, or well below.
@@ -622,8 +621,8 @@ async function mountTry(el, code) {
     const shown = p >= cut ? Math.max(p, cut).toFixed(1) : (Math.floor(p * 10) / 10).toFixed(1);
     let cls, verdict, line;
     if (p >= cut) { cls = "on"; verdict = "Get the hospital ready"; line = `About ${shown} cases a week expected two weeks from now, above the warning level of ${cutTxt}.`; }
-    else if (p >= 1) { cls = "near"; verdict = "Close to the warning level"; line = `About ${shown} cases a week expected two weeks from now. The warning starts at ${cutTxt}.`; }
-    else { cls = "off"; verdict = "No warning needed"; line = "Fewer than 1 case a week expected two weeks from now."; }
+    else if (p >= 0.6 * cut) { cls = "near"; verdict = "Close to the warning level"; line = `About ${shown} cases a week expected two weeks from now. The warning starts at ${cutTxt}.`; }
+    else { cls = "off"; verdict = "No warning needed"; line = p < 1 ? "Fewer than 1 case a week expected two weeks from now." : `About ${shown} cases a week expected two weeks from now, below the warning level of ${cutTxt}.`; }
     out.innerHTML = `<div class="try-result ${cls}"><p class="try-verdict">${verdict}</p><p class="try-num">${line}</p></div>`;
   };
   box.addEventListener("click", (e) => {
