@@ -601,7 +601,7 @@ async function mountTry(el, code) {
   }
   const st = { month: mdl.default_month, pick: "normal", custom: null };
   const WEEKS = ["3 weeks ago", "2 weeks ago", "Last week", "This week"]; // left to right; column i is lag j = 3 - i
-  box.innerHTML = `<div class="try-head"><h2 class="card-title">Will this rain bring leptospirosis?</h2><span class="badge try-badge">Test version, not live</span></div>
+  box.innerHTML = `<div class="try-head"><h2 class="card-title">Could this rain bring leptospirosis?</h2><span class="badge try-badge">Test version, not live</span></div>
     <p class="try-lead">Pick the month and the rain. Drag a bar, or tap its number to type it.</p>
     ${tierNote(mdl, place)}
     <div class="try-step"><p class="try-q" id="tryMonthQ">Month</p>
