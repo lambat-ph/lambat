@@ -422,7 +422,7 @@ function mapReady() {
 function showNational(first) {
   endTour(false);
   S.city = null; S.pre = null; S.data = null; S.active = null; S.hover = null; clearSel();
-  S.pl = null; closePrint(true); $("#floodPick").hidden = true; $("#prPlan").hidden = true; $("#mapwrap").classList.remove("pl");
+  S.pl = null; closePrint(true); $("#floodPick").hidden = true; $("#prPlan").hidden = true; $("#mapwrap").classList.remove("pl"); $("#mapwrap").classList.add("nat");
   setCityLayers(false);
   if (map.getLayer("b-hov")) { map.setLayoutProperty("b-hov", "visibility", "none"); S.hovB = null; }
   I.hover = null; if (!first) S.ready = true;
@@ -620,12 +620,13 @@ async function selectCity(code, first) {
   ld.hidden = true;
   if (!data || data.error || !data.barangays) {
     hideLoader(); unbusy(); $("#sites").hidden = true; S.ready = true; islRender();
-    $("#answer").removeAttribute("aria-busy"); $("#answer").textContent = "The numbers could not be loaded.";
+    $("#answer").removeAttribute("aria-busy");
+    if (S.city) $("#answer").textContent = "The numbers could not be loaded."; else renderStrip(); // from the national view, keep its numbers
     const n = $("#info"); n.hidden = false; n.innerHTML = `<p class="notice">Could not load ${esc(c.name)}: ${esc((data && data.error) || "no data")}</p>`;
     return;
   }
   loaderStep(3, "Placing dose points");
-  S.data = data; S.city = code; S.active = null; S.hover = null; clearSel();
+  S.data = data; S.city = code; S.active = null; S.hover = null; clearSel(); $("#mapwrap").classList.remove("nat");
   plAttach(pld);
   const hasUnreached = data.rows.some((r) => r.unreached != null);
   const ui = $('#measures input[value="unreached"]');
@@ -1822,6 +1823,7 @@ function attachMore() {
 // Phone sheet: two snap heights. closed = peek (question and answer), open = everything.
 function openSheet(open) {
   const col = $("#col"), h = $("#handle");
+  if (!open) col.scrollTop = 0; // the peek always shows the question and answer
   col.classList.toggle("closed", !open);
   h.setAttribute("aria-expanded", String(open));
   $("#handleT").textContent = open ? "Hide the plan" : "Show the plan";

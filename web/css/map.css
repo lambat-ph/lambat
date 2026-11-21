@@ -313,7 +313,12 @@ body.route-map #view{position:relative;padding-bottom:0}
   .handle:focus-visible{outline-offset:-4px}
   .col-top{padding-top:calc(14px + var(--s2))}
   .col-top .eyebrow,.col-top .q{padding-right:0}
-  .col-more{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  /* the whole open sheet scrolls as one, so the city and dose point lists get the full height, not a strip under the answer */
+  .col{overflow-y:auto;overscroll-behavior:contain}
+  .col.closed{overflow:hidden}
+  .handle{position:sticky;top:0;z-index:3}
+  .col-more{flex:none;min-height:auto;overflow:visible}
+  .mapwrap.nat #planPick{display:none}
   .col-top .eyebrow{margin-bottom:var(--s1)}
   .st-n{font-size:1.375rem}
   .st-l{font-size:var(--t-xs)}
