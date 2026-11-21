@@ -43,8 +43,12 @@ def build_city(code: str, loc: pd.DataFrame) -> dict | None:
     if not summ_path.exists():
         print(f"{code}: no results, skipped")
         return None
-    if code in cities.EXTRA and not (DATA / code / f"planner_{scen}.json").exists():
+    pl_path = DATA / code / f"planner_{scen}.json"
+    if code in cities.EXTRA and not pl_path.exists():
         print(f"{code}: no planner yet (scripts/export_planner.py), skipped")  # new cities go live only when complete
+        return None
+    if code in cities.EXTRA and not json.loads(pl_path.read_text()).get("plans"):
+        print(f"{code}: everyone already within reach, no dose point plans; the map has no view for that yet, skipped")
         return None
     out = DATA / code
     out.mkdir(parents=True, exist_ok=True)

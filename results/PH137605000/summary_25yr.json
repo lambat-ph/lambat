@@ -1,0 +1,61 @@
+{
+  "city": "PH137605000",
+  "city_name": "Pasay City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 337085.2711,
+  "barangays": 201,
+  "barangays_flooded": 201,
+  "exposed": 223294.0805451886,
+  "weekly_capsules": 446588.1610903772,
+  "health_facilities": 34,
+  "facilities_closed_by_flood": 2,
+  "candidate_sites_usable": 79,
+  "exposed_on_road_network": 223762.0166341143,
+  "exposed_within_reach_dry": 223762.0166341143,
+  "exposed_within_reach_flood": 205406.4404158548,
+  "exposed_access_gap": 18355.576218259477,
+  "exposed_unreached_in_flood": 18355.576218259477,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w265149872",
+        "w306236780",
+        "w1119496406"
+      ],
+      "exposed_newly_covered": 2202.716887213622,
+      "exposed_within_reach_after": 207609.1573030684,
+      "share_of_exposed_within_reach_after": 0.9278123268013877
+    },
+    "5": {
+      "sites": [
+        "w265149872",
+        "w306236780",
+        "w1119496406"
+      ],
+      "exposed_newly_covered": 2202.716887213622,
+      "exposed_within_reach_after": 207609.1573030684,
+      "share_of_exposed_within_reach_after": 0.9278123268013877
+    },
+    "8": {
+      "sites": [
+        "w265149872",
+        "w306236780",
+        "w1119496406"
+      ],
+      "exposed_newly_covered": 2202.716887213622,
+      "exposed_within_reach_after": 207609.1573030684,
+      "share_of_exposed_within_reach_after": 0.9278123268013877
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 5018.9
+}

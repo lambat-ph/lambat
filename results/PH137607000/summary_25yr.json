@@ -1,0 +1,68 @@
+{
+  "city": "PH137607000",
+  "city_name": "Taguig City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 753204.5885,
+  "barangays": 28,
+  "barangays_flooded": 28,
+  "exposed": 227779.83207976853,
+  "weekly_capsules": 455559.66415953706,
+  "health_facilities": 72,
+  "facilities_closed_by_flood": 2,
+  "candidate_sites_usable": 183,
+  "exposed_on_road_network": 228011.25754966875,
+  "exposed_within_reach_dry": 227701.2418410563,
+  "exposed_within_reach_flood": 202952.95277653003,
+  "exposed_access_gap": 24748.289064526252,
+  "exposed_unreached_in_flood": 25058.30477313869,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n6447272007",
+        "w930579865",
+        "w1073489345"
+      ],
+      "exposed_newly_covered": 6652.388796268957,
+      "exposed_within_reach_after": 209605.341572799,
+      "share_of_exposed_within_reach_after": 0.9192762840981205
+    },
+    "5": {
+      "sites": [
+        "n6447272007",
+        "w747482271",
+        "w910400518",
+        "w930579865",
+        "w1073489345"
+      ],
+      "exposed_newly_covered": 8769.993018765776,
+      "exposed_within_reach_after": 211722.94579529582,
+      "share_of_exposed_within_reach_after": 0.9285635633546525
+    },
+    "8": {
+      "sites": [
+        "n4504390491",
+        "n6447272007",
+        "w133822881",
+        "w747482271",
+        "w910400518",
+        "w930579865",
+        "w954773964",
+        "w1073489345"
+      ],
+      "exposed_newly_covered": 10177.87885579214,
+      "exposed_within_reach_after": 213130.83163232217,
+      "share_of_exposed_within_reach_after": 0.9347381963624971
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 5493.2
+}

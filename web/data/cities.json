@@ -520,6 +520,46 @@
     }
   },
   {
+    "code": "PH137402000",
+    "name": "City of Marikina",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Second District",
+    "lon": 121.10497,
+    "lat": 14.64731,
+    "bbox": [
+      121.07438,
+      14.61797,
+      121.13504,
+      14.6755
+    ],
+    "barangays": 16,
+    "population": 412613,
+    "exposed": 290435,
+    "exposed_share": 0.7039,
+    "weekly_capsules": 580869,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 157857,
+    "coverage_after": {
+      "3": 0.48859497118904704,
+      "5": 0.4980625887022293,
+      "8": 0.5100838694641573
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
     "code": "PH137403000",
     "name": "City of Pasig",
     "region": "National Capital Region (NCR)",
@@ -783,6 +823,126 @@
       "3": 0.9505872236717164,
       "5": 0.9505872236717164,
       "8": 0.9505872236717164
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137604000",
+    "name": "City of Paranaque",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Fourth District",
+    "lon": 121.01501,
+    "lat": 14.48352,
+    "bbox": [
+      120.97421,
+      14.43528,
+      121.0482,
+      14.53345
+    ],
+    "barangays": 16,
+    "population": 746182,
+    "exposed": 271947,
+    "exposed_share": 0.3645,
+    "weekly_capsules": 543895,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 57867,
+    "coverage_after": {
+      "3": 0.7756069912157739,
+      "5": 0.8050138218874626,
+      "8": 0.8333283151354076
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137605000",
+    "name": "Pasay City",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Fourth District",
+    "lon": 121.004,
+    "lat": 14.53141,
+    "bbox": [
+      120.97759,
+      14.5021,
+      121.03527,
+      14.56372
+    ],
+    "barangays": 201,
+    "population": 337085,
+    "exposed": 223294,
+    "exposed_share": 0.6624,
+    "weekly_capsules": 446588,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 18356,
+    "coverage_after": {
+      "3": 0.9278123268013877,
+      "5": 0.9278123268013877,
+      "8": 0.9278123268013877
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137607000",
+    "name": "Taguig City",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Fourth District",
+    "lon": 121.06234,
+    "lat": 14.51663,
+    "bbox": [
+      121.02224,
+      14.46672,
+      121.10385,
+      14.54753
+    ],
+    "barangays": 28,
+    "population": 753205,
+    "exposed": 227780,
+    "exposed_share": 0.3024,
+    "weekly_capsules": 455560,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 24748,
+    "coverage_after": {
+      "3": 0.9192762840981205,
+      "5": 0.9285635633546525,
+      "8": 0.9347381963624971
     },
     "alert": {
       "status": "no_case_data",

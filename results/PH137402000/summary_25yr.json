@@ -1,0 +1,68 @@
+{
+  "city": "PH137402000",
+  "city_name": "City of Marikina",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 412613.3557,
+  "barangays": 16,
+  "barangays_flooded": 16,
+  "exposed": 290434.568108892,
+  "weekly_capsules": 580869.136217784,
+  "health_facilities": 79,
+  "facilities_closed_by_flood": 28,
+  "candidate_sites_usable": 83,
+  "exposed_on_road_network": 290541.09930664505,
+  "exposed_within_reach_dry": 288533.67517665203,
+  "exposed_within_reach_flood": 130676.76094324312,
+  "exposed_access_gap": 157856.91423340893,
+  "exposed_unreached_in_flood": 159864.3383634019,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n4375537890",
+        "n12152993790",
+        "w97918519"
+      ],
+      "exposed_newly_covered": 11280.15910172119,
+      "exposed_within_reach_after": 141956.9200449643,
+      "share_of_exposed_within_reach_after": 0.48859497118904704
+    },
+    "5": {
+      "sites": [
+        "n4375537890",
+        "n12152993790",
+        "w97918519",
+        "w116914604",
+        "w446778587"
+      ],
+      "exposed_newly_covered": 14030.891101815987,
+      "exposed_within_reach_after": 144707.6520450591,
+      "share_of_exposed_within_reach_after": 0.4980625887022293
+    },
+    "8": {
+      "sites": [
+        "n4375537890",
+        "n12152993790",
+        "w97918519",
+        "w116061794",
+        "w116914604",
+        "w117481997",
+        "w446778587",
+        "w608076882"
+      ],
+      "exposed_newly_covered": 17523.56722946036,
+      "exposed_within_reach_after": 148200.32817270348,
+      "share_of_exposed_within_reach_after": 0.5100838694641573
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 4837.9
+}

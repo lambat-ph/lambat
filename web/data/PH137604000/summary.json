@@ -1,0 +1,69 @@
+{
+  "city": "PH137604000",
+  "city_name": "City of Paranaque",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 746181.6353,
+  "barangays": 16,
+  "barangays_flooded": 16,
+  "exposed": 271947.36031498364,
+  "weekly_capsules": 543894.7206299673,
+  "health_facilities": 47,
+  "facilities_closed_by_flood": 0,
+  "candidate_sites_usable": 159,
+  "exposed_on_road_network": 272304.5645008021,
+  "exposed_within_reach_dry": 246746.41683097353,
+  "exposed_within_reach_flood": 188879.09565632732,
+  "exposed_access_gap": 57867.321174646204,
+  "exposed_unreached_in_flood": 83425.46884447473,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n9254888858",
+        "w423377035",
+        "w581423339"
+      ],
+      "exposed_newly_covered": 22322.228310461418,
+      "exposed_within_reach_after": 211201.32396678874,
+      "share_of_exposed_within_reach_after": 0.7756069912157739
+    },
+    "5": {
+      "sites": [
+        "n9254888858",
+        "w272561788",
+        "w296120701",
+        "w423377035",
+        "w581423339"
+      ],
+      "exposed_newly_covered": 30329.842529864425,
+      "exposed_within_reach_after": 219208.93818619175,
+      "share_of_exposed_within_reach_after": 0.8050138218874626
+    },
+    "8": {
+      "sites": [
+        "n663935936",
+        "n9254888858",
+        "w272561788",
+        "w290139755",
+        "w296120701",
+        "w423377035",
+        "w581423339",
+        "w689436798"
+      ],
+      "exposed_newly_covered": 38040.00828280703,
+      "exposed_within_reach_after": 226919.10393913434,
+      "share_of_exposed_within_reach_after": 0.8333283151354076
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 4493.6,
+  "scenario_note": null
+}
