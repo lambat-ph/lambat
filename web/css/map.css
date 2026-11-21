@@ -42,7 +42,7 @@ body.route-map #view{position:relative;padding-bottom:0}
 .eyebrow .eb-city{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s1);margin-bottom:var(--s0)}
 .eb-city .cn{font:700 var(--t-md)/1.25 var(--f-display);color:var(--ink);min-width:0}
 .eb-change{flex:none;font:600 var(--t-sm) var(--f-text);text-transform:none;letter-spacing:0}
-.scn{width:fit-content;max-width:100%;margin:calc(var(--s1)*-1) 0 var(--s2);font-size:var(--t-xs);line-height:1.4;color:var(--muted);background:var(--blue-wash);border-radius:var(--radius-sm);padding:var(--s0) var(--s1)}
+.scn{width:fit-content;max-width:100%;margin:0 0 var(--s2);font-size:var(--t-xs);line-height:1.4;color:var(--muted);background:var(--blue-wash);border-radius:var(--radius-sm);padding:6px 10px}
 .scn[hidden]{display:none}
 /* the question: one step smaller, at most 3 lines */
 .q{font:700 var(--t-q) var(--f-display);line-height:1.25;color:var(--ink);margin:0 0 var(--s2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
