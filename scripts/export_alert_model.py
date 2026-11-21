@@ -196,7 +196,7 @@ def export_city(code: str) -> dict | None:
         # half its warnings right; "weak" = at the same number of warnings it caught more outbreak weeks than
         # both simple guesses (seasonal average, last week's count). Otherwise why_not says which failed.
         "try_it": tier is not None, "tier": tier, "model": model_kind, "why_not": why_not, "evidence": evidence,
-        "cases_default": int(round(float(train.cases.median()))),
+        "cases_default": round(float(train.cases.median())),
         "months": [MONTHS[m - 1] for m in months], "month_full": dict(zip(MONTHS, FULL, strict=True)),
         "default_month": MONTHS[int(mean[months].idxmax()) - 1], "presets": presets,
         "rain_max_by_week": rmax, "guard_factor": GUARD,
