@@ -551,11 +551,12 @@ function isoWeek(d) {
   const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
   return Math.ceil(((t - y0) / 864e5 + 1) / 7);
 }
-function rainPredict(mdl, target, rainNewestFirst) {
+function rainPredict(mdl, target, rainNewestFirst, casesNow = 0) {
   const c = mdl.coef, w = isoWeek(target), P = mdl.period_weeks;
   let z = c.const;
   [1, 2].forEach((k) => { z += c["sin" + k] * Math.sin((2 * Math.PI * k * w) / P) + c["cos" + k] * Math.cos((2 * Math.PI * k * w) / P); });
   mdl.rain_lags_weeks.forEach((lag, j) => { z += c["rain_l" + lag] * Math.log1p(Math.max(0, rainNewestFirst[j] || 0)); });
+  if (c.ar_log != null) z += c.ar_log * Math.log1p(Math.max(0, casesNow || 0));
   return Math.exp(z);
 }
 // Each city's rainy months, rain choices and record come from its alert_model.json (scripts/export_alert_model.py).
@@ -580,7 +581,11 @@ async function mountTry(el, code) {
   const num = (v) => (v < 1 ? v.toFixed(1) : fmt(Math.round(v)));
   // Offered only where a warning level fixed in advance worked on the test years (see export_alert_model.py).
   if (!mdl.try_it) {
-    box.innerHTML = `<h2 class="card-title">Try it</h2><p class="try-lead">Offered where a warning level set in advance caught at least a quarter of outbreak weeks, with at least half its warnings right. In ${esc(place)} it caught ${bt.hits} of ${bt.outbreak_weeks} in ${mdl.trained_years[1] + 1} to 2019, so the tool is not offered here.</p>`;
+    const ev = mdl.evidence || {}, yrs = `${mdl.trained_years[1] + 1} to 2019`;
+    const why = mdl.why_not === "last_week"
+      ? `In ${esc(place)}, last week's case count predicted outbreaks better than rain in ${yrs} (it caught ${ev.last_week} of ${ev.outbreak_weeks} outbreak weeks; rain caught ${ev.rain}). A rain tool would mislead here, so it is not offered.`
+      : `In ${esc(place)}, rain did not predict outbreak weeks better than simple guesses in ${yrs}, so the tool is not offered here.`;
+    box.innerHTML = `<h2 class="card-title">Try it</h2><p class="try-lead">${why}</p>`;
     box.hidden = false;
     return;
   }
@@ -588,6 +593,7 @@ async function mountTry(el, code) {
   const WEEKS = ["3 weeks ago", "2 weeks ago", "Last week", "This week"]; // left to right; column i is lag j = 3 - i
   box.innerHTML = `<div class="try-head"><h2 class="card-title">Will this rain bring leptospirosis?</h2><span class="badge try-badge">Test version, not live</span></div>
     <p class="try-lead">Pick the month and the rain. Drag a bar, or tap its number to type it.</p>
+    ${mdl.tier === "weak" ? `<p class="try-note">Weaker signal in ${esc(place)}: ranking the riskiest weeks of ${mdl.trained_years[1] + 1} to 2019, rain caught ${mdl.evidence.rain} of ${mdl.evidence.outbreak_weeks} outbreak weeks. Simple guesses caught ${mdl.evidence.seasonal} and ${mdl.evidence.last_week}.</p>` : ""}
     <div class="try-step"><p class="try-q" id="tryMonthQ">Month</p>
       <div class="seg try-months" role="group" aria-labelledby="tryMonthQ">${mdl.months.map((mo) => `<button type="button" data-mo="${mo}" aria-pressed="false">${mo}</button>`).join("")}</div></div>
     <div class="try-step"><p class="try-q" id="tryRainQ">Rain in the last 4 weeks</p>
@@ -597,11 +603,13 @@ async function mountTry(el, code) {
             <span class="rb-rec" aria-hidden="true"></span><span class="rb-bar"><span class="rb-grip" aria-hidden="true"></span></span></div>
           <button type="button" class="rb-val" aria-label="Type the rain ${w}"></button>
           <span class="rb-wk">${w}</span></div>`).join("")}</div>
-      <p class="rb-key"><span class="rb-key-l" aria-hidden="true"></span>Wettest week on record for this time of year</p></div>
+      <p class="rb-key"><span class="rb-key-l" aria-hidden="true"></span>Wettest week on record for this time of year</p>
+      ${mdl.model === "rain_cases" ? `<label class="try-cases"><span>Cases reported this week</span><input class="field" type="number" min="0" max="500" step="1" inputmode="numeric" value="${mdl.cases_default}"></label>` : ""}</div>
     <div class="try-out" aria-live="polite"></div>
     <details class="try-more"><summary>How this works</summary>
       <ul class="try-how">
         <li>It learned from ${esc(place)}'s cases and rain, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}.</li>
+        ${mdl.model === "rain_cases" ? "<li>Here it uses this week's case count as well as rain.</li>" : ""}
         <li>It warns when it expects ${mdl.cutoff.toFixed(1)} or more cases in a week.</li>
         <li>On ${mdl.trained_years[1] + 1} to 2019 it warned ${bt.alerts} times and was right ${bt.hits} times, catching ${bt.hits} of ${bt.outbreak_weeks} outbreak weeks.</li>
         <li>${ex.warned ? `It gets the timing, not the size: two weeks before the ${fmt(ex.actual)}-case week in ${esc(ex.month_year)} it warned, but expected about ${num(ex.predicted)}.` : `It can miss sharp spikes: it did not flag the ${fmt(ex.actual)}-case week in ${esc(ex.month_year)}, where it expected about ${num(ex.predicted)}.`}</li>
@@ -643,7 +651,8 @@ async function mountTry(el, code) {
       return;
     }
     // Three answers that always agree with the number: at or above the warning level, close to it, or well below.
-    const p = rainPredict(mdl, target, mm), cut = mdl.cutoff, cutTxt = cut.toFixed(1);
+    const casesIn = box.querySelector(".try-cases input");
+    const p = rainPredict(mdl, target, mm, casesIn ? +casesIn.value || 0 : 0), cut = mdl.cutoff, cutTxt = cut.toFixed(1);
     const shown = p >= cut ? Math.max(p, cut).toFixed(1) : (Math.floor(p * 10) / 10).toFixed(1);
     let cls, verdict, line;
     if (p >= cut) { cls = "on"; verdict = "Get the hospital ready"; line = `About ${shown} cases a week expected two weeks from now, above the warning level of ${cutTxt}.`; }
@@ -678,6 +687,7 @@ async function mountTry(el, code) {
       inp.addEventListener("blur", () => commit(true));
     }
   });
+  const ci = box.querySelector(".try-cases input"); if (ci) ci.addEventListener("input", () => draw(true));
   cols.forEach((c, i) => {
     const tr = c.querySelector(".rb-track"), j = 3 - i;
     const fromY = (y) => { const r = tr.getBoundingClientRect(); return Math.max(0, Math.min(scale, ((r.bottom - y) / r.height) * scale)); };

@@ -56,6 +56,37 @@ def above_record(rmax: list[float], month: int, mm: list[float]) -> bool:
     return any(v > rmax[((w0 - 1 - j + 53) % 53)] * GUARD for j, v in enumerate(mm))
 
 
+def loyo_predictions(train: pd.DataFrame, cols: list[str]) -> pd.Series:
+    """Leave-one-year-out predictions inside the training years."""
+    out = []
+    for yr in sorted(set(train.index.year)):
+        held, rest = train[train.index.year == yr], train[train.index.year != yr]
+        m = sm.GLM(rest.cases, sm.add_constant(rest[cols], has_constant="add"), family=sm.families.Poisson()).fit()
+        out.append(pd.Series(np.asarray(m.predict(sm.add_constant(held[cols], has_constant="add"))), index=held.index))
+    return pd.concat(out)
+
+
+def f1_cutoff(pred: pd.Series, actual: pd.Series, thr: float) -> float | None:
+    """Warning level with the best F1 on training-years predictions (at least 2 warnings)."""
+    best, cut = -1.0, None
+    for c in np.unique(np.round(pred.to_numpy(), 4)):
+        fired = pred >= c
+        if fired.sum() < 2:
+            continue
+        hits = int((fired & (actual > thr)).sum())
+        if hits == 0:
+            continue
+        prec, rec = hits / fired.sum(), hits / max(1, int((actual > thr).sum()))
+        f1 = 2 * prec * rec / (prec + rec)
+        if f1 > best:
+            best, cut = f1, float(c)
+    return cut
+
+
+def passes_strict(b: dict) -> bool:
+    return bool(b["outbreak_weeks"] and b["alerts"] and b["hits"] / b["outbreak_weeks"] >= 0.25 and b["hits"] / b["alerts"] >= 0.5)
+
+
 def export_city(code: str) -> dict | None:
     web = ROOT / "web" / "data" / code
     scores = ROOT / "results" / code / "alert_scores.json"
@@ -83,6 +114,32 @@ def export_city(code: str) -> dict | None:
     back = {"alerts": int(fired.sum()), "hits": int((fired & out_test).sum()),
             "outbreak_weeks": int(out_test.sum()), "false_alerts": int((fired & ~out_test).sum()),
             "test_weeks": len(test)}
+
+    # Equal-budget comparison with the two simple guesses on 2017-2019 (the deck's claim).
+    sc = {m: alert.score(m, p, test.cases, threshold, alert_rate) for m, p in (
+        ("rain", pred_test), ("seasonal", alert.seasonal_baseline(train, test)), ("last_week", test.last_week.astype(float)))}
+    evidence = {"alerts": sc["rain"].alerts, "outbreak_weeks": sc["rain"].outbreak_weeks, "rain": sc["rain"].hits,
+                "seasonal": sc["seasonal"].hits, "last_week": sc["last_week"].hits}
+    beats_guesses = evidence["rain"] > evidence["seasonal"] and evidence["rain"] > evidence["last_week"]
+    model_kind, tier, why_not = "rain", None, None
+    if passes_strict(back):
+        tier = "strong"
+    else:
+        # Rain plus this week's case count, warning level chosen on the training years only.
+        cols2 = [c for c in train.columns if c.startswith(("sin", "cos"))] + ["ar_log"] + [c for c in train.columns if c.startswith("rain_")]
+        cut2 = f1_cutoff(loyo_predictions(train, cols2), train.cases, threshold)
+        if cut2 is not None:
+            m2 = sm.GLM(train.cases, sm.add_constant(train[cols2], has_constant="add"), family=sm.families.Poisson()).fit()
+            p2 = pd.Series(np.asarray(m2.predict(sm.add_constant(test[cols2], has_constant="add"))), index=test.index)
+            f2 = p2 >= cut2
+            back2 = {"alerts": int(f2.sum()), "hits": int((f2 & out_test).sum()), "outbreak_weeks": int(out_test.sum()),
+                     "false_alerts": int((f2 & ~out_test).sum()), "test_weeks": len(test)}
+            if passes_strict(back2):
+                model, cols, cutoff, back, tier, model_kind = m2, cols2, cut2, back2, "strong", "rain_cases"
+        if tier is None and beats_guesses:
+            tier = "weak"
+        if tier is None:
+            why_not = "last_week" if evidence["last_week"] >= evidence["rain"] else "no_signal"
 
     tr = rain[(rain.index.year >= 2008) & (rain.index.year <= 2016)].dropna()
     rmax = rain_max_by_week(tr)
@@ -134,10 +191,12 @@ def export_city(code: str) -> dict | None:
         "period_weeks": 52.18, "coef": {c: float(model.params[c]) for c in ["const", *cols]},
         "rain_lags_weeks": [2, 3, 4, 5], "outbreak_threshold": threshold, "alert_rate": round(alert_rate, 4),
         "cutoff": round(cutoff, 4), "backtest_fixed_cutoff": back,
-        # The "Try it" box is offered only where a warning level fixed in advance worked on 2017-2019:
-        # it caught at least a quarter of outbreak weeks and at least half of its warnings were right.
-        "try_it": bool(back["outbreak_weeks"] and back["alerts"]
-                       and back["hits"] / back["outbreak_weeks"] >= 0.25 and back["hits"] / back["alerts"] >= 0.5),
+        # The "Try it" box is offered where the warning worked on 2017-2019, years it never saw:
+        # "strong" = a warning level fixed in advance caught at least a quarter of outbreak weeks with at least
+        # half its warnings right; "weak" = at the same number of warnings it caught more outbreak weeks than
+        # both simple guesses (seasonal average, last week's count). Otherwise why_not says which failed.
+        "try_it": tier is not None, "tier": tier, "model": model_kind, "why_not": why_not, "evidence": evidence,
+        "cases_default": int(round(float(train.cases.median()))),
         "months": [MONTHS[m - 1] for m in months], "month_full": dict(zip(MONTHS, FULL, strict=True)),
         "default_month": MONTHS[int(mean[months].idxmax()) - 1], "presets": presets,
         "rain_max_by_week": rmax, "guard_factor": GUARD,
@@ -148,7 +207,7 @@ def export_city(code: str) -> dict | None:
     ex = out["examples"][0]
     print(f"[{code}] {cities.CITIES[code]}: refit diff {diff:.5f}; cutoff {cutoff:.2f}; fixed cut-off on 2017-2019 "
           f"{back['hits']}/{back['alerts']} right, caught {back['hits']}/{back['outbreak_weeks']}; months "
-          f"{','.join(out['months'])}; try_it {out['try_it']}; presets {[p['mm'] for p in presets]}; peak {ex['month_year']} "
+          f"{','.join(out['months'])}; tier {tier} model {model_kind} why_not {why_not} evidence {evidence}; presets {[p['mm'] for p in presets]}; peak {ex['month_year']} "
           f"actual {ex['actual']} predicted {ex['predicted']} warned {ex['warned']}")
     assert math.isfinite(cutoff)
     return out

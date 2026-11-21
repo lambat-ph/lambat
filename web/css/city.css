@@ -194,3 +194,8 @@
 .rb-key{display:flex;align-items:center;gap:6px;margin:var(--s1) 0 0;font-size:.75rem;color:var(--muted)}
 .rb-key-l{flex:none;width:18px;border-top:2px dashed var(--muted);opacity:.55}
 @media (max-width:640px){.rb-track{height:130px}}
+
+/* rain box: weaker-signal note and the case-count input (rain + cases model) */
+.try-note{margin:0 0 var(--s2);padding:var(--s1) var(--s2);border-radius:10px;background:var(--bg);font-size:var(--t-sm);max-width:70ch}
+.try-cases{display:flex;align-items:center;gap:var(--s1);margin-top:var(--s2);font:600 var(--t-sm) var(--f-text)}
+.try-cases input{width:96px;min-height:40px}

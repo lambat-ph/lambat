@@ -8,15 +8,16 @@
   "horizon_weeks": 2,
   "period_weeks": 52.18,
   "coef": {
-    "const": -7.698201418864473,
-    "sin1": 2.4241267144997733,
-    "cos1": 1.0651258886519657,
-    "sin2": 0.7716769037547233,
-    "cos2": -0.8178350795064563,
-    "rain_l2": 0.7755190354089065,
-    "rain_l3": 0.7286840043359177,
-    "rain_l4": 0.12142491086884152,
-    "rain_l5": 0.49699541540741143
+    "const": -6.456347336829935,
+    "sin1": 1.8011070817382653,
+    "cos1": 0.783579941043923,
+    "sin2": 0.6120826448897986,
+    "cos2": -0.5997264453653517,
+    "ar_log": 0.44724868064091716,
+    "rain_l2": 0.7075111288519498,
+    "rain_l3": 0.6551879124790989,
+    "rain_l4": -0.015059589630465886,
+    "rain_l5": 0.3335859699184097
   },
   "rain_lags_weeks": [
     2,
@@ -26,15 +27,26 @@
   ],
   "outbreak_threshold": 1.0,
   "alert_rate": 0.0884,
-  "cutoff": 1.8143,
+  "cutoff": 1.0621,
   "backtest_fixed_cutoff": {
-    "alerts": 9,
-    "hits": 4,
+    "alerts": 24,
+    "hits": 14,
     "outbreak_weeks": 24,
-    "false_alerts": 5,
+    "false_alerts": 10,
     "test_weeks": 157
   },
-  "try_it": false,
+  "try_it": true,
+  "tier": "strong",
+  "model": "rain_cases",
+  "why_not": null,
+  "evidence": {
+    "alerts": 14,
+    "outbreak_weeks": 24,
+    "rain": 6,
+    "seasonal": 7,
+    "last_week": 6
+  },
+  "cases_default": 0,
   "months": [
     "May",
     "Jun",
@@ -171,9 +183,9 @@
         68.3,
         56.3
       ],
-      "predicted": 1.04,
+      "predicted": 1.63,
       "actual": 9,
-      "warned": false
+      "warned": true
     }
   ],
   "note": "Prototype. Poisson model trained on City of Navotas 2008-2016 (Project CCHAIN). Not a live warning."

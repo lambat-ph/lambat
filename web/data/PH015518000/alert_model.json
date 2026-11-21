@@ -35,6 +35,17 @@
     "test_weeks": 157
   },
   "try_it": true,
+  "tier": "strong",
+  "model": "rain",
+  "why_not": null,
+  "evidence": {
+    "alerts": 16,
+    "outbreak_weeks": 39,
+    "rain": 14,
+    "seasonal": 8,
+    "last_week": 10
+  },
+  "cases_default": 0,
   "months": [
     "May",
     "Jun",

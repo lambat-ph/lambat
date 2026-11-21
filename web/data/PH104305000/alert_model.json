@@ -34,7 +34,18 @@
     "false_alerts": 4,
     "test_weeks": 157
   },
-  "try_it": false,
+  "try_it": true,
+  "tier": "weak",
+  "model": "rain",
+  "why_not": null,
+  "evidence": {
+    "alerts": 8,
+    "outbreak_weeks": 11,
+    "rain": 3,
+    "seasonal": 1,
+    "last_week": 2
+  },
+  "cases_default": 0,
   "months": [
     "Jun",
     "Jul",
