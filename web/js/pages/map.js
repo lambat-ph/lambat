@@ -602,6 +602,7 @@ function applyRelief() {
 }
 
 async function selectCity(code, first) {
+  rollPrev.city = null; // opening a city, even the same one again, counts its numbers up from 0
   const c = S.cities.find((x) => x.code === code);
   if (!c) return;
   endTour(false);
