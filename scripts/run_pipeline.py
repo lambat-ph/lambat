@@ -174,7 +174,7 @@ def run_city(city: str, scenario: str, ks: list[int], limit_min: float, scope: s
     reach_flood = float(tab.exposed_reach_flood.sum()) if have else None
     summary = {
         "city": city,
-        "city_name": cities.CITIES[city],
+        "city_name": cities.MAP_CITIES[city],
         "scenario": scenario,
         "walk_limit_min": limit_min,
         "steps": steps,

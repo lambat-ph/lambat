@@ -508,7 +508,7 @@ function alertPanel(m) {
   const a = m.alert, c = m.meta;
   if (a.status !== "evaluated") {
     const n = c.lepto_cases_2008_2022;
-    return `<div class="card"><h2 class="card-title">Rain warning</h2><p>${a.status === "too_few_cases" ? "Too few cases to test a rain warning for this city" : "The rain warning was not tested for this city"}${isNum(n) ? `: only ${fmt(n)} leptospirosis cases were reported from 2008 to 2022` : ""}. Any score would be noise, so none is shown.</p></div>`
+    return `<div class="card"><h2 class="card-title">Rain warning</h2><p>${a.status === "no_case_data" ? "No public weekly case data exists for this city, so there is no outbreak forecast here" : a.status === "too_few_cases" ? "Too few cases to test a rain warning for this city" : "The rain warning was not tested for this city"}${isNum(n) ? `: only ${fmt(n)} leptospirosis cases were reported from 2008 to 2022` : ""}${a.status === "no_case_data" ? "." : ". Any score would be noise, so none is shown."}</p></div>`
       + `<div class="card try-rain" id="tryRain" hidden></div>`;
   }
   const yrs = `${a.years[0]} to ${a.years[1]}`;

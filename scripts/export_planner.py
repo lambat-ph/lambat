@@ -226,7 +226,7 @@ def main() -> None:
 def write_index() -> None:
     """web/data/planner_index.json: which planner scenarios exist per city (the map reads it)."""
     idx = {}
-    for city in cities.CITIES:
+    for city in cities.MAP_CITIES:
         have = [sc.replace("yr", "") for sc in SCENARIOS if (WEB / city / f"planner_{sc}.json").exists()]
         if have:
             idx[city] = have

@@ -36,6 +36,7 @@ PROVINCE = {
     "PH097332000": ["zamboangadelsur"], "PH104305000": ["misamisoriental_a", "misamisoriental_b"],
     "PH112402000": ["davaodelsur"], "PH137401000": ["metromanila"], "PH137503000": ["metromanila"],
     "PH137603000": ["metromanila"],
+    **{c: ["metromanila"] for c in cities.EXTRA},
 }
 SCENARIOS = ("5yr", "25yr", "100yr")
 TOLS = (0.0001, 0.0002, 0.0004, 0.0008)  # about 10 to 80 m; NOAH polygons are built from raster cells
@@ -75,6 +76,7 @@ def export(city: str, scn: str) -> Path | None:
     fh = fh[fh.to_crs(data.CRS_METRIC).area >= MIN_M2]
     merged = fh.dissolve(by="Var").reset_index()[["Var", "geometry"]].rename(columns={"Var": "level"})
     path = WEB / city / f"noah_flood_{scn}.geojson"
+    path.parent.mkdir(parents=True, exist_ok=True)
     for tol in TOLS:  # simplify more strongly until the file is light enough for the browser
         out = merged.copy()
         out["geometry"] = out.geometry.simplify(tol, preserve_topology=True).apply(polygonal)
@@ -99,7 +101,7 @@ def polygonal(g):
 
 
 def write_index() -> dict:
-    idx = {c: [s.replace("yr", "") for s in SCENARIOS if (WEB / c / f"noah_flood_{s}.geojson").exists()] for c in cities.CITIES}
+    idx = {c: [s.replace("yr", "") for s in SCENARIOS if (WEB / c / f"noah_flood_{s}.geojson").exists()] for c in cities.MAP_CITIES}
     idx = {c: v for c, v in idx.items() if v}
     (WEB / "noah_index.json").write_text(json.dumps(idx, indent=1))
     print("noah index:", idx, flush=True)

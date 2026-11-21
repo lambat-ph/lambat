@@ -43,6 +43,9 @@ def build_city(code: str, loc: pd.DataFrame) -> dict | None:
     if not summ_path.exists():
         print(f"{code}: no results, skipped")
         return None
+    if code in cities.EXTRA and not (DATA / code / f"planner_{scen}.json").exists():
+        print(f"{code}: no planner yet (scripts/export_planner.py), skipped")  # new cities go live only when complete
+        return None
     out = DATA / code
     out.mkdir(parents=True, exist_ok=True)
     summary = json.loads(summ_path.read_text())
@@ -75,7 +78,7 @@ def build_city(code: str, loc: pd.DataFrame) -> dict | None:
     gap = summary["exposed_access_gap"]
     row_out = {
         "code": code,
-        "name": cities.CITIES[code],
+        "name": cities.MAP_CITIES[code],
         "region": row.adm1_en,
         "province": row.adm2_en,
         "lon": lon,
@@ -86,10 +89,10 @@ def build_city(code: str, loc: pd.DataFrame) -> dict | None:
         "exposed": round(summary["exposed"]),
         "exposed_share": round(summary["exposed"] / pop, 4) if pop else None,
         "weekly_capsules": round(summary["weekly_capsules"]),
-        "lepto_cases_2008_2022": int(data.weekly_cases(code).sum()),
+        "lepto_cases_2008_2022": int(data.weekly_cases(code).sum()) if code in cities.CITIES else None,
         "access_gap": round(gap) if gap is not None else None,
         "coverage_after": cities.coverage_after(summary),
-        "alert": cities.alert_block(scores),
+        "alert": cities.alert_block(scores) if code in cities.CITIES else {"status": "no_case_data", "correlation": None, "caught": None, "false_alerts": None, "baseline_correlation": None},
         "scenario": scen,
         "scenario_note": summary["scenario_note"],
         "steps": summary["steps"],
@@ -105,8 +108,8 @@ def main() -> None:
                     help="remove the old flat web/data files that web/index.html no longer mentions")
     args = ap.parse_args()
     DATA.mkdir(parents=True, exist_ok=True)
-    loc = pd.read_csv(data.RAW / "location.csv", usecols=["adm1_en", "adm2_en", "adm3_pcode"]).drop_duplicates("adm3_pcode")
-    rows = [r for r in (build_city(c, loc) for c in cities.CITIES) if r]
+    loc = data._read(data.RAW, "location.csv", usecols=["adm1_en", "adm2_en", "adm3_pcode"]).drop_duplicates("adm3_pcode")
+    rows = [r for r in (build_city(c, loc) for c in cities.MAP_CITIES) if r]
     _write_json(DATA / "cities.json", rows)
 
     pooled_path = RESULTS / "pooled_alert_scores.json"
@@ -121,7 +124,7 @@ def main() -> None:
             "population": sum(r["population"] for r in rs),
             "exposed": sum(r["exposed"] for r in rs),
             "weekly_capsules": sum(r["weekly_capsules"] for r in rs),
-            "lepto_cases_2008_2022": sum(r["lepto_cases_2008_2022"] for r in rs),
+            "lepto_cases_2008_2022": sum(r["lepto_cases_2008_2022"] or 0 for r in rs),  # cities outside CCHAIN have no case data
             "cities_with_access": len(with_access),
             "access_gap": sum(r["access_gap"] for r in with_access),
             "alert_cities_evaluated": sum(r["alert"]["status"] == "evaluated" for r in rs),

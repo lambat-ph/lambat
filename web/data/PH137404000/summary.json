@@ -1,0 +1,69 @@
+{
+  "city": "PH137404000",
+  "city_name": "Quezon City",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 3266730.9654,
+  "barangays": 142,
+  "barangays_flooded": 142,
+  "exposed": 955964.0269813197,
+  "weekly_capsules": 1911928.0539626393,
+  "health_facilities": 278,
+  "facilities_closed_by_flood": 17,
+  "candidate_sites_usable": 573,
+  "exposed_on_road_network": 954603.4973476755,
+  "exposed_within_reach_dry": 895801.0439609935,
+  "exposed_within_reach_flood": 646187.7989420418,
+  "exposed_access_gap": 249613.24501895165,
+  "exposed_unreached_in_flood": 308415.6984056337,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n255072683",
+        "w281979053",
+        "w911494559"
+      ],
+      "exposed_newly_covered": 20811.268613482476,
+      "exposed_within_reach_after": 666999.0675555243,
+      "share_of_exposed_within_reach_after": 0.6987184411211067
+    },
+    "5": {
+      "sites": [
+        "n255072683",
+        "r14626755",
+        "w281979053",
+        "w795490291",
+        "w911494559"
+      ],
+      "exposed_newly_covered": 30968.038254123396,
+      "exposed_within_reach_after": 677155.8371961652,
+      "share_of_exposed_within_reach_after": 0.709358219488629
+    },
+    "8": {
+      "sites": [
+        "n255072683",
+        "r14626755",
+        "w107948775",
+        "w281979053",
+        "w591631427",
+        "w795490291",
+        "w911494559",
+        "w1311645086"
+      ],
+      "exposed_newly_covered": 43555.37063281667,
+      "exposed_within_reach_after": 689743.1695748585,
+      "share_of_exposed_within_reach_after": 0.7225441468539346
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 2996.8,
+  "scenario_note": null
+}

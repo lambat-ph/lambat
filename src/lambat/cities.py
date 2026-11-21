@@ -27,6 +27,18 @@ CITIES: dict[str, str] = {
     "PH137603000": "City of Muntinlupa",
 }
 
+# Metro Manila cities outside Project CCHAIN (PSA/HDX pcodes). Their inputs come from national open data
+# (scripts/build_extra_cities.py); they have no case or rainfall data, so no outbreak forecast.
+NCR_EXTRA_HDX: dict[str, str] = {
+    "PH1303901": "City of Manila", "PH1307402": "City of Marikina", "PH1307403": "City of Pasig",
+    "PH1307404": "Quezon City", "PH1307405": "City of San Juan", "PH1307501": "Caloocan City",
+    "PH1307502": "City of Malabon", "PH1307504": "City of Valenzuela", "PH1307601": "City of Las Pinas",
+    "PH1307602": "City of Makati", "PH1307604": "City of Paranaque", "PH1307605": "Pasay City",
+    "PH1307606": "Pateros", "PH1307607": "Taguig City",
+}
+EXTRA: dict[str, str] = {"PH" + h[2:4] + h[5:] + "000": n for h, n in NCR_EXTRA_HDX.items()}
+MAP_CITIES: dict[str, str] = {**CITIES, **EXTRA}  # every city on the map; forecasts use CITIES only
+
 MIN_CASES_FOR_ALERT = 100
 UTM51_LON = (120.0, 126.0)
 
@@ -35,8 +47,12 @@ def resolve(arg: str) -> list[str]:
     """'all' -> every city code; otherwise one code (must be a known city)."""
     if arg.lower() == "all":
         return list(CITIES)
-    if arg not in CITIES:
-        raise SystemExit(f"unknown city {arg}; known: {', '.join(CITIES)}")
+    if arg.lower() == "extra":
+        return list(EXTRA)
+    if arg.lower() == "map":
+        return list(MAP_CITIES)
+    if arg not in MAP_CITIES:
+        raise SystemExit(f"unknown city {arg}; known: {', '.join(MAP_CITIES)}")
     return [arg]
 
 

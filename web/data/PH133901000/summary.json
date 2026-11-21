@@ -1,0 +1,69 @@
+{
+  "city": "PH133901000",
+  "city_name": "City of Manila",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 1725296.1324,
+  "barangays": 899,
+  "barangays_flooded": 894,
+  "exposed": 1184826.3534573563,
+  "weekly_capsules": 2369652.7069147127,
+  "health_facilities": 173,
+  "facilities_closed_by_flood": 1,
+  "candidate_sites_usable": 383,
+  "exposed_on_road_network": 1179891.320918235,
+  "exposed_within_reach_dry": 1175377.6507339403,
+  "exposed_within_reach_flood": 992540.0818699371,
+  "exposed_access_gap": 182837.5688640031,
+  "exposed_unreached_in_flood": 187351.23904829795,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n4177432021",
+        "n9813646902",
+        "w789142647"
+      ],
+      "exposed_newly_covered": 56634.55841831952,
+      "exposed_within_reach_after": 1049174.6402882566,
+      "share_of_exposed_within_reach_after": 0.8892129484194783
+    },
+    "5": {
+      "sites": [
+        "n4177432021",
+        "n9813646902",
+        "w765639111",
+        "w789142647",
+        "w914169574"
+      ],
+      "exposed_newly_covered": 79456.09209992352,
+      "exposed_within_reach_after": 1071996.1739698607,
+      "share_of_exposed_within_reach_after": 0.9085550126223436
+    },
+    "8": {
+      "sites": [
+        "n4177432021",
+        "n9813646902",
+        "n10866560505",
+        "w154644775",
+        "w437302643",
+        "w765639111",
+        "w789142647",
+        "w914169574"
+      ],
+      "exposed_newly_covered": 105749.1310387372,
+      "exposed_within_reach_after": 1098289.2129086743,
+      "share_of_exposed_within_reach_after": 0.9308393014145956
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 2442.0,
+  "scenario_note": null
+}

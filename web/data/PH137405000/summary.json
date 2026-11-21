@@ -1,0 +1,56 @@
+{
+  "city": "PH137405000",
+  "city_name": "City of San Juan",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 101802.2612,
+  "barangays": 21,
+  "barangays_flooded": 21,
+  "exposed": 34398.0667443128,
+  "weekly_capsules": 68796.1334886256,
+  "health_facilities": 30,
+  "facilities_closed_by_flood": 2,
+  "candidate_sites_usable": 48,
+  "exposed_on_road_network": 34290.20160589951,
+  "exposed_within_reach_dry": 34290.20160589951,
+  "exposed_within_reach_flood": 26142.716313171506,
+  "exposed_access_gap": 8147.485292727997,
+  "exposed_unreached_in_flood": 8147.485292727995,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w485258677"
+      ],
+      "exposed_newly_covered": 1132.6270032786886,
+      "exposed_within_reach_after": 27275.343316450195,
+      "share_of_exposed_within_reach_after": 0.7954267411410486
+    },
+    "5": {
+      "sites": [
+        "w485258677"
+      ],
+      "exposed_newly_covered": 1132.6270032786886,
+      "exposed_within_reach_after": 27275.343316450195,
+      "share_of_exposed_within_reach_after": 0.7954267411410486
+    },
+    "8": {
+      "sites": [
+        "w485258677"
+      ],
+      "exposed_newly_covered": 1132.6270032786886,
+      "exposed_within_reach_after": 27275.343316450195,
+      "share_of_exposed_within_reach_after": 0.7954267411410486
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 303.6,
+  "scenario_note": null
+}

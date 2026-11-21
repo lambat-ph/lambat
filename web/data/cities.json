@@ -478,5 +478,125 @@
       "access": true,
       "siting": true
     }
+  },
+  {
+    "code": "PH133901000",
+    "name": "City of Manila",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila First District",
+    "lon": 120.98546,
+    "lat": 14.60062,
+    "bbox": [
+      120.9328,
+      14.55861,
+      121.02617,
+      14.63998
+    ],
+    "barangays": 899,
+    "population": 1725296,
+    "exposed": 1184826,
+    "exposed_share": 0.6867,
+    "weekly_capsules": 2369653,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 182838,
+    "coverage_after": {
+      "3": 0.8892129484194783,
+      "5": 0.9085550126223436,
+      "8": 0.9308393014145956
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137403000",
+    "name": "City of Pasig",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Second District",
+    "lon": 121.08548,
+    "lat": 14.57887,
+    "bbox": [
+      121.0514,
+      14.532,
+      121.11045,
+      14.62414
+    ],
+    "barangays": 30,
+    "population": 840414,
+    "exposed": 539984,
+    "exposed_share": 0.6425,
+    "weekly_capsules": 1079969,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 124223,
+    "coverage_after": {
+      "3": 0.8055577161323553,
+      "5": 0.820631858202355,
+      "8": 0.8313637619814973
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137404000",
+    "name": "Quezon City",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Second District",
+    "lon": 121.06047,
+    "lat": 14.68049,
+    "bbox": [
+      120.98982,
+      14.58962,
+      121.13497,
+      14.7777
+    ],
+    "barangays": 142,
+    "population": 3266731,
+    "exposed": 955964,
+    "exposed_share": 0.2926,
+    "weekly_capsules": 1911928,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 249613,
+    "coverage_after": {
+      "3": 0.6987184411211067,
+      "5": 0.709358219488629,
+      "8": 0.7225441468539346
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
   }
 ]

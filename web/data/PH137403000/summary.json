@@ -1,0 +1,69 @@
+{
+  "city": "PH137403000",
+  "city_name": "City of Pasig",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 840414.4735999999,
+  "barangays": 30,
+  "barangays_flooded": 30,
+  "exposed": 539984.3313662139,
+  "weekly_capsules": 1079968.6627324277,
+  "health_facilities": 97,
+  "facilities_closed_by_flood": 7,
+  "candidate_sites_usable": 180,
+  "exposed_on_road_network": 539926.1862420656,
+  "exposed_within_reach_dry": 539926.1862420656,
+  "exposed_within_reach_flood": 415703.15604887245,
+  "exposed_access_gap": 124223.03019319307,
+  "exposed_unreached_in_flood": 124223.0301931931,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "r17637744",
+        "w93266874",
+        "w436004836"
+      ],
+      "exposed_newly_covered": 19238.54942033866,
+      "exposed_within_reach_after": 434941.7054692111,
+      "share_of_exposed_within_reach_after": 0.8055577161323553
+    },
+    "5": {
+      "sites": [
+        "n6522578619",
+        "r17637744",
+        "w93266874",
+        "w425048983",
+        "w436004836"
+      ],
+      "exposed_newly_covered": 27377.473459064644,
+      "exposed_within_reach_after": 443080.6295079371,
+      "share_of_exposed_within_reach_after": 0.820631858202355
+    },
+    "8": {
+      "sites": [
+        "n6522578619",
+        "r17637744",
+        "r17644984",
+        "r17674130",
+        "w93266874",
+        "w425048983",
+        "w427120477",
+        "w436004836"
+      ],
+      "exposed_newly_covered": 33171.90933765378,
+      "exposed_within_reach_after": 448875.0653865262,
+      "share_of_exposed_within_reach_after": 0.8313637619814973
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 2543.6,
+  "scenario_note": null
+}

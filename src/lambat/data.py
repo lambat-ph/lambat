@@ -15,9 +15,19 @@ from shapely import wkt
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw" / "cchain"
 PROCESSED = ROOT / "data" / "processed"
+EXTRA = ROOT / "data" / "raw" / "extra"  # same tables for cities outside CCHAIN (scripts/build_extra_cities.py)
 
 DAGUPAN = "PH015518000"
 CRS_METRIC = "EPSG:32651"  # UTM zone 51N, metres
+
+
+def _read(raw: Path, name: str, **kw) -> pd.DataFrame:
+    """A CCHAIN table, plus the same table for cities outside CCHAIN when it exists."""
+    df = pd.read_csv(raw / name, **kw)
+    extra = EXTRA / name
+    if raw == RAW and extra.exists():
+        df = pd.concat([df, pd.read_csv(extra, **kw)], ignore_index=True)
+    return df
 
 
 def _city_prefix(city: str) -> str:
@@ -27,9 +37,9 @@ def _city_prefix(city: str) -> str:
 
 def barangays(city: str = DAGUPAN, raw: Path = RAW) -> gpd.GeoDataFrame:
     """Barangay names, codes, boundaries and area (km2), in WGS84."""
-    loc = pd.read_csv(raw / "location.csv")
+    loc = _read(raw, "location.csv")
     loc = loc[loc.adm3_pcode == city][["adm4_pcode", "adm4_en", "brgy_total_area"]]
-    geo = pd.read_csv(raw / "brgy_geography.csv", usecols=["adm4_pcode", "brgy_is_coastal", "geometry"])
+    geo = _read(raw, "brgy_geography.csv", usecols=["adm4_pcode", "brgy_is_coastal", "geometry"])
     df = loc.merge(geo, on="adm4_pcode", how="left")
     df["geometry"] = df.geometry.apply(wkt.loads)
     return gpd.GeoDataFrame(df, geometry="geometry", crs="EPSG:4326").reset_index(drop=True)
@@ -37,7 +47,7 @@ def barangays(city: str = DAGUPAN, raw: Path = RAW) -> gpd.GeoDataFrame:
 
 def population(city: str = DAGUPAN, year: int | None = None, raw: Path = RAW) -> pd.Series:
     """WorldPop residents per barangay for one year (latest available by default)."""
-    wp = pd.read_csv(raw / "worldpop_population.csv", usecols=["adm4_pcode", "date", "pop_count_total"])
+    wp = _read(raw, "worldpop_population.csv", usecols=["adm4_pcode", "date", "pop_count_total"])
     wp = wp[wp.adm4_pcode.str.startswith(_city_prefix(city))]
     wp["year"] = wp.date.str[:4].astype(int)
     year = year or int(wp.year.max())
@@ -47,7 +57,7 @@ def population(city: str = DAGUPAN, year: int | None = None, raw: Path = RAW) ->
 def flood_hazard(city: str = DAGUPAN, raw: Path = RAW) -> pd.DataFrame:
     """UP NOAH flood hazard: percent of each barangay's area in each
     (return period, hazard level) class, e.g. column '25yr_med'."""
-    hz = pd.read_csv(raw / "project_noah_hazards.csv")
+    hz = _read(raw, "project_noah_hazards.csv")
     hz = hz[hz.adm4_pcode.str.startswith(_city_prefix(city))].set_index("adm4_pcode")
     cols = [c for c in hz.columns if c.startswith("pct_area_flood_hazard_")]
     return hz[cols].rename(columns=lambda c: c.replace("pct_area_flood_hazard_", ""))

@@ -215,7 +215,7 @@ const html = () => `
       <li>Each dose point assumes a prescriber is present.</li>
       <li>The tool counts places, not patients. Pregnant and lactating women are flagged for referral, and people who were never diagnosed do not appear.</li>
       <li>The radar flood model is a U-Net, an image-reading neural network. It was tested on floods in other countries, not in Dagupan, and it does not feed the ranking or the dose points. Its score is IoU, the overlap between predicted water and true water, where 1 is a perfect match.</li>
-      <li>The flood map layer on the map shows NOAH's flood shapes. The numbers come from the same NOAH maps summed per barangay, so the water and the shading will not line up exactly.</li>
+      <li>Metro Manila's 14 cities outside Project CCHAIN use PSA barangay boundaries, WorldPop 2020 and NOAH's flood shapes, combined the same way CCHAIN does. On the three NCR cities CCHAIN covers, this gave the same population and flooded area (within 0.3 points). These cities have no public weekly case data, so they have no forecast.</li>      <li>The flood map layer on the map shows NOAH's flood shapes. The numbers come from the same NOAH maps summed per barangay, so the water and the shading will not line up exactly.</li>
     </ul>
   </section>
 
