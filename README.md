@@ -87,7 +87,7 @@ Barangay table, GeoJSON maps and a JSON summary land in `results/`.
 
 ## Cities
 
-The pipeline has been run for all 12 Project CCHAIN cities and for 8 more Metro Manila cities. Dagupan is the pilot and the only one checked against news reports.
+The pipeline has been run for all 12 Project CCHAIN cities and for 12 more Metro Manila cities. Dagupan is the pilot and the only one checked against news reports.
 
 | City | Flood map | Population | Exposed | Coverage after 3 / 5 / 8 dose points |
 |---|---|---|---|---|
@@ -111,10 +111,14 @@ The pipeline has been run for all 12 Project CCHAIN cities and for 8 more Metro 
 | Valenzuela | 25-year | 647,549 | 273,077 | 75% / 78% / 80% |
 | Las Pinas | 25-year | 604,495 | 228,716 | 94% / 94% / 94% |
 | Makati | 25-year | 388,718 | 177,342 | 95% / 95% / 95% |
+| Marikina | 25-year | 412,613 | 290,435 | 49% / 50% / 51% |
+| Paranaque | 25-year | 746,182 | 271,947 | 78% / 81% / 83% |
+| Pasay | 25-year | 337,085 | 223,294 | 93% / 93% / 93% |
+| Taguig | 25-year | 753,205 | 227,780 | 92% / 93% / 93% |
 
-The national total counts only the 25-year cities: 5,004,282 exposed residents across 17 cities (`web/data/national.json`). Iloilo, Mandaue and Tacloban have no 25-year map in Project CCHAIN, so they are shown on the larger 100-year map and are not added to the total.
+The national total counts only the 25-year cities: 6,017,738 exposed residents across 21 cities (`web/data/national.json`). Iloilo, Mandaue and Tacloban have no 25-year map in Project CCHAIN, so they are shown on the larger 100-year map and are not added to the total.
 
-**Metro Manila cities outside Project CCHAIN** (the last 8 rows) are built by `scripts/build_extra_cities.py` from PSA barangay boundaries (HDX, CC BY-IGO), WorldPop 2020 and UP NOAH flood shapes, combined the same way CCHAIN does. On the three NCR cities CCHAIN covers, this method gave the same population and flooded area (within 0.3 points). They have the full map: exposure, walking access and the 0 to 10 dose-point planner (their range of plausible floods uses 20 simulated floods so far, against 200 in the CCHAIN cities). They have no outbreak forecast, because no public weekly case data exists for them. Caloocan, Marikina, Paranaque, Pasay, Pateros and Taguig are not published yet.
+**Metro Manila cities outside Project CCHAIN** (the last 12 rows) are built by `scripts/build_extra_cities.py` from PSA barangay boundaries (HDX, CC BY-IGO), WorldPop 2020 and UP NOAH flood shapes, combined the same way CCHAIN does. On the three NCR cities CCHAIN covers, this method gave the same population and flooded area (within 0.3 points). They have the full map: exposure, walking access and the 0 to 10 dose-point planner (their range of plausible floods uses 20 simulated floods so far, against 200 in the CCHAIN cities). They have no outbreak forecast, because no public weekly case data exists for them. Two are held back: Caloocan (only 43% of exposed residents reach a clinic even on a dry day, still being checked) and Pateros (every exposed resident is already within reach of a clinic, so there is no dose point plan to show yet).
 
 ## Seeing the water from orbit
 
@@ -154,7 +158,7 @@ The trained U-Net (94 MB) is on the [unet-v1 release](https://github.com/lambat-
 | Flood mapping (threshold vs U-Net on Sen1Floods11) | Trained and scored (pooled IoU 0.64 vs 0.21) |
 | Validation against news reports | Done, with confidence intervals; no detectable agreement |
 | Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Run: 0.46 km2 of new water inside the city two days after landfall; matches NOAH 100-year map (rho 0.54), not the 25-year map or news reports ([docs/sentinel1.md](docs/sentinel1.md)) |
-| Dashboard (`web/`, MapLibre) | Multi-city map (20 cities, with a national summary), 0 to 10 dose-point slider and planning tools in every city, optional UP NOAH flood layer, outbreak-week forecast box in all 12 CCHAIN cities, priority table, satellite page; live on [GitHub Pages](https://lambat-ph.github.io/lambat/) |
+| Dashboard (`web/`, MapLibre) | Multi-city map (24 cities, with a national summary), 0 to 10 dose-point slider and planning tools in every city, optional UP NOAH flood layer, outbreak-week forecast box in all 12 CCHAIN cities, priority table, satellite page; live on [GitHub Pages](https://lambat-ph.github.io/lambat/) |
 
 ### For a health office: the map's planning tools (every city)
 
