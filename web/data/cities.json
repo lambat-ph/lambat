@@ -598,5 +598,205 @@
       "access": true,
       "siting": true
     }
+  },
+  {
+    "code": "PH137405000",
+    "name": "City of San Juan",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Second District",
+    "lon": 121.0367,
+    "lat": 14.60247,
+    "bbox": [
+      121.01956,
+      14.59072,
+      121.05925,
+      14.61383
+    ],
+    "barangays": 21,
+    "population": 101802,
+    "exposed": 34398,
+    "exposed_share": 0.3379,
+    "weekly_capsules": 68796,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 8147,
+    "coverage_after": {
+      "3": 0.7954267411410486,
+      "5": 0.7954267411410486,
+      "8": 0.7954267411410486
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137502000",
+    "name": "City of Malabon",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Third District",
+    "lon": 120.95856,
+    "lat": 14.67412,
+    "bbox": [
+      120.92351,
+      14.64502,
+      121.00042,
+      14.70265
+    ],
+    "barangays": 21,
+    "population": 373143,
+    "exposed": 254807,
+    "exposed_share": 0.6829,
+    "weekly_capsules": 509614,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 54847,
+    "coverage_after": {
+      "3": 0.8495942918838157,
+      "5": 0.8807260181437644,
+      "8": 0.9052685150642568
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137504000",
+    "name": "City of Valenzuela",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Third District",
+    "lon": 120.97916,
+    "lat": 14.70999,
+    "bbox": [
+      120.92574,
+      14.6687,
+      121.02463,
+      14.75838
+    ],
+    "barangays": 33,
+    "population": 647549,
+    "exposed": 273077,
+    "exposed_share": 0.4217,
+    "weekly_capsules": 546154,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 77262,
+    "coverage_after": {
+      "3": 0.7513217756155153,
+      "5": 0.7768505834798299,
+      "8": 0.7972953307771549
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137601000",
+    "name": "City of Las Pinas",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Fourth District",
+    "lon": 120.99521,
+    "lat": 14.44139,
+    "bbox": [
+      120.96595,
+      14.37485,
+      121.02434,
+      14.49011
+    ],
+    "barangays": 20,
+    "population": 604495,
+    "exposed": 228716,
+    "exposed_share": 0.3784,
+    "weekly_capsules": 457432,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 22012,
+    "coverage_after": {
+      "3": 0.9376161255771785,
+      "5": 0.938631046449332,
+      "8": 0.938631046449332
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
+  },
+  {
+    "code": "PH137602000",
+    "name": "City of Makati",
+    "region": "National Capital Region (NCR)",
+    "province": "Metropolitan Manila Fourth District",
+    "lon": 121.03226,
+    "lat": 14.55344,
+    "bbox": [
+      120.99882,
+      14.52957,
+      121.06747,
+      14.57941
+    ],
+    "barangays": 33,
+    "population": 388718,
+    "exposed": 177342,
+    "exposed_share": 0.4562,
+    "weekly_capsules": 354684,
+    "lepto_cases_2008_2022": null,
+    "access_gap": 9555,
+    "coverage_after": {
+      "3": 0.9505872236717164,
+      "5": 0.9505872236717164,
+      "8": 0.9505872236717164
+    },
+    "alert": {
+      "status": "no_case_data",
+      "correlation": null,
+      "caught": null,
+      "false_alerts": null,
+      "baseline_correlation": null
+    },
+    "scenario": "25yr",
+    "scenario_note": null,
+    "steps": {
+      "exposure": true,
+      "access": true,
+      "siting": true
+    }
   }
 ]

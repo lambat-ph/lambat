@@ -1,0 +1,68 @@
+{
+  "city": "PH137502000",
+  "city_name": "City of Malabon",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 373143.06360000005,
+  "barangays": 21,
+  "barangays_flooded": 21,
+  "exposed": 254807.1480801499,
+  "weekly_capsules": 509614.2961602998,
+  "health_facilities": 40,
+  "facilities_closed_by_flood": 2,
+  "candidate_sites_usable": 77,
+  "exposed_on_road_network": 254871.56191899453,
+  "exposed_within_reach_dry": 246619.11961578994,
+  "exposed_within_reach_flood": 191772.28726735467,
+  "exposed_access_gap": 54846.83234843529,
+  "exposed_unreached_in_flood": 63099.27465163987,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n7466528441",
+        "w266408956",
+        "w312367054"
+      ],
+      "exposed_newly_covered": 24765.136902535596,
+      "exposed_within_reach_after": 216537.42416989026,
+      "share_of_exposed_within_reach_after": 0.8495942918838157
+    },
+    "5": {
+      "sites": [
+        "n7466528441",
+        "n12193942773",
+        "w159633373",
+        "w266408956",
+        "w312367054"
+      ],
+      "exposed_newly_covered": 32699.728599643287,
+      "exposed_within_reach_after": 224472.01586699794,
+      "share_of_exposed_within_reach_after": 0.8807260181437644
+    },
+    "8": {
+      "sites": [
+        "n7466528441",
+        "n12193942773",
+        "w159633373",
+        "w159633374",
+        "w266408956",
+        "w312367054",
+        "w574920945",
+        "w1067797448"
+      ],
+      "exposed_newly_covered": 38954.91312316128,
+      "exposed_within_reach_after": 230727.20039051594,
+      "share_of_exposed_within_reach_after": 0.9052685150642568
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 3978.6
+}

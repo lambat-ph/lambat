@@ -1,0 +1,63 @@
+{
+  "city": "PH137601000",
+  "city_name": "City of Las Pinas",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 604495.4665,
+  "barangays": 20,
+  "barangays_flooded": 20,
+  "exposed": 228716.2413674279,
+  "weekly_capsules": 457432.4827348558,
+  "health_facilities": 67,
+  "facilities_closed_by_flood": 3,
+  "candidate_sites_usable": 139,
+  "exposed_on_road_network": 228497.7587223506,
+  "exposed_within_reach_dry": 228351.95945777663,
+  "exposed_within_reach_flood": 206340.13206822725,
+  "exposed_access_gap": 22011.82738954937,
+  "exposed_unreached_in_flood": 22157.626654123364,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n10660745852",
+        "w144886916",
+        "w369509989"
+      ],
+      "exposed_newly_covered": 7903.051168092075,
+      "exposed_within_reach_after": 214243.18323631934,
+      "share_of_exposed_within_reach_after": 0.9376161255771785
+    },
+    "5": {
+      "sites": [
+        "n10660745852",
+        "w144886916",
+        "w296404136",
+        "w369509989"
+      ],
+      "exposed_newly_covered": 8134.958312659703,
+      "exposed_within_reach_after": 214475.09038088695,
+      "share_of_exposed_within_reach_after": 0.938631046449332
+    },
+    "8": {
+      "sites": [
+        "n10660745852",
+        "w144886916",
+        "w296404136",
+        "w369509989"
+      ],
+      "exposed_newly_covered": 8134.958312659703,
+      "exposed_within_reach_after": 214475.09038088695,
+      "share_of_exposed_within_reach_after": 0.938631046449332
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 3978.9
+}

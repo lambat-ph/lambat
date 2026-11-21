@@ -1,0 +1,68 @@
+{
+  "city": "PH137504000",
+  "city_name": "City of Valenzuela",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 647549.1417,
+  "barangays": 33,
+  "barangays_flooded": 33,
+  "exposed": 273077.2206117929,
+  "weekly_capsules": 546154.4412235857,
+  "health_facilities": 54,
+  "facilities_closed_by_flood": 4,
+  "candidate_sites_usable": 151,
+  "exposed_on_road_network": 272745.410350399,
+  "exposed_within_reach_dry": 250592.49118685263,
+  "exposed_within_reach_flood": 173330.75592001452,
+  "exposed_access_gap": 77261.73526683809,
+  "exposed_unreached_in_flood": 99414.65443038451,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "n4102715289",
+        "n8553180979",
+        "w285708519"
+      ],
+      "exposed_newly_covered": 31588.810075429592,
+      "exposed_within_reach_after": 204919.5659954441,
+      "share_of_exposed_within_reach_after": 0.7513217756155153
+    },
+    "5": {
+      "sites": [
+        "n4102715289",
+        "n8553180979",
+        "w285708519",
+        "w292584211",
+        "w1088875381"
+      ],
+      "exposed_newly_covered": 38551.67525213857,
+      "exposed_within_reach_after": 211882.4311721531,
+      "share_of_exposed_within_reach_after": 0.7768505834798299
+    },
+    "8": {
+      "sites": [
+        "n4102715289",
+        "n8553180979",
+        "r15080698",
+        "w285708519",
+        "w292417345",
+        "w292584211",
+        "w569044803",
+        "w1088875381"
+      ],
+      "exposed_newly_covered": 44127.886243257686,
+      "exposed_within_reach_after": 217458.6421632722,
+      "share_of_exposed_within_reach_after": 0.7972953307771549
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 3971.1
+}

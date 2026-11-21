@@ -1,6 +1,6 @@
 {
   "scenario": "25yr",
-  "cities": 12,
+  "cities": 17,
   "city_codes": [
     "PH015518000",
     "PH034919000",
@@ -13,15 +13,20 @@
     "PH137603000",
     "PH133901000",
     "PH137403000",
-    "PH137404000"
+    "PH137404000",
+    "PH137405000",
+    "PH137502000",
+    "PH137504000",
+    "PH137601000",
+    "PH137602000"
   ],
-  "barangays": 1605,
-  "population": 10790893,
-  "exposed": 4035942,
-  "weekly_capsules": 8071884,
+  "barangays": 1733,
+  "population": 12906600,
+  "exposed": 5004282,
+  "weekly_capsules": 10008564,
   "lepto_cases_2008_2022": 3925,
-  "cities_with_access": 12,
-  "access_gap": 843727,
+  "cities_with_access": 17,
+  "access_gap": 1015550,
   "alert_cities_evaluated": 7,
   "cities_100yr": {
     "scenario": "100yr",

@@ -1,0 +1,61 @@
+{
+  "city": "PH137602000",
+  "city_name": "City of Makati",
+  "scenario": "25yr",
+  "walk_limit_min": 30,
+  "steps": {
+    "exposure": true,
+    "access": true,
+    "siting": true
+  },
+  "step_notes": {},
+  "access_scope": "full",
+  "population": 388717.9854,
+  "barangays": 33,
+  "barangays_flooded": 33,
+  "exposed": 177341.7976142018,
+  "weekly_capsules": 354683.5952284036,
+  "health_facilities": 103,
+  "facilities_closed_by_flood": 5,
+  "candidate_sites_usable": 149,
+  "exposed_on_road_network": 177017.7672448422,
+  "exposed_within_reach_dry": 177017.7672448422,
+  "exposed_within_reach_flood": 167462.72619146755,
+  "exposed_access_gap": 9555.041053374658,
+  "exposed_unreached_in_flood": 9555.041053374658,
+  "dose_point_plans": {
+    "3": {
+      "sites": [
+        "w4914935",
+        "w30012154",
+        "w121507498"
+      ],
+      "exposed_newly_covered": 808.1017143730887,
+      "exposed_within_reach_after": 168270.82790584065,
+      "share_of_exposed_within_reach_after": 0.9505872236717164
+    },
+    "5": {
+      "sites": [
+        "w4914935",
+        "w30012154",
+        "w121507498"
+      ],
+      "exposed_newly_covered": 808.1017143730887,
+      "exposed_within_reach_after": 168270.82790584065,
+      "share_of_exposed_within_reach_after": 0.9505872236717164
+    },
+    "8": {
+      "sites": [
+        "w4914935",
+        "w30012154",
+        "w121507498"
+      ],
+      "exposed_newly_covered": 808.1017143730887,
+      "exposed_within_reach_after": 168270.82790584065,
+      "share_of_exposed_within_reach_after": 0.9505872236717164
+    }
+  },
+  "validation": null,
+  "validation_note": "News-report validation exists for Dagupan only.",
+  "runtime_s": 3672.9
+}
