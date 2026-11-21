@@ -1273,17 +1273,25 @@ const TIPS = () => ({
 });
 // A number that counts up once. The final value is already in the text, so reduced motion and screen readers get it at once.
 const rollNum = (v, f) => `<b class="n" aria-hidden="true" data-to="${v}" data-f="${f}">${f === "p" ? v.toFixed(0) + "%" : fmt(v)}</b><span class="sr-only">${f === "p" ? v.toFixed(0) + "%" : fmt(v)}</span>`;
+// Count a number up to its value. Within one city, a number that did not change stays still, and one that
+// changed counts from its old value, so a plan change only moves the numbers it actually changes.
+const rollPrev = { city: null, vals: {} };
 function roll(root) {
-  if (reducedMotion()) return;
-  root.querySelectorAll("[data-to]").forEach((e) => {
+  if (rollPrev.city !== S.city) { rollPrev.city = S.city; rollPrev.vals = {}; }
+  const area = root.id || root.className || "x";
+  root.querySelectorAll("[data-to]").forEach((e, i) => {
     const to = +e.dataset.to, p = e.dataset.f === "p", fin = e.textContent, t0 = performance.now();
+    const key = `${area}|${i}|${e.dataset.f}`;
+    const from = rollPrev.vals[key] != null ? rollPrev.vals[key] : 0;
+    rollPrev.vals[key] = to;
+    if (reducedMotion() || Math.abs(from - to) < 1e-9) return;
     const step = (t) => {
       if (S.dead || !e.isConnected) return;
-      const k = Math.min(1, (t - t0) / 600), v = to * (1 - (1 - k) ** 3);
+      const k = Math.min(1, (t - t0) / 600), v = from + (to - from) * (1 - (1 - k) ** 3);
       e.textContent = k >= 1 ? fin : p ? Math.round(v) + "%" : fmt(v);
       if (k < 1) requestAnimationFrame(step);
     };
-    e.textContent = p ? "0%" : "0";
+    e.textContent = p ? Math.round(from) + "%" : fmt(from);
     requestAnimationFrame(step);
   });
 }
