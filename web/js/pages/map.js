@@ -1273,24 +1273,26 @@ const TIPS = () => ({
 });
 // A number that counts up once. The final value is already in the text, so reduced motion and screen readers get it at once.
 const rollNum = (v, f) => `<b class="n" aria-hidden="true" data-to="${v}" data-f="${f}">${f === "p" ? v.toFixed(0) + "%" : fmt(v)}</b><span class="sr-only">${f === "p" ? v.toFixed(0) + "%" : fmt(v)}</span>`;
-// Count a number up to its value. Within one city, a number that did not change stays still, and one that
-// changed counts from its old value, so a plan change only moves the numbers it actually changes.
-const rollPrev = { city: null, vals: {} };
+// Count a number to its value. A new city counts up from 0; within a city a number that did not change stays
+// still and one that changed counts from the value on screen. Redrawing the card mid-count carries on from
+// where the count was, so a second render while a city loads does not cut the animation short.
+const rollPrev = { city: null, shown: {} };
 function roll(root) {
-  if (rollPrev.city !== S.city) { rollPrev.city = S.city; rollPrev.vals = {}; }
+  if (rollPrev.city !== S.city) { rollPrev.city = S.city; rollPrev.shown = {}; }
   const area = root.id || root.className || "x";
   root.querySelectorAll("[data-to]").forEach((e, i) => {
     const to = +e.dataset.to, p = e.dataset.f === "p", fin = e.textContent, t0 = performance.now();
     const key = `${area}|${i}|${e.dataset.f}`;
-    const from = rollPrev.vals[key] != null ? rollPrev.vals[key] : 0;
-    rollPrev.vals[key] = to;
-    if (reducedMotion() || Math.abs(from - to) < 1e-9) return;
+    const from = rollPrev.shown[key] != null ? rollPrev.shown[key] : 0;
+    if (reducedMotion() || Math.abs(from - to) < 1e-9) { rollPrev.shown[key] = to; return; }
     const step = (t) => {
       if (S.dead || !e.isConnected) return;
       const k = Math.min(1, (t - t0) / 600), v = from + (to - from) * (1 - (1 - k) ** 3);
+      rollPrev.shown[key] = k >= 1 ? to : v;
       e.textContent = k >= 1 ? fin : p ? Math.round(v) + "%" : fmt(v);
       if (k < 1) requestAnimationFrame(step);
     };
+    rollPrev.shown[key] = from;
     e.textContent = p ? Math.round(from) + "%" : fmt(from);
     requestAnimationFrame(step);
   });
@@ -1341,7 +1343,7 @@ function renderSentence() {
   if (a.innerHTML !== next) {
     hideTip(); a.innerHTML = next;
     const key = `${S.city}|${S.plan}|${plSig()}`;
-    if (S.rollKey !== key) { S.rollKey = key; roll(a); }
+    S.rollKey = key; roll(a); // roll() leaves unchanged numbers still and resumes a count cut off by a redraw
   }
   const hb = $("#honestBox"); if (hb) hb.innerHTML = S.pl && share != null && exposed != null ? honestHtml(pp, now) + '<p class="a-do">Open these dose points first, listed below.</p>' : "";
   const pc = $("#planCov");
