@@ -8,8 +8,8 @@ const STEPS = [
   { q: "Where is the water?", s: "Start with the NOAH flood hazard map on day zero. Swap in a Sentinel-1 radar image when one arrives.", m: "NOAH map, then radar read by a threshold or a U-Net (an image-reading neural network)" },
   { q: "Who was in it?", s: "Count the residents living in flooded areas, barangay by barangay.", m: "NOAH flood map combined with WorldPop population estimates" },
   { q: "Who can still walk to care?", s: "Slow or close flooded roads, then see who can reach a clinic in 30 minutes.", m: "OpenStreetMap roads, 30-minute walk" },
-  { q: "Where should dose points go?", s: "Pick 3, 5 or 8 temporary sites that reach the most exposed residents.", m: "Maximal covering: a method that picks the sites reaching the most people" },
-  { q: "Should hospitals get ready?", s: "Rain from the past 2 to 5 weeks flags weeks when more cases are likely.", m: "Rain warning, run on a separate clock" },
+  { q: "Where should dose points go?", s: "Pick 1 to 10 temporary sites that reach the most exposed residents. Each plan size is solved on its own.", m: "Maximal covering: a method that picks the sites reaching the most people" },
+  { q: "Should hospitals get ready?", s: "Rain from the past 2 to 5 weeks, and in some cities this week's case count, flags weeks when more cases are likely.", m: "Outbreak-week forecast, run on a separate clock" },
 ];
 
 // The five steps as plain HTML cards: text stays real text, 14px and up, and the row stacks on phones.
@@ -55,6 +55,8 @@ const REFS = [
   `University of the Philippines Resilience Institute. (n.d.). <i>UP NOAH hazard maps</i> [Data set]. <a href="https://noah.up.edu.ph">https://noah.up.edu.ph</a>`,
   `Villanueva, R. (2026, September 23). Leptospirosis cases up, dengue down. <i>The Philippine Star</i>. <a href="https://www.philstar.com/nation/2026/09/23/2558155/leptospirosis-cases-up-dengue-down">https://www.philstar.com/nation/2026/09/23/2558155/leptospirosis-cases-up-dengue-down</a>`,
   `WorldPop. (n.d.). <i>WorldPop gridded population estimates</i> [Data set]. <a href="https://www.worldpop.org">https://www.worldpop.org</a>`,
+  `OCHA and Philippine Statistics Authority. (2026). <i>Philippines: Subnational administrative boundaries</i> [Data set]. Humanitarian Data Exchange. <a href="https://data.humdata.org/dataset/cod-ab-phl">https://data.humdata.org/dataset/cod-ab-phl</a>`,
+  `BetterGov PH. (2026). <i>Project NOAH hazard maps</i> [Data set, mirror of UP NOAH flood hazard shapefiles, ODbL]. Hugging Face. <a href="https://huggingface.co/datasets/bettergovph/project-noah-hazard-maps">https://huggingface.co/datasets/bettergovph/project-noah-hazard-maps</a>`,
 ];
 
 const ICON_COPY = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg>`;
@@ -69,6 +71,9 @@ const RUN_CMDS = `uv sync
 uv run pytest
 uv run python scripts/run_alert.py
 uv run python scripts/run_pipeline.py --scenario 25yr
+uv run python scripts/export_planner.py --city all
+uv run python scripts/export_alert_model.py
+uv run python scripts/export_noah_layer.py
 uv sync --extra cv   # optional: PyTorch for the U-Net`;
 
 const TOC = [
@@ -77,6 +82,8 @@ const TOC = [
   ["m-how", "How it works"],
   ["m-defs", "Words we use"],
   ["m-val", "How we checked it"],
+  ["m-robust", "How much the plans hold up"],
+  ["m-fore", "Forecast by city"],
   ["m-limits", "Limits"],
   ["m-notyet", "100-year cities"],
   ["m-refs", "Data and references"],
@@ -104,8 +111,9 @@ const html = () => `
         <ul>
           <li>Which barangays a 25-year flood reaches, and how many residents live there.</li>
           <li>How many of those residents can walk to a clinic in 30 minutes, and how many cannot.</li>
-          <li>Which 3, 5 or 8 dose points reach the most exposed residents on a map.</li>
-          <li>How a rain warning, trained on past years, scored on years it had not seen.</li>
+          <li>Which 1 to 10 dose points reach the most exposed residents on a map, in every city.</li>
+          <li>How much those plans change across 200 simulated versions of the same flood.</li>
+          <li>How each city's outbreak-week forecast, trained on past years, scored on years it had not seen.</li>
         </ul>
       </div>
       <div class="know-col know-no">
@@ -113,7 +121,8 @@ const html = () => `
         <ul>
           <li><strong>Whether the ranking is right.</strong> We compared it with news reports of 13 flood events in Dagupan City. The Spearman correlation (a score from -1 to 1 for how well two rankings agree, where 0 means none) is -0.10, with a 95% interval of -0.48 to 0.30. That is no detectable agreement.</li>
           <li><strong>Why reports are a weak ruler.</strong> They mostly follow where people live (0.64 against population density), not where the water goes.</li>
-          <li>Whether the radar flood model works in Dagupan. It was tested on floods in other countries.</li>
+          <li><strong>Where inside each barangay the water sits.</strong> Our numbers spread each barangay's NOAH flood share over its lowest roads. Using NOAH's own flood shapes instead, Dagupan has about 37,900 exposed residents, not 71,868, and 3 dose points reach 94%, not 92%. The published numbers are the higher estimate.</li>
+          <li>Whether the radar flood model works in Dagupan. It was tested on floods in other countries, and it does not feed the ranking.</li>
           <li>How access changes on the ground. It is modelled from maps.</li>
         </ul>
       </div>
@@ -174,6 +183,29 @@ const html = () => `
     <p class="sources">Full method and results: <a href="${REPO_URL}/blob/main/docs/validation.md">docs/validation.md</a>.</p>
   </section>
 
+  <section class="card" aria-labelledby="m-robust">
+    <h2 class="card-title" id="m-robust">How much the plans hold up</h2>
+    <p>We do not know which streets flood inside a barangay, so for every city and flood size we tried 200 plausible versions of the same flood and solved every plan size again. The map shows the range of coverage across those versions, and for each dose point how often it was one of the best.</p>
+    <ul class="limits">
+      <li>In Dagupan, 3 dose points reach 93% to 95% of exposed residents across the 200 versions. The barangay ranking holds; the exact sites change more, so the map says to check a site before opening it.</li>
+      <li>In most cities the published coverage sits at or below that range, so the published numbers lean cautious.</li>
+    </ul>
+    <p class="sources">Method: <a href="${REPO_URL}/blob/main/docs/sensitivity.md">docs/sensitivity.md</a>. Data: scripts/export_planner.py.</p>
+  </section>
+
+  <section class="card" aria-labelledby="m-fore">
+    <h2 class="card-title" id="m-fore">Outbreak-week forecast, city by city</h2>
+    <p>Each forecast learned from 2008 to 2016 and was tested once on 2017 to 2019, years it had not seen. Every choice, including the warning level, was made on the training years. The city page says which group a city is in, with its own numbers.</p>
+    <dl class="defs">
+      <div><dt>Strong</dt><dd>A warning level fixed in advance caught at least a quarter of outbreak weeks, and at least half of its warnings were right. Dagupan, Iloilo, Tacloban, Navotas and Mandaluyong.</dd></div>
+      <div><dt>Better than guessing</dt><dd>At the same number of warnings, it caught more outbreak weeks than both simple guesses: the usual pattern for that time of year, and last week's case count. Zamboanga, Cagayan de Oro, Davao and Legazpi.</dd></div>
+      <div><dt>Case count is the signal</dt><dd>This week's case count does as well as anything we tried, so the forecast asks for it. Muntinlupa.</dd></div>
+      <div><dt>Estimate</dt><dd>Too few cases to check a forecast (62 in Palayan, 39 in Mandaue from 2008 to 2022). It uses a model shared across the 12 cities.</dd></div>
+    </dl>
+    <p>Where a city's own data was not enough, one model learned from all 12 cities' cases and rain at once, with a level for each city. The deck's comparison, which ranks the riskiest weeks in hindsight, gives Dagupan 14 of 39 outbreak weeks; a warning level fixed in advance gives 13 of 39. Both are reported.</p>
+    <p class="sources">Code: scripts/export_alert_model.py and src/lambat/alert.py.</p>
+  </section>
+
   <section class="card" aria-labelledby="m-limits">
     <h2 class="card-title" id="m-limits">Limits</h2>
     <ul class="limits">
@@ -182,7 +214,8 @@ const html = () => `
       <li>Access is modelled from maps, not checked on the ground.</li>
       <li>Each dose point assumes a prescriber is present.</li>
       <li>The tool counts places, not patients. Pregnant and lactating women are flagged for referral, and people who were never diagnosed do not appear.</li>
-      <li>The radar flood model is a U-Net, an image-reading neural network. It was tested on floods in other countries, not in Dagupan. Its score is IoU, the overlap between predicted water and true water, where 1 is a perfect match.</li>
+      <li>The radar flood model is a U-Net, an image-reading neural network. It was tested on floods in other countries, not in Dagupan, and it does not feed the ranking or the dose points. Its score is IoU, the overlap between predicted water and true water, where 1 is a perfect match.</li>
+      <li>The flood map layer on the map shows NOAH's flood shapes. The numbers come from the same NOAH maps summed per barangay, so the water and the shading will not line up exactly.</li>
     </ul>
   </section>
 
