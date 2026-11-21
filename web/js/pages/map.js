@@ -995,7 +995,6 @@ function showServe(s) {
   map.setFilter("b-serve", f); map.setFilter("b-serve-c", f);
 }
 function clearServe() { showServe(null); }
-const PRESETS = ["3", "5", "8"];
 // Slider state: fill up to the thumb, the number beside it, and what a screen reader hears.
 function syncRange(rg, k) {
   rg.value = k;
@@ -1011,12 +1010,10 @@ function buildPlanSeg() {
   pick.classList.toggle("is-range", slider);
   pick.querySelector(".plan-u").textContent = slider ? "" : "dose points";
   if (slider) {
-    // Any plan size from 1 to 10; 3, 5 and 8 (the sizes in the proposal and the deck) are marked as presets.
+    // Any plan size from 1 to 10; tap a number under the slider or drag it.
     seg.className = "prange"; seg.removeAttribute("role"); seg.removeAttribute("aria-label");
     const lo = av[0], hi = av[av.length - 1];
-    const pre = PRESETS.filter((k) => av.includes(k));
-    seg.innerHTML = `<div class="prange-top"><output id="planOut" for="planRange">${S.plan}</output><span>dose points</span>`
-      + `<div class="ppre" role="group" aria-label="Preset plan sizes">${pre.map((k) => `<button type="button" data-k="${k}" aria-label="${dpts(k)}" title="Preset: ${dpts(k)}">${k}</button>`).join("")}</div></div>`
+    seg.innerHTML = `<div class="prange-top"><output id="planOut" for="planRange">${S.plan}</output><span>dose points</span></div>`
       + `<input type="range" id="planRange" name="plan" min="${lo}" max="${hi}" step="1" value="${S.plan}" aria-label="How many dose points to open">`
       + `<div class="pticks">${av.map((k) => `<button type="button" data-k="${k}" aria-label="${dpts(k)}">${k}</button>`).join("")}</div>`;
     syncRange($("#planRange"), S.plan);
@@ -1351,19 +1348,15 @@ function renderSentence() {
 function marginalHtml() {
   const k = +S.plan;
   const add = k > 1 ? curPlan(String(k)).newly - curPlan(String(k - 1)).newly : curPlan("1").newly;
-  return ` <span class="cov-add">Site ${k} adds ${fmt(Math.round(add))} ${Math.round(add) === 1 ? "person" : "people"}.</span>`;
+  const n = Math.round(add);
+  return ` <span class="cov-add">${k === 1 ? "This site brings" : `Site ${k} brings`} ${fmt(n)} more ${n === 1 ? "person" : "people"} within reach.</span>`;
 }
-// A plan change shows how many points of coverage it added or took away, for three seconds.
+// Remembers the current plan (the "+/- points" chip it used to drive was removed: it compared with
+// whichever plan came before, so the same plan could show a gain or a loss).
 function trackPlan(share) {
-  const prev = I.cur;
   const sig = S.pl ? [...S.pl.excluded].sort().join() : "";
   I.cur = { city: S.city, plan: S.plan, share, sig, scn: S.pl ? S.pl.scn : "" };
-  if (!(S.ready && prev && prev.city === S.city && prev.scn === I.cur.scn && (prev.plan !== S.plan || prev.sig !== sig) && prev.share != null && share != null)) return;
-  const d = Math.round(share * 100) - Math.round(prev.share * 100);
-  clearTimeout(I.chipT);
-  if (!d) { I.chip = null; return; }
-  I.chip = `${d > 0 ? "+" : "\u2212"}${Math.abs(d)} points`;
-  I.chipT = setTimeout(() => { I.chip = null; islRender(); }, 3000);
+  I.chip = null;
 }
 
 function renderLegend() {
@@ -1651,7 +1644,7 @@ function islWant() {
   if (share != null) {
     const p = Math.round(share * 100), chip = I.chip;
     return { kind: "answer", key: `a|${S.city}|${S.plan}|${chip || ""}|${plSig()}`, roll: `${S.city}|${S.plan}|${plSig()}`,
-      html: `<span class="isl-badge">${S.plan}</span><span class="isl-t"><b class="n" data-to="${share * 100}" data-f="p">${p}%</b> <span class="isl-xtra">of exposed residents </span>within a ${WALK_MIN}-minute walk</span>${chip ? `<span class="isl-chip">${chip}</span>` : ""}`,
+      html: `<span class="isl-badge">${S.plan}</span><span class="isl-t"><b class="n" data-to="${share * 100}" data-f="p">${p}%</b> <span class="isl-xtra">of exposed residents </span>within a ${WALK_MIN}-minute walk</span>${chip ? `<span class="isl-chip" title="Change from your last plan">${chip}<span class="sr-only"> from your last plan</span></span>` : ""}`,
       live: `Plan of ${dpts(S.plan)}. ${p}% of exposed residents within a ${WALK_MIN}-minute walk.` };
   }
   if (exposed != null) { const t = `${fmt(exposed)} exposed residents in ${cityName()}`; return { kind: "answer", key: "e|" + S.city, html: `<span class="isl-t"><b class="n">${fmt(exposed)}</b> exposed residents in ${esc(cityName())}</span>`, live: t + "." }; }

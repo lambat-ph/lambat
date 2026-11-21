@@ -275,7 +275,7 @@ export async function render(root) {
   <header class="rd-hero">
     <span class="eyebrow">Satellite flood maps</span>
     <h1>Seeing a flood from space <span class="badge badge-neutral">Experimental</span></h1>
-    <p class="rd-one">The map today uses the UP NOAH flood hazard map. Satellites can show a real flood within days, even through clouds.</p>
+    <p class="rd-one">The map today uses the UP NOAH flood hazard map; turn on "UP NOAH flood map" under More options to see its flood shapes. Satellites can show a real flood within days, even through clouds. The radar model below does not feed the map's numbers yet: it still needs to be scored on a labelled Philippine flood.</p>
     <a class="btn btn-primary sm" href="#/map">Back to the map</a>
   </header>
 
