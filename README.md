@@ -6,7 +6,7 @@
 
 **Leptospirosis Alert, Mapping and Barangay Allocation Tool.** *Lambat* is Filipino for *net*, and a net is only as good as where you cast it.
 
-**In one sentence:** after a flood, LAMBAT shows a city health office which barangays lie where a mapped flood reaches, who can no longer walk to a clinic, and where to open temporary stations for the free doxycycline that prevents leptospirosis.
+**In one sentence:** after a flood, LAMBAT shows a city health office which barangays lie where a mapped flood reaches, who can no longer walk to a clinic, and where to open temporary stations for the free doxycycline that guidelines recommend after flood exposure.
 
 ![The LAMBAT map of Dagupan City: barangays shaded by how many residents were in the floodwater, with gold numbered dose points](docs/img/map.jpg)
 
@@ -22,12 +22,12 @@
 |---|---|
 | `web/` | The site: home, map, city dashboard, radar page, method page |
 | `src/lambat/` | The pipeline: data loading, exposure, walking access, dose-point siting, alert, radar flood mapping, validation |
-| `scripts/` | One script per job: `run_pipeline.py`, `run_alert.py`, `train_unet.py`, `run_s1_flood.py`, `run_validation.py`, `build_web.py` |
+| `scripts/` | One script per job. Pipeline: `run_pipeline.py`, `build_extra_cities.py` (inputs for Metro Manila cities outside CCHAIN). Checks: `run_alert.py`, `run_alert_eval.py`, `run_sensitivity.py`, `run_validation.py`, `run_route_check.py`. Radar: `train_unet.py`, `run_s1_flood.py`, `make_unet_gif.py`, `make_training_gif.py`, `make_egay_figs.py`. Site data: `build_web.py`, `export_planner.py`, `export_alert_model.py`, `export_noah_layer.py` |
 | `results/` | What the scripts produce (tables, maps, summaries) |
-| `docs/` | How each part works and how well it does: `flood.md`, `validation.md`, `sentinel1.md`, `development.md` |
+| `docs/` | How each part works and how well it does: `alert.md`, `sensitivity.md`, `flood.md`, `validation.md`, `sentinel1.md`, `development.md`, `web.md` |
 | `tests/` | Automated tests, run on every push |
 
-> The flood was gone by the time Rosa's fever came. For six days she had waded through it to sell fish. The capsule that could have protected her was free. But it was on the other side of the water.
+> The flood was gone by the time Rosa's fever came. For six days she had waded through it to sell fish. The capsule that might have lowered her risk was free. But it was on the other side of the water.
 
 Rosa is a composite; the numbers are not. By September 2026 the Philippines had 10,936 suspected leptospirosis cases, 3,005 more than a year earlier, while 3.73 million doxycycline capsules sat in government warehouses (Villanueva, 2026). The country did not run short of medicine. We think it ran short of a map. LAMBAT is that map, for a city health office in the days after a flood. Pilot: Dagupan City.
 
@@ -38,7 +38,7 @@ Rosa is a composite; the numbers are not. By September 2026 the Philippines had 
 | 1 | Where is the water? NOAH hazard map now; Sentinel-1 radar (threshold vs U-Net) when a pass arrives | `flood.py` |
 | 2 | Who was in it, and how many capsules do they need? | `exposure.py` |
 | 3 | Who can still walk to care in 30 minutes, with flooded roads slowed or closed? | `access.py` |
-| 4 | Which 3, 5 or 8 sites would cover the most exposed residents? (maximal covering model) | `siting.py` |
+| 4 | Which 1 to 10 sites would cover the most exposed residents? (maximal covering model) | `siting.py` |
 | 5 | Should hospitals get ready? A rainfall alert two weeks ahead, on a separate clock | `alert.py` |
 
 The **access gap** is the number of residents who can reach care on a dry day but not during the flood. That floods create such a gap is our **hypothesis**, not our premise: no study we found has measured it. If the gap turns out to be zero, the officer still gets exposure and capsule counts per barangay, which nobody hands them today. We report residents within reach of care, never lives saved.
@@ -65,7 +65,7 @@ A stricter check (`scripts/run_alert_eval.py`, [docs/alert.md](docs/alert.md)):
 
 ## What one run produces
 
-`scripts/run_pipeline.py` runs steps 2 to 4 for Dagupan in about 5 seconds. For a 25-year flood:
+`scripts/run_pipeline.py` runs steps 2 to 4 for Dagupan in about 3 seconds. For a 25-year flood:
 
 - **71,868** of 208,322 residents live in flood-hazard areas: **143,737 capsules** for each week the water stays.
 - **36** clinics and hospitals on OpenStreetMap. Within a 30-minute walk of one: 62,625 exposed residents on a dry day, 60,140 in the flood. The access gap is **2,485** people, smaller than we expected, and we say so.
@@ -87,7 +87,7 @@ Barangay table, GeoJSON maps and a JSON summary land in `results/`.
 
 ## Cities
 
-The pipeline has been run for all 12 Project CCHAIN cities. Dagupan is the pilot and the only one checked against news reports.
+The pipeline has been run for all 12 Project CCHAIN cities and for 8 more Metro Manila cities. Dagupan is the pilot and the only one checked against news reports.
 
 | City | Flood map | Population | Exposed | Coverage after 3 / 5 / 8 dose points |
 |---|---|---|---|---|
@@ -103,8 +103,18 @@ The pipeline has been run for all 12 Project CCHAIN cities. Dagupan is the pilot
 | Iloilo | 100-year | 424,837 | 176,430 | 74% / 76% / 80% |
 | Mandaue | 100-year | 356,165 | 142,030 | 87% / 88% / 89% |
 | Tacloban | 100-year | 200,382 | 54,888 | 79% / 79% / 79% |
+| Manila | 25-year | 1,725,296 | 1,184,826 | 89% / 91% / 93% |
+| Pasig | 25-year | 840,414 | 539,984 | 81% / 82% / 83% |
+| Quezon City | 25-year | 3,266,731 | 955,964 | 70% / 71% / 72% |
+| San Juan | 25-year | 101,802 | 34,398 | 80% / 80% / 80% |
+| Malabon | 25-year | 373,143 | 254,807 | 85% / 88% / 91% |
+| Valenzuela | 25-year | 647,549 | 273,077 | 75% / 78% / 80% |
+| Las Pinas | 25-year | 604,495 | 228,716 | 94% / 94% / 94% |
+| Makati | 25-year | 388,718 | 177,342 | 95% / 95% / 95% |
 
-The national total counts only the 25-year cities: 1,355,168 exposed residents across 9 cities (`web/data/national.json`). Iloilo, Mandaue and Tacloban have no 25-year map in Project CCHAIN, so they are shown on the larger 100-year map and are not added to the total.
+The national total counts only the 25-year cities: 5,004,282 exposed residents across 17 cities (`web/data/national.json`). Iloilo, Mandaue and Tacloban have no 25-year map in Project CCHAIN, so they are shown on the larger 100-year map and are not added to the total.
+
+**Metro Manila cities outside Project CCHAIN** (the last 8 rows) are built by `scripts/build_extra_cities.py` from PSA barangay boundaries (HDX, CC BY-IGO), WorldPop 2020 and UP NOAH flood shapes, combined the same way CCHAIN does. On the three NCR cities CCHAIN covers, this method gave the same population and flooded area (within 0.3 points). They have the full map: exposure, walking access and the 0 to 10 dose-point planner (their range of plausible floods uses 20 simulated floods so far, against 200 in the CCHAIN cities). They have no outbreak forecast, because no public weekly case data exists for them. Caloocan, Marikina, Paranaque, Pasay, Pateros and Taguig are not published yet.
 
 ## Seeing the water from orbit
 
@@ -144,14 +154,18 @@ The trained U-Net (94 MB) is on the [unet-v1 release](https://github.com/lambat-
 | Flood mapping (threshold vs U-Net on Sen1Floods11) | Trained and scored (pooled IoU 0.64 vs 0.21) |
 | Validation against news reports | Done, with confidence intervals; no detectable agreement |
 | Sentinel-1 map of a real Dagupan flood (Typhoon Egay, 2023) | Run: 0.46 km2 of new water inside the city two days after landfall; matches NOAH 100-year map (rho 0.54), not the 25-year map or news reports ([docs/sentinel1.md](docs/sentinel1.md)) |
-| Dashboard (`web/`, MapLibre) | Multi-city map (12 cities, with a national summary), priority table, dose points, alert chart, satellite page; live on [GitHub Pages](https://lambat-ph.github.io/lambat/) |
+| Dashboard (`web/`, MapLibre) | Multi-city map (20 cities, with a national summary), 0 to 10 dose-point slider and planning tools in every city, optional UP NOAH flood layer, outbreak-week forecast box in all 12 CCHAIN cities, priority table, satellite page; live on [GitHub Pages](https://lambat-ph.github.io/lambat/) |
 
-### For a health office: the map's planning tools (Dagupan)
+### For a health office: the map's planning tools (every city)
+
+- **0 to 10 dose points.** Slide from clinics alone (0) up to 10 dose points; each plan size is solved on its own, and the line under it says how many more people the last site brings within reach.
 
 - **How often each site is chosen.** Each dose point says how many of 200 simulated versions of the same flood put it in the best plan, for example "In the best 3 in 102 of 200 simulated floods".
 - **Can't use a site?** Mark it and the plan is re-solved in the browser without it.
 - **5, 25 or 100-year flood.** Switch the flood map and every number and site updates.
 - **Print plan.** A one-page sheet with each site, the barangays it serves and the residents it brings within reach.
+- **UP NOAH flood layer.** Under More options, show NOAH's own flood shapes for the chosen flood size (visual only; the numbers come from the same maps summed per barangay).
+- **Outbreak-week forecast (city page).** In each of the 12 CCHAIN cities, set the month and the last 4 weeks of rain to see whether an outbreak week is likely in 2 weeks. Each city is labelled with how its own forecast did on 2017 to 2019, years it had not seen; a test version, not live.
 
 ## What we proposed, and how far we got
 
