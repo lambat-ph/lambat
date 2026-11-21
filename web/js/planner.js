@@ -178,6 +178,11 @@ export function evaluate(d, ids) {
  * Returns { rows, newly, share, changed, uncovered: Map pcode -> weight still out of reach }.
  */
 export function planFor(d, k, excluded = new Set()) {
+  if (+k === 0) {  // no dose points: clinics alone
+    const unc = new Map();
+    d.points.pcode.forEach((p, i) => unc.set(p, (unc.get(p) || 0) + d.points.w[i]));
+    return { rows: [], newly: 0, share: clinicShare(d), changed: false, uncovered: unc };
+  }
   const pub = d.plans[String(k)];
   const hit = pub && pub.sites.some((id) => excluded.has(id));
   const ids = pub && !hit ? pub.sites : solve(d, k, excluded);

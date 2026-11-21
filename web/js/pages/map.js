@@ -303,7 +303,7 @@ async function onLoad() {
   const q = S.params.query;
   const m = METRICS.find((x) => x.key === q.get("metric"));
   if (m) S.metric = m;
-  if (/^(10|[1-9])$/.test(q.get("plan") || "")) S.plan = q.get("plan");
+  if (/^(10|[0-9])$/.test(q.get("plan") || "")) S.plan = q.get("plan");
   if (q.get("view") === "3d") S.view = "3d";
   if (SCENARIOS.includes(q.get("scenario"))) S.plScn = q.get("scenario");
   if (code === "all") {
@@ -799,7 +799,7 @@ function boundsOf(f) {
 /* ---------- dose points ---------- */
 function availPlans() {
   // Cities with a planner file have exact plans for 1 to 10 sites; the others publish 3, 5 and 8.
-  if (S.pl) { const k = Object.keys(S.pl.d.plans).sort((a, b) => a - b); if (k.length) return k; }
+  if (S.pl) { const k = Object.keys(S.pl.d.plans).sort((a, b) => a - b); if (k.length) return ["0", ...k]; }  // 0 = clinics alone
   const plans = S.data && S.data.summary && S.data.summary.dose_point_plans;
   if (plans) { const k = PLANS.filter((p) => plans[p]); if (k.length) return k; }
   return PLANS;
@@ -1336,7 +1336,8 @@ function renderSentence() {
   if (exposed == null) html = `<p class="a-main">Flood exposure and dose point plans are not available for this city yet.</p>`;
   else if (share != null) {
     const dose = nb(tipBtn("dose", `${dpts(S.plan)}`, "What is a dose point?"));
-    html = `<div class="stats">${statBlock(rollNum(exposed, "n"), `${exTip} live where a ${years()}-year flood reaches`)}${statBlock(rollNum(share * 100, "p"), `of them within a ${nb(WALK_MIN + "-minute")} walk of free medicine with ${dose}`)}</div>${S.pl ? "" : '<p class="a-do">Open these dose points first, listed below.</p>'}`;
+    const tail = +S.plan === 0 ? `of them within a ${nb(WALK_MIN + "-minute")} walk of a clinic, with no dose points` : `of them within a ${nb(WALK_MIN + "-minute")} walk of free medicine with ${dose}`;
+    html = `<div class="stats">${statBlock(rollNum(exposed, "n"), `${exTip} live where a ${years()}-year flood reaches`)}${statBlock(rollNum(share * 100, "p"), tail)}</div>${S.pl ? "" : '<p class="a-do">Open these dose points first, listed below.</p>'}`;
   } else {
     html = `<div class="stats one">${statBlock(rollNum(exposed, "n"), `${exTip} live where a ${years()}-year flood reaches`)}</div><p class="a-main">Dose point plans are not computed for this city yet, so the map shows where the water reached.</p>`;
   }
@@ -1346,7 +1347,7 @@ function renderSentence() {
     const key = `${S.city}|${S.plan}|${plSig()}`;
     S.rollKey = key; roll(a); // roll() leaves unchanged numbers still and resumes a count cut off by a redraw
   }
-  const hb = $("#honestBox"); if (hb) hb.innerHTML = S.pl && share != null && exposed != null ? honestHtml(pp, now) + '<p class="a-do">Open these dose points first, listed below.</p>' : "";
+  const hb = $("#honestBox"); if (hb) hb.innerHTML = S.pl && share != null && exposed != null ? (+S.plan === 0 ? zeroHtml() : honestHtml(pp, now) + '<p class="a-do">Open these dose points first, listed below.</p>') : "";
   const pc = $("#planCov");
   if (pc) {
     pc.innerHTML = share != null
@@ -1355,9 +1356,15 @@ function renderSentence() {
   }
   islRender();
 }
+// Plan size 0: who is cut off from care with clinics alone, the number dose points exist for.
+function zeroHtml() {
+  const d = S.pl.d, cut = Math.round(d.exposed_on_network - d.clinic_reach);
+  return `<div class="honest"><p><b>${fmt(cut)}</b> exposed residents are more than a ${WALK_MIN}-minute walk from a clinic in this flood</p><p class="honest-note">Model estimate, not checked on the ground.</p></div><p class="a-do">Slide right to open dose points.</p>`;
+}
 // What the last site in the plan adds, so the shrinking gain from each extra team is visible.
 function marginalHtml() {
   const k = +S.plan;
+  if (k === 0) return ` <span class="cov-add">That is with clinics alone.</span>`;
   const add = k > 1 ? curPlan(String(k)).newly - curPlan(String(k - 1)).newly : curPlan("1").newly;
   const n = Math.round(add);
   return ` <span class="cov-add">${k === 1 ? "This site brings" : `Site ${k} brings`} ${fmt(n)} more ${n === 1 ? "person" : "people"} within reach.</span>`;
