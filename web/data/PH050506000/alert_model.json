@@ -1,0 +1,195 @@
+{
+  "city": "PH050506000",
+  "city_name": "Legazpi City",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -6.180237416429652,
+    "sin1": -0.11719178569040534,
+    "cos1": 0.6064573392016102,
+    "sin2": 0.31801436114746917,
+    "cos2": 0.14920344833560506,
+    "ar_log": 0.7109812276188928,
+    "rain_l2": 0.1514516357468082,
+    "rain_l3": 0.3615044311708189,
+    "rain_l4": 0.2196761831330074,
+    "rain_l5": -0.006106474323729946
+  },
+  "total_cases": 60,
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 0.0,
+  "alert_rate": 0.0431,
+  "cutoff": 0.1323,
+  "backtest_fixed_cutoff": {
+    "alerts": 16,
+    "hits": 4,
+    "outbreak_weeks": 24,
+    "false_alerts": 12,
+    "test_weeks": 157
+  },
+  "try_it": true,
+  "tier": "weak",
+  "model": "pooled_rain_cases",
+  "why_not": null,
+  "evidence": {
+    "alerts": 7,
+    "outbreak_weeks": 24,
+    "rain": 1,
+    "seasonal": 1,
+    "last_week": 1,
+    "model": 3,
+    "pooled": true
+  },
+  "cases_default": 0,
+  "months": [
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+    "Jan",
+    "Feb"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Dec",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "sub": "About 70 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        60,
+        50,
+        60,
+        40
+      ],
+      "sub": "About 50 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        60,
+        110,
+        60,
+        40
+      ],
+      "sub": "One week near 110 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    420.1,
+    420.1,
+    298.1,
+    288.2,
+    342.2,
+    342.2,
+    342.2,
+    342.2,
+    276.2,
+    234.8,
+    273.3,
+    273.3,
+    273.3,
+    273.3,
+    463.4,
+    463.4,
+    463.4,
+    463.4,
+    182.1,
+    174.9,
+    174.9,
+    174.9,
+    138.3,
+    138.3,
+    138.3,
+    213.8,
+    325.8,
+    325.8,
+    325.8,
+    325.8,
+    121.1,
+    139.9,
+    139.9,
+    157.8,
+    175.0,
+    175.0,
+    175.0,
+    195.2,
+    195.2,
+    195.2,
+    241.7,
+    241.7,
+    241.7,
+    241.7,
+    183.0,
+    295.9,
+    322.5,
+    322.5,
+    420.1,
+    420.1,
+    420.1,
+    420.1,
+    34.3
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2019-09-09",
+      "target_week": "2019-09-23",
+      "month_year": "September 2019",
+      "rain_newest_first": [
+        113.7,
+        10.1,
+        92.0,
+        107.6
+      ],
+      "predicted": 0.04,
+      "actual": 2,
+      "warned": false
+    }
+  ],
+  "note": "Prototype. Poisson model trained on Legazpi City 2008-2016 (Project CCHAIN). Not a live warning."
+}

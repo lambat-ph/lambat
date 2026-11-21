@@ -87,12 +87,40 @@ def passes_strict(b: dict) -> bool:
     return bool(b["outbreak_weeks"] and b["alerts"] and b["hits"] / b["outbreak_weeks"] >= 0.25 and b["hits"] / b["alerts"] >= 0.5)
 
 
-def export_city(code: str) -> dict | None:
+def pooled_model():
+    """One Poisson model over all 12 cities' 2008-2016 weeks: season, this week's cases, rain, a level per city."""
+    rows = []
+    for c in cities.CITIES:
+        d = alert.design(data.weekly_cases(c), data.weekly_rainfall(c)["city"], H)
+        d = d[(d.index.year >= 2008) & (d.index.year <= 2016)].copy()
+        for k in cities.CITIES:
+            d["city_" + k] = 1.0 if k == c else 0.0
+        rows.append(d)
+    pool = pd.concat(rows)
+    season = [c for c in pool.columns if c.startswith(("sin", "cos"))]
+    rain = [c for c in pool.columns if c.startswith("rain_")]
+    ccols = ["city_" + k for k in cities.CITIES]
+    cols = season + ["ar_log"] + rain
+    m = sm.GLM(pool.cases, pool[cols + ccols], family=sm.families.Poisson()).fit()  # city levels act as intercepts
+    return m, cols
+
+
+def pooled_for(pm, code: str):
+    """The pooled model as a single-city formula: its own level becomes the constant."""
+    m, cols = pm
+    coef = {"const": float(m.params["city_" + code]), **{c: float(m.params[c]) for c in cols}}
+    return coef, cols
+
+
+def predict_coef(coef: dict, d: pd.DataFrame, cols: list[str]) -> pd.Series:
+    z = coef["const"] + sum(coef[c] * d[c] for c in cols)
+    return np.exp(z)
+
+
+def export_city(code: str, pm=None) -> dict | None:
     web = ROOT / "web" / "data" / code
     scores = ROOT / "results" / code / "alert_scores.json"
-    if not scores.exists() or json.loads(scores.read_text()).get("status") != "evaluated":
-        print(f"[{code}] skipped: rain warning not evaluated (too few cases)")
-        return None
+    evaluated = scores.exists() and json.loads(scores.read_text()).get("status") == "evaluated"
     cases = data.weekly_cases(code)
     rain = data.weekly_rainfall(code)["city"]
     df = alert.design(cases, rain, H)
@@ -101,12 +129,16 @@ def export_city(code: str) -> dict | None:
     model, cols = alert.fit_rain_model(train)
 
     pred_test = pd.Series(model.predict(sm.add_constant(test[cols], has_constant="add")), index=test.index)
-    pub = pd.read_csv(web / "alert_predictions.csv", index_col=0, parse_dates=True)
-    diff = float((pred_test.round(4) - pub.rain_model.reindex(pred_test.index)).abs().max())
-    assert diff < 1e-3, f"[{code}] refit does not match the published predictions (max diff {diff})"
+    diff = 0.0
+    if evaluated:  # the published rain model must be reproduced exactly
+        pub = pd.read_csv(web / "alert_predictions.csv", index_col=0, parse_dates=True)
+        diff = float((pred_test.round(4) - pub.rain_model.reindex(pred_test.index)).abs().max())
+        assert diff < 1e-3, f"[{code}] refit does not match the published predictions (max diff {diff})"
 
     threshold = float(np.quantile(train.cases, 0.9))
     alert_rate = float((train.cases > threshold).mean())
+    if alert_rate == 0:  # very few cases: any week with a case counts as an outbreak week
+        threshold, alert_rate = 0.0, float((train.cases > 0).mean())
     pred_train = model.predict(sm.add_constant(train[cols], has_constant="add"))
     cutoff = float(np.quantile(pred_train, 1 - alert_rate))
     out_test = test.cases > threshold
@@ -136,10 +168,34 @@ def export_city(code: str) -> dict | None:
                      "false_alerts": int((f2 & ~out_test).sum()), "test_weeks": len(test)}
             if passes_strict(back2):
                 model, cols, cutoff, back, tier, model_kind = m2, cols2, cut2, back2, "strong", "rain_cases"
-        if tier is None and beats_guesses:
+        if tier is None and beats_guesses and evaluated:
             tier = "weak"
-        if tier is None:
-            why_not = "last_week" if evidence["last_week"] >= evidence["rain"] else "no_signal"
+    coef_override = None
+    if tier is None and pm is not None:
+        # Shared 12-city model with rain and this week's cases, scored at the same number of warnings.
+        pcoef, pcols = pooled_for(pm, code)
+        pp = predict_coef(pcoef, test, pcols)
+        ps = alert.score("pooled", pp, test.cases, threshold, alert_rate)
+        evidence = {**evidence, "model": ps.hits, "pooled": True}
+        best_guess = max(evidence["seasonal"], evidence["last_week"])
+        if not evaluated:
+            tier = "weak" if ps.hits > best_guess else "estimate"
+        elif ps.hits > best_guess:
+            tier = "weak"
+        elif ps.hits >= best_guess and ps.hits > min(evidence["seasonal"], evidence["last_week"]):
+            tier = "cases"
+        else:
+            tier = "estimate"
+        ptrain = predict_coef(pcoef, train, pcols)
+        cutoff = float(np.quantile(ptrain, 1 - alert_rate))
+        f3 = pp >= cutoff
+        back = {"alerts": int(f3.sum()), "hits": int((f3 & out_test).sum()), "outbreak_weeks": int(out_test.sum()),
+                "false_alerts": int((f3 & ~out_test).sum()), "test_weeks": len(test)}
+        if passes_strict(back):  # the shared model's fixed warning level passes the strict test on its own
+            tier = "strong"
+        coef_override, cols, model_kind = pcoef, pcols, "pooled_rain_cases"
+    if tier is None:
+        why_not = "last_week" if evidence["last_week"] >= evidence["rain"] else "no_signal"
 
     tr = rain[(rain.index.year >= 2008) & (rain.index.year <= 2016)].dropna()
     rmax = rain_max_by_week(tr)
@@ -181,14 +237,17 @@ def export_city(code: str) -> dict | None:
         i = df.index.get_loc(t)
         fw = df.index[i] - pd.Timedelta(weeks=H)
         r = [round(float(rain.get(fw - pd.Timedelta(weeks=j), np.nan)), 1) for j in range(4)]
-        p = float(model.predict(sm.add_constant(df.loc[[t], cols], has_constant="add")).iloc[0])
+        p = (float(predict_coef(coef_override, df.loc[[t]], cols).iloc[0]) if coef_override is not None
+             else float(model.predict(sm.add_constant(df.loc[[t], cols], has_constant="add")).iloc[0]))
         return {"forecast_week": str(fw.date()), "target_week": str(t.date()), "month_year": f"{FULL[t.month - 1]} {t.year}",
                 "rain_newest_first": r, "predicted": round(p, 2), "actual": int(df.cases.iloc[i]),
                 "warned": bool(p >= cutoff)}
 
     out = {
         "city": code, "city_name": cities.CITIES[code], "trained_years": [2008, 2016], "horizon_weeks": H,
-        "period_weeks": 52.18, "coef": {c: float(model.params[c]) for c in ["const", *cols]},
+        "period_weeks": 52.18,
+        "coef": coef_override if coef_override is not None else {c: float(model.params[c]) for c in ["const", *cols]},
+        "total_cases": int(cases.sum()),
         "rain_lags_weeks": [2, 3, 4, 5], "outbreak_threshold": threshold, "alert_rate": round(alert_rate, 4),
         "cutoff": round(cutoff, 4), "backtest_fixed_cutoff": back,
         # The "Try it" box is offered where the warning worked on 2017-2019, years it never saw:
@@ -217,8 +276,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--city", default="all", help="adm3 pcode or 'all'")
     args = ap.parse_args()
+    pm = pooled_model()
     for c in cities.resolve(args.city):
-        export_city(c)
+        export_city(c, pm)
 
 
 if __name__ == "__main__":

@@ -8,16 +8,18 @@
   "horizon_weeks": 2,
   "period_weeks": 52.18,
   "coef": {
-    "const": -10.042140981207305,
-    "sin1": 1.339167495107105,
-    "cos1": 0.0946461066223081,
-    "sin2": -0.36292939187479983,
-    "cos2": -0.9957938857652959,
-    "rain_l2": 0.4157054653528189,
-    "rain_l3": 0.8257520416096751,
-    "rain_l4": 0.2870729164571339,
-    "rain_l5": 0.7718542080891058
+    "const": -4.054587717586523,
+    "sin1": -0.11719178569040534,
+    "cos1": 0.6064573392016102,
+    "sin2": 0.31801436114746917,
+    "cos2": 0.14920344833560506,
+    "ar_log": 0.7109812276188928,
+    "rain_l2": 0.1514516357468082,
+    "rain_l3": 0.3615044311708189,
+    "rain_l4": 0.2196761831330074,
+    "rain_l5": -0.006106474323729946
   },
+  "total_cases": 222,
   "rain_lags_weeks": [
     2,
     3,
@@ -26,24 +28,26 @@
   ],
   "outbreak_threshold": 1.0,
   "alert_rate": 0.0474,
-  "cutoff": 1.3344,
+  "cutoff": 0.9182,
   "backtest_fixed_cutoff": {
-    "alerts": 2,
-    "hits": 1,
+    "alerts": 12,
+    "hits": 2,
     "outbreak_weeks": 11,
-    "false_alerts": 1,
+    "false_alerts": 10,
     "test_weeks": 157
   },
-  "try_it": false,
-  "tier": null,
-  "model": "rain",
-  "why_not": "last_week",
+  "try_it": true,
+  "tier": "cases",
+  "model": "pooled_rain_cases",
+  "why_not": null,
   "evidence": {
     "alerts": 7,
     "outbreak_weeks": 11,
     "rain": 1,
     "seasonal": 1,
-    "last_week": 2
+    "last_week": 2,
+    "model": 2,
+    "pooled": true
   },
   "cases_default": 0,
   "months": [
@@ -182,7 +186,7 @@
         16.2,
         71.5
       ],
-      "predicted": 0.52,
+      "predicted": 0.39,
       "actual": 4,
       "warned": false
     }

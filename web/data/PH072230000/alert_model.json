@@ -1,0 +1,195 @@
+{
+  "city": "PH072230000",
+  "city_name": "Mandaue City",
+  "trained_years": [
+    2008,
+    2016
+  ],
+  "horizon_weeks": 2,
+  "period_weeks": 52.18,
+  "coef": {
+    "const": -6.590039746710196,
+    "sin1": -0.11719178569040534,
+    "cos1": 0.6064573392016102,
+    "sin2": 0.31801436114746917,
+    "cos2": 0.14920344833560506,
+    "ar_log": 0.7109812276188928,
+    "rain_l2": 0.1514516357468082,
+    "rain_l3": 0.3615044311708189,
+    "rain_l4": 0.2196761831330074,
+    "rain_l5": -0.006106474323729946
+  },
+  "total_cases": 39,
+  "rain_lags_weeks": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "outbreak_threshold": 0.0,
+  "alert_rate": 0.0151,
+  "cutoff": 0.0592,
+  "backtest_fixed_cutoff": {
+    "alerts": 4,
+    "hits": 0,
+    "outbreak_weeks": 7,
+    "false_alerts": 4,
+    "test_weeks": 157
+  },
+  "try_it": true,
+  "tier": "estimate",
+  "model": "pooled_rain_cases",
+  "why_not": null,
+  "evidence": {
+    "alerts": 2,
+    "outbreak_weeks": 7,
+    "rain": 0,
+    "seasonal": 0,
+    "last_week": 0,
+    "model": 0,
+    "pooled": true
+  },
+  "cases_default": 0,
+  "months": [
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov"
+  ],
+  "month_full": {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+  },
+  "default_month": "Jun",
+  "presets": [
+    {
+      "id": "dry",
+      "label": "Mostly dry",
+      "mm": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "sub": "Under 10 mm a week"
+    },
+    {
+      "id": "normal",
+      "label": "Normal rainy season",
+      "mm": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "sub": "About 40 mm a week"
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy rain most weeks",
+      "mm": [
+        70,
+        55,
+        70,
+        50
+      ],
+      "sub": "About 60 mm a week"
+    },
+    {
+      "id": "typhoon",
+      "label": "A typhoon passed",
+      "mm": [
+        70,
+        110,
+        70,
+        50
+      ],
+      "sub": "One week near 110 mm"
+    }
+  ],
+  "rain_max_by_week": [
+    113.5,
+    102.5,
+    103.6,
+    103.6,
+    124.3,
+    124.3,
+    124.3,
+    124.3,
+    94.4,
+    94.4,
+    94.4,
+    94.4,
+    50.0,
+    68.9,
+    71.4,
+    71.4,
+    71.4,
+    78.8,
+    78.8,
+    78.8,
+    91.7,
+    131.0,
+    131.0,
+    131.0,
+    131.0,
+    91.1,
+    112.6,
+    112.6,
+    112.6,
+    112.6,
+    111.4,
+    111.4,
+    111.4,
+    84.5,
+    84.5,
+    84.0,
+    100.5,
+    100.5,
+    100.5,
+    100.5,
+    106.5,
+    107.2,
+    107.2,
+    107.2,
+    107.2,
+    128.3,
+    128.3,
+    128.3,
+    128.3,
+    113.5,
+    113.5,
+    65.0,
+    49.4
+  ],
+  "guard_factor": 1.25,
+  "examples": [
+    {
+      "forecast_week": "2017-07-03",
+      "target_week": "2017-07-17",
+      "month_year": "July 2017",
+      "rain_newest_first": [
+        73.1,
+        60.6,
+        22.3,
+        10.2
+      ],
+      "predicted": 0.02,
+      "actual": 1,
+      "warned": false
+    }
+  ],
+  "note": "Prototype. Poisson model trained on Mandaue City 2008-2016 (Project CCHAIN). Not a live warning."
+}

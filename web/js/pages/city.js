@@ -508,7 +508,8 @@ function alertPanel(m) {
   const a = m.alert, c = m.meta;
   if (a.status !== "evaluated") {
     const n = c.lepto_cases_2008_2022;
-    return `<div class="card"><h2 class="card-title">Rain warning</h2><p>${a.status === "too_few_cases" ? "Too few cases to test a rain warning for this city" : "The rain warning was not tested for this city"}${isNum(n) ? `: only ${fmt(n)} leptospirosis cases were reported from 2008 to 2022` : ""}. Any score would be noise, so none is shown.</p></div>`;
+    return `<div class="card"><h2 class="card-title">Rain warning</h2><p>${a.status === "too_few_cases" ? "Too few cases to test a rain warning for this city" : "The rain warning was not tested for this city"}${isNum(n) ? `: only ${fmt(n)} leptospirosis cases were reported from 2008 to 2022` : ""}. Any score would be noise, so none is shown.</p></div>`
+      + `<div class="card try-rain" id="tryRain" hidden></div>`;
   }
   const yrs = `${a.years[0]} to ${a.years[1]}`;
   const hasSeries = m.series && m.series.length > 1;
@@ -570,6 +571,15 @@ function aboveRecord(mdl, forecast, rainNewestFirst) {
   });
   return worst;
 }
+// What the city's own 2017-2019 test showed, in one line (tiers from scripts/export_alert_model.py).
+function tierNote(mdl, place) {
+  const ev = mdl.evidence || {}, yrs = `${mdl.trained_years[1] + 1} to 2019`, n = ev.model != null ? ev.model : ev.rain;
+  const shared = ev.pooled ? " It uses a model shared across the 12 cities." : "";
+  if (mdl.tier === "weak") return `<p class="try-note">Weaker signal in ${esc(place)}: ranking the riskiest weeks of ${yrs}, it caught ${n} of ${ev.outbreak_weeks} outbreak weeks. Simple guesses caught ${ev.seasonal} and ${ev.last_week}.${shared}</p>`;
+  if (mdl.tier === "cases") return `<p class="try-note">In ${esc(place)}, this week's case count is the strongest signal. In ${yrs} the forecast caught ${n} of ${ev.outbreak_weeks} outbreak weeks, as many as last week's count (${ev.last_week}) and more than the seasonal guess (${ev.seasonal}).${shared}</p>`;
+  if (mdl.tier === "estimate") return `<p class="try-note">${esc(place)} reported ${fmt(mdl.total_cases)} cases from 2008 to 2022, too few to check a forecast. This uses the model shared across the 12 cities, so treat it as an estimate.</p>`;
+  return "";
+}
 async function mountTry(el, code) {
   const box = el.querySelector("#tryRain");
   if (!box) return;
@@ -593,7 +603,7 @@ async function mountTry(el, code) {
   const WEEKS = ["3 weeks ago", "2 weeks ago", "Last week", "This week"]; // left to right; column i is lag j = 3 - i
   box.innerHTML = `<div class="try-head"><h2 class="card-title">Will this rain bring leptospirosis?</h2><span class="badge try-badge">Test version, not live</span></div>
     <p class="try-lead">Pick the month and the rain. Drag a bar, or tap its number to type it.</p>
-    ${mdl.tier === "weak" ? `<p class="try-note">Weaker signal in ${esc(place)}: ranking the riskiest weeks of ${mdl.trained_years[1] + 1} to 2019, rain caught ${mdl.evidence.rain} of ${mdl.evidence.outbreak_weeks} outbreak weeks. Simple guesses caught ${mdl.evidence.seasonal} and ${mdl.evidence.last_week}.</p>` : ""}
+    ${tierNote(mdl, place)}
     <div class="try-step"><p class="try-q" id="tryMonthQ">Month</p>
       <div class="seg try-months" role="group" aria-labelledby="tryMonthQ">${mdl.months.map((mo) => `<button type="button" data-mo="${mo}" aria-pressed="false">${mo}</button>`).join("")}</div></div>
     <div class="try-step"><p class="try-q" id="tryRainQ">Rain in the last 4 weeks</p>
@@ -604,12 +614,12 @@ async function mountTry(el, code) {
           <button type="button" class="rb-val" aria-label="Type the rain ${w}"></button>
           <span class="rb-wk">${w}</span></div>`).join("")}</div>
       <p class="rb-key"><span class="rb-key-l" aria-hidden="true"></span>Wettest week on record for this time of year</p>
-      ${mdl.model === "rain_cases" ? `<label class="try-cases"><span>Cases reported this week</span><input class="field" type="number" min="0" max="500" step="1" inputmode="numeric" value="${mdl.cases_default}"></label>` : ""}</div>
+      ${/cases/.test(mdl.model) ? `<label class="try-cases"><span>Cases reported this week</span><input class="field" type="number" min="0" max="500" step="1" inputmode="numeric" value="${mdl.cases_default}"></label>` : ""}</div>
     <div class="try-out" aria-live="polite"></div>
     <details class="try-more"><summary>How this works</summary>
       <ul class="try-how">
-        <li>It learned from ${esc(place)}'s cases and rain, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}.</li>
-        ${mdl.model === "rain_cases" ? "<li>Here it uses this week's case count as well as rain.</li>" : ""}
+        <li>${mdl.model === "pooled_rain_cases" ? `It learned from all 12 cities' cases and rain, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}, at ${esc(place)}'s own level.` : `It learned from ${esc(place)}'s cases and rain, ${mdl.trained_years[0]} to ${mdl.trained_years[1]}.`}</li>
+        ${/cases/.test(mdl.model) ? "<li>It uses this week's case count as well as rain.</li>" : ""}
         <li>It warns when it expects ${mdl.cutoff.toFixed(1)} or more cases in a week.</li>
         <li>On ${mdl.trained_years[1] + 1} to 2019 it warned ${bt.alerts} times and was right ${bt.hits} times, catching ${bt.hits} of ${bt.outbreak_weeks} outbreak weeks.</li>
         <li>${ex.warned ? `It gets the timing, not the size: two weeks before the ${fmt(ex.actual)}-case week in ${esc(ex.month_year)} it warned, but expected about ${num(ex.predicted)}.` : `It can miss sharp spikes: it did not flag the ${fmt(ex.actual)}-case week in ${esc(ex.month_year)}, where it expected about ${num(ex.predicted)}.`}</li>
@@ -750,7 +760,7 @@ export async function render(el, params = {}) {
   };
   Object.entries(panels).forEach(([id, html]) => { el.querySelector("#panel-" + id).innerHTML = html; });
   barangayPanel(m, el.querySelector("#panel-barangays"), c.code);
-  if (m.alert && m.alert.status === "evaluated") mountTry(el, c.code);
+  mountTry(el, c.code);
 
   el.querySelector("#city-sel").addEventListener("change", (e) => { location.hash = "#/city/" + e.target.value; });
 
